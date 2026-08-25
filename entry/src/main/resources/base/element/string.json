@@ -1,0 +1,20 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "码上 Offer 面试刷题模块"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "码上 Offer"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "码上 Offer"
+    },
+    {
+      "name": "internet_permission_reason",
+      "value": "用于请求远程题库与 AI 服务"
+    }
+  ]
+}

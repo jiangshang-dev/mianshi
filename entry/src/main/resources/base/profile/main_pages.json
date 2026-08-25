@@ -1,0 +1,8 @@
+{
+  "src": [
+    "pages/Index",
+    "pages/bank/QuestionListPage",
+    "pages/bank/QuestionDetailPage",
+    "pages/search/SearchPage"
+  ]
+}

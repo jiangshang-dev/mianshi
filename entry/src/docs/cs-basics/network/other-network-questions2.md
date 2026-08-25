@@ -1,0 +1,364 @@
+---
+title: 计算机网络常见面试题总结（下）
+description: 汇总计算机网络常见面试题（下），覆盖 TCP/UDP、连接管理、可靠传输、HTTP/3、IP、IPv6、NAT 与 ARP 等基础知识。
+category: 计算机基础
+tag:
+  - 计算机网络
+head:
+  - - meta
+    - name: keywords
+      content: 计算机网络面试题,TCP vs UDP,TCP三次握手,HTTP/3 QUIC,IPv4 vs IPv6,TCP可靠性,IP地址,NAT协议,ARP协议,传输层面试,网络层高频题,基于TCP协议,基于UDP协议,队头阻塞,四次挥手
+---
+
+计算机网络面试题里，真正容易被追问到细节的部分，往往集中在 **TCP、UDP、IP、ARP、NAT、IPv4/IPv6** 这些传输层和网络层知识点上。比如：为什么 TCP 可靠？为什么要三次握手和四次挥手？HTTP/3 为什么改用基于 UDP 的 QUIC？这些问题不仅考概念，也考你对网络通信过程的理解。
+
+这篇《计算机网络常见面试题总结（下）》会重点梳理 TCP 与 UDP、TCP 连接管理、可靠传输、IP 地址、ARP、NAT 等后端面试高频内容，帮助你把传输层和网络层的核心考点串起来。
+
+## TCP 与 UDP
+
+### ⭐️ TCP 与 UDP 的区别（重要）
+
+1. **是否面向连接**：
+   - TCP 是面向连接的。在传输数据之前，必须先通过“三次握手”建立连接；数据传输完成后，还需要通过“四次挥手”来释放连接。这保证了双方都准备好通信。
+   - UDP 是无连接的。发送数据前不需要建立任何连接，直接把数据包（数据报）扔出去。
+2. **是否是可靠传输**：
+   - TCP 提供可靠的数据传输服务。它通过序列号、确认应答（ACK）、超时重传、流量控制、拥塞控制等一系列机制，来确保数据能够无差错、不丢失、不重复且按顺序地到达目的地。
+   - UDP 提供不可靠的传输。它尽最大努力交付（best-effort delivery），但不保证数据一定能到达，也不保证到达的顺序，更不会自动重传。收到报文后，接收方也不会主动发确认。
+3. **是否有状态**：
+   - TCP 是有状态的。因为要保证可靠性，TCP 需要在连接的两端维护连接状态信息，比如序列号、窗口大小、哪些数据发出去了、哪些收到了确认等。
+   - UDP 是无状态的。它不维护连接状态，发送方发出数据后就不再关心它是否到达以及如何到达，因此开销更小（**这很“渣男”！**）。
+4. **传输效率**：
+   - TCP 因为需要建立连接、发送确认、处理重传等，其开销较大，传输效率相对较低。
+   - UDP 结构简单，没有复杂的控制机制，开销小，传输效率更高，速度更快。
+5. **传输形式**：
+   - TCP 是面向字节流（Byte Stream）的。它将应用程序交付的数据视为一连串无结构的字节流，可能会对数据进行拆分或合并。
+   - UDP 是面向报文（Message Oriented）的。应用程序交给 UDP 多大的数据块，UDP 就照样发送，既不拆分也不合并，保留了应用程序消息的边界。
+6. **首部开销**：
+   - TCP 的头部至少需要 20 字节，如果包含选项字段，最多可达 60 字节。
+   - UDP 的头部非常简单，固定只有 8 字节。
+7. **是否提供广播或多播服务**：
+   - TCP 只支持点对点（Point-to-Point）的单播通信。
+   - UDP 支持一对一（单播）、一对多（多播/Multicast）和一对所有（广播/Broadcast）的通信方式。
+8. ……
+
+为了更直观地对比，可以看下面这个表格：
+
+| 特性         | TCP                        | UDP                                 |
+| ------------ | -------------------------- | ----------------------------------- |
+| **连接性**   | 面向连接                   | 无连接                              |
+| **可靠性**   | 可靠                       | 不可靠（尽力而为）                  |
+| **状态维护** | 有状态                     | 无状态                              |
+| **传输效率** | 较低                       | 较高                                |
+| **传输形式** | 面向字节流                 | 面向数据报（报文）                  |
+| **头部开销** | 20 - 60 字节               | 8 字节                              |
+| **通信模式** | 点对点（单播）             | 单播、多播、广播                    |
+| **常见应用** | HTTP/HTTPS, FTP, SMTP, SSH | DNS, DHCP, SNMP, TFTP, VoIP, 视频流 |
+
+### ⭐️ 什么时候选择 TCP，什么时候选 UDP?
+
+选择 TCP 还是 UDP，主要取决于你的应用**对数据传输的可靠性要求有多高，以及对实时性和效率的要求有多高**。
+
+当**数据准确性和完整性至关重要，一点都不能出错**时，通常选择 TCP。因为 TCP 提供了一整套机制（三次握手、确认应答、重传、流量控制等）来保证数据能够可靠、有序地送达。典型应用场景如下：
+
+- **Web 浏览（HTTP/HTTPS）:** 网页内容、图片、脚本必须完整加载才能正确显示。
+- **文件传输（FTP, SCP）:** 文件内容不允许有任何字节丢失或错序。
+- **邮件收发（SMTP, POP3, IMAP）:** 邮件内容需要完整无误地送达。
+- **远程登录（SSH, Telnet）:** 命令和响应需要准确传输。
+- ……
+
+当**实时性、速度和效率优先，并且应用能容忍少量数据丢失或乱序**时，通常选择 UDP。UDP 开销小、传输快，没有建立连接和保证可靠性的复杂过程。典型应用场景如下：
+
+- **实时音视频通信（VoIP, 视频会议，直播）:** 偶尔丢失一两个数据包（可能导致画面或声音短暂卡顿）通常比因为等待重传（TCP 机制）导致长时间延迟更可接受。应用层可能会有自己的补偿机制。
+- **在线游戏:** 需要快速传输玩家位置、状态等信息，对实时性要求极高，旧的数据很快就没用了，丢失少量数据影响通常不大。
+- **DHCP（动态主机配置协议）:** 客户端在请求 IP 时自身没有 IP 地址，无法满足 TCP 建立连接的前提条件，并且 DHCP 有广播需求、交互模式简单以及自带可靠性机制。
+- **物联网（IoT）数据上报:** 某些场景下，传感器定期上报数据，丢失个别数据点可能不影响整体趋势分析。
+- ……
+
+### HTTP 基于 TCP 还是 UDP？
+
+~~**HTTP 协议是基于 TCP 协议的**，所以发送 HTTP 请求之前首先要建立 TCP 连接也就是要经历 3 次握手。~~
+
+🐛 修正（参见 [issue#1915](https://github.com/Snailclimb/JavaGuide/issues/1915)）：
+
+HTTP/3.0 之前是基于 TCP 协议的，而 HTTP/3.0 将弃用 TCP，改用 **基于 UDP 的 QUIC 协议**：
+
+- **HTTP/1.x 和 HTTP/2.0**：这两个版本的 HTTP 协议都明确建立在 TCP 之上。TCP 提供了可靠的、面向连接的传输，确保数据按序、无差错地到达，这对于网页内容的正确展示非常重要。发送 HTTP 请求前，需要先通过 TCP 的三次握手建立连接。
+- **HTTP/3.0**：这是一个重大的改变。HTTP/3 弃用了 TCP，转而使用 QUIC 协议，而 QUIC 是构建在 UDP 之上的。
+
+![HTTP/1、HTTP/2 和 HTTP/3 协议栈对比](https://oss.javaguide.cn/github/javaguide/cs-basics/network/http-3-implementation.png)
+
+**为什么 HTTP/3 要做这个改变呢？主要有两大原因：**
+
+1. 解决队头阻塞（Head-of-Line Blocking，简写：HOL blocking）问题。
+2. 减少连接建立的延迟。
+
+下面我们来详细介绍这两大优化。
+
+在 HTTP/2 中，虽然可以在一个 TCP 连接上并发传输多个请求/响应流（多路复用），但 TCP 本身的特性（保证有序、可靠）意味着如果其中一个流的某个 TCP 报文丢失或延迟，整个 TCP 连接都会被阻塞，等待该报文重传。这会导致所有在这个 TCP 连接上的 HTTP/2 流都受到影响，即使其他流的数据包已经到达。**QUIC（运行在 UDP 上）解决了这个问题**。QUIC 内部实现了自己的多路复用和流控制机制。不同的 HTTP 请求/响应流在 QUIC 层面是真正独立的。如果一个流的数据包丢失，它只会阻塞该流，而不会影响同一 QUIC 连接上的其他流（本质上是多路复用+轮询），大大提高了并发传输的效率。
+
+除了解决队头阻塞问题，HTTP/3.0 还可以减少握手过程的延迟。在 HTTP/2.0 中，如果要建立一个安全的 HTTPS 连接，需要经过 TCP 三次握手和 TLS 握手：
+
+RTT 指报文从一端到对端再返回的往返时间，不是单程传输时间。TCP 握手的延迟必须说明测量终点：客户端在发送 SYN 后约 1 RTT 收到 SYN-ACK，随后可以发送最终 ACK 和应用请求；服务器收到该 ACK 和请求还需要一个单程延迟。比较 HTTP/2 和 HTTP/3 时，应统一采用“客户端何时可以发送首个请求”或“客户端何时收到首字节”等同一个指标。
+
+HTTP/2 的 HTTPS 连接需要先建立 TCP 连接，再完成 TLS 握手。HTTP/3 把传输参数协商和 TLS 1.3 握手结合在 QUIC 建连过程中。新的 QUIC 连接通常使用 1-RTT；0-RTT 只适用于客户端持有先前连接状态的恢复场景，可以在首个报文中携带早期数据，但存在重放风险，只适合可安全重放的请求。
+
+相关证明可以参考下面这两个链接：
+
+- <https://zh.wikipedia.org/zh/HTTP/3>
+- <https://datatracker.ietf.org/doc/rfc9114/>
+
+### 为什么 TCP 是面向字节流，UDP 是面向报文？
+
+![TCP 与 UDP 的消息边界](https://oss.javaguide.cn/github/javaguide/cs-basics/network/tcp-udp-byte-stream-tcp-udp-message-boundary.png)
+
+TCP 是面向字节流的。应用层写入的数据会进入内核缓冲区，TCP 只保证这些字节可靠、有序地到达对端，不保证一次 `send()` 对应一次 `recv()`，也不保留应用层消息边界。因此接收方可能一次读到多条消息，也可能只读到半条消息，这就是常说的粘包、拆包现象。
+![TCP 粘包 / 拆包为什么会出现？](https://oss.javaguide.cn/github/javaguide/cs-basics/network/tcp-udp-byte-stream-tcp-sticky-split-causes.png)
+
+UDP 是面向报文的。应用层交给 UDP 的一次数据会作为一个 UDP 数据报发送，接收端也是按数据报读取，所以天然保留消息边界。不过 UDP 不保证可靠到达，也不保证顺序。
+
+解决 TCP 粘包/拆包，本质是应用层协议自己定义消息边界。常见方案有固定长度、分隔符、长度头。工程里更常用长度头，因为它对二进制协议和变长消息更友好，但要处理字节序、最大长度限制、半包缓存和异常连接关闭等问题。
+
+![应用层如何定义消息边界？](https://oss.javaguide.cn/github/javaguide/cs-basics/network/tcp-udp-byte-stream-tcp-message-boundary-solutions.png)
+
+详细介绍：[为什么 TCP 是面向字节流，UDP 是面向报文？](./tcp-byte-stream-udp-datagram.md)
+
+### 你知道哪些基于 TCP/UDP 的协议？
+
+TCP（传输控制协议）和 UDP（用户数据报协议）是互联网传输层的两大核心协议，它们为各种应用层协议提供了基础的通信服务。以下是一些常见的、分别构建在 TCP 和 UDP 之上的应用层协议：
+
+**运行于 TCP 协议之上的协议（强调可靠、有序传输）：**
+
+| 中文全称（缩写）            | 英文全称                           | 主要用途                     | 说明与特性                                                                                                                  |
+| --------------------------- | ---------------------------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| 超文本传输协议（HTTP）      | HyperText Transfer Protocol        | 传输网页、超文本、多媒体内容 | **HTTP/1.x 和 HTTP/2 基于 TCP**。早期版本不加密，是 Web 通信的基础。                                                        |
+| 安全超文本传输协议（HTTPS） | HyperText Transfer Protocol Secure | 加密的网页传输               | 使用 TLS 保护 HTTP。HTTP/1.1 和 HTTP/2 通常使用 TLS over TCP，HTTP/3 使用集成 TLS 1.3 的 QUIC。                             |
+| 文件传输协议（FTP）         | File Transfer Protocol             | 文件传输                     | 传统的 FTP **明文传输**，不安全。推荐使用其安全版本 **SFTP（SSH File Transfer Protocol）** 或 **FTPS (FTP over SSL/TLS)**。 |
+| 简单邮件传输协议（SMTP）    | Simple Mail Transfer Protocol      | **发送**电子邮件             | 负责将邮件从客户端发送到服务器，或在邮件服务器之间传递。可通过 **STARTTLS** 升级到加密传输。                                |
+| 邮局协议第 3 版（POP3）     | Post Office Protocol version 3     | **接收**电子邮件             | 通常将邮件从服务器**下载到本地设备后删除服务器副本**（可配置保留）。**POP3S** 是其 SSL/TLS 加密版本。                       |
+| 互联网消息访问协议（IMAP）  | Internet Message Access Protocol   | **接收和管理**电子邮件       | 邮件保留在服务器，支持多设备同步邮件状态、文件夹管理、在线搜索等。**IMAPS** 是其 SSL/TLS 加密版本。现代邮件服务首选。       |
+| 远程终端协议（Telnet）      | Teletype Network                   | 远程终端登录                 | **明文传输**所有数据（包括密码），安全性极差，基本已被 SSH 完全替代。                                                       |
+| 安全外壳协议（SSH）         | Secure Shell                       | 安全远程管理、加密数据传输   | 提供了加密的远程登录和命令执行，以及安全的文件传输（SFTP）等功能，是 Telnet 的安全替代品。                                  |
+
+**运行于 UDP 协议之上的协议（强调快速、低开销传输）：**
+
+| 中文全称（缩写）         | 英文全称                              | 主要用途                   | 说明与特性                                                                                                         |
+| ------------------------ | ------------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| 超文本传输协议（HTTP/3） | HyperText Transfer Protocol version 3 | 新一代网页传输             | 基于 **QUIC** 协议（QUIC 本身构建于 UDP 之上），旨在减少延迟、缓解 TCP 队头阻塞；会话恢复时可使用 0-RTT 早期数据。 |
+| 动态主机配置协议（DHCP） | Dynamic Host Configuration Protocol   | 动态分配 IP 地址及网络配置 | 客户端从服务器自动获取 IP 地址、子网掩码、网关、DNS 服务器等信息。                                                 |
+| 域名系统（DNS）          | Domain Name System                    | 域名到 IP 地址的解析       | **通常使用 UDP** 进行快速查询。当响应数据包过大或进行区域传送（AXFR）时，会**切换到 TCP** 以保证数据完整性。       |
+| 实时传输协议（RTP）      | Real-time Transport Protocol          | 实时音视频数据流传输       | 常用于 VoIP、视频会议、直播等。追求低延迟，允许少量丢包。通常与 RTCP 配合使用。                                    |
+| RTP 控制协议（RTCP）     | RTP Control Protocol                  | RTP 流的质量监控和控制信息 | 配合 RTP 工作，提供丢包、延迟、抖动等统计信息，辅助流量控制和拥塞管理。                                            |
+| 简单文件传输协议（TFTP） | Trivial File Transfer Protocol        | 简化的文件传输             | 功能简单，常用于局域网内无盘工作站启动、网络设备固件升级等小文件传输场景。                                         |
+| 简单网络管理协议（SNMP） | Simple Network Management Protocol    | 网络设备的监控与管理       | 允许网络管理员查询和修改网络设备的状态信息。                                                                       |
+| 网络时间协议（NTP）      | Network Time Protocol                 | 同步计算机时钟             | 用于在网络中的计算机之间同步时间，确保时间的一致性。                                                               |
+
+**总结一下：**
+
+- **TCP** 更适合那些对数据**可靠性、完整性和顺序性**要求高的应用，如网页浏览（HTTP/HTTPS）、文件传输（FTP/SFTP）、邮件收发（SMTP/POP3/IMAP）。
+- **UDP** 则更适用于那些对**实时性要求高、能容忍少量数据丢失**的应用，如域名解析（DNS）、实时音视频（RTP）、在线游戏、网络管理（SNMP）等。
+
+### ⭐️ TCP Keepalive 和 HTTP Keep-Alive 有什么区别
+
+| 对比维度          | HTTP Keep-Alive                                         | TCP Keepalive                                       |
+| ----------------- | ------------------------------------------------------- | --------------------------------------------------- |
+| **所属层**        | 应用层（HTTP 协议）                                     | 传输层（TCP 协议）                                  |
+| **解决的问题**    | 复用 TCP 连接，减少重复建连、挥手、慢启动等开销         | 探测长时间空闲的 TCP 连接，对端失联后释放连接资源   |
+| **默认行为**      | HTTP/1.0 默认短连接；HTTP/1.1 默认长连接                | 默认关闭，应用需要显式开启 `SO_KEEPALIVE`           |
+| **控制粒度**      | 由 HTTP 客户端、Web 服务器或代理按连接策略控制          | 由操作系统内核控制，也可在部分平台逐 socket 调整    |
+| **常见参数**      | `Connection`、`Keep-Alive: timeout/max`、服务器超时配置 | `tcp_keepalive_time/intvl/probes` 或平台对应参数    |
+| **关闭触发**      | 到达空闲超时、请求次数上限，或任意一方主动关闭          | 空闲后发探测包，多次无响应或收到 RST 才关闭         |
+| **对端在线时**    | 服务端仍可按配置主动回收空闲连接                        | 只要对端内核能回 ACK，连接通常继续维持              |
+| **能否替代心跳**  | 不能判断业务是否健康，只能管理 HTTP 连接复用            | 不能判断应用线程池、事件循环、业务依赖是否正常      |
+| **中间层影响**    | 代理、网关可独立管理前后两段 HTTP/TCP 连接              | NAT/LB/反向代理可能让你探测到的只是某一段 TCP 连接  |
+| **HTTP/2/3 关系** | HTTP/2 禁用连接级头；HTTP/3/QUIC 不使用这套机制         | 只作用于 TCP；真正的 HTTP/3/QUIC 连接不受它直接影响 |
+
+**不同 HTTP 版本里，Keep-Alive 的默认行为不一样**：
+
+![不同 HTTP 版本里，Keep-Alive 的默认行为不一样](https://oss.javaguide.cn/github/javaguide/cs-basics/network/different-http-versions-have-different-default-keep-alive-behaviors.png)
+
+如果从“谁来决定关连接”的角度看，两个机制的态度完全相反：
+
+HTTP Keep-Alive 是“主动回收”——服务器到了超时或请求次数上限，就可以按自己的配置关闭连接，不需要先探测对方是否在线。它是一种比较主动的资源回收方式。
+
+TCP Keepalive 是“被动回收”——它必须先发探测包去问“你还在吗？”。只要对方在线、能回 ACK，服务器就只能继续维持连接，刷新定时器。只有确认对方已经不在了，才能释放资源。这是一种温和的回收策略。
+
+![TCP Keepalive 工作原理](https://oss.javaguide.cn/github/javaguide/cs-basics/network/tcp-keepalive-vs-http-keepalive-tcp-keepalive-working-principle.png)
+
+![TCP Keepalive 探测机制](https://oss.javaguide.cn/github/javaguide/cs-basics/network/tcp-keepalive-vs-http-keepalive-tcp-keepalive-detection-mechanism.png)
+
+实际项目中，两者经常同时在跑，各管各的。HTTP Keep-Alive 管的是“一条连接最多用多久、服务多少次请求”，TCP Keepalive 管的是“如果长时间没数据，检查一下对方是不是已经消失了”。两者互不干扰，也不能互相替代。
+
+详细介绍：[TCP Keepalive 和 HTTP Keep-Alive 有什么区别？](./tcp-keepalive-vs-http-keepalive.md)
+
+### ⭐️ TCP 三次握手和四次挥手（非常重要）
+
+**相关面试题**：
+
+- 为什么要三次握手？
+- 第 2 次握手传回了 ACK，为什么还要传回 SYN？
+- 为什么要四次挥手？
+- 为什么不能把服务器发送的 ACK 和 FIN 合并起来，变成三次挥手？
+- 如果第二次挥手时服务器的 ACK 没有送达客户端，会怎样？
+- 为什么第四次挥手客户端需要等待 2\*MSL（报文段最长寿命）时间后才进入 CLOSED 状态？
+
+**参考答案**：[TCP 三次握手和四次挥手（传输层）](https://javaguide.cn/cs-basics/network/tcp-connection-and-disconnection.html)。
+
+### TCP TIME_WAIT 到底在等什么？为什么要等？
+
+**相关面试题**：
+
+1. `TIME_WAIT` 到底在等什么？
+2. `TIME_WAIT` 大量堆积会不会真的出问题？
+3. `tcp_tw_reuse` 能不能随便开？
+4. `TIME_WAIT` 和 `CLOSE_WAIT` 怎么区分？
+
+**参考答案**： [TCP TIME_WAIT 详解：为什么要等、会不会出问题、能不能复用？](./tcp-time-wait.md)。
+
+### ⭐️ TCP 如何保证传输的可靠性？（重要）
+
+[TCP 传输可靠性保障（传输层）](https://javaguide.cn/cs-basics/network/tcp-reliability-guarantee.html)
+
+### TCP 和 UDP 可以使用同一个端口吗？
+
+结论：**可以**。TCP 和 UDP 的端口绑定命名空间按传输层协议区分，同一个数字端口在不同协议下不冲突。
+
+内核收到 IP 包后，会先看 IP 层的协议标识（TCP 协议号是 `6`，UDP 是 `17`），根据协议号把报文交给对应的 TCP 或 UDP 协议栈，然后再在各自协议栈内按地址和端口分发。所以 `TCP/8080` 和 `UDP/8080` 可以共存，内核压根不会把它们当成同一条通信。
+
+![内核协议分发流程](https://oss.javaguide.cn/github/javaguide/cs-basics/network/can-tcp-and-udp-use-the-same-port-kernel-protocol-dispatching-process.png)
+
+真正容易冲突的是**同一协议**下的重复绑定，比如两个 TCP 服务通常不能同时监听同一个本地 IP 和端口；这时才涉及 `SO_REUSEADDR`、`SO_REUSEPORT` 这类 socket 复用选项。
+
+经典例子：DNS 同时使用 `UDP/53`（日常查询）和 `TCP/53`（响应过大、区域传送）；HTTP/3 常见部署是 `UDP/443`（QUIC），可以和传统 HTTPS 的 `TCP/443` 同时存在。
+
+![DNS 和 HTTP/3 同时使用 TCP 与 UDP 端口的实际案例](https://oss.javaguide.cn/github/javaguide/cs-basics/network/can-tcp-and-udp-use-the-same-port-practical-application-example.png)
+
+详细介绍：[TCP 和 UDP 可以使用同一个端口吗？](./can-tcp-and-udp-use-the-same-port.md)
+
+### ⭐️ 一台主机上只能保持最多 65535 个 TCP 连接吗？
+
+结论：**不是**。`65535` 是最大端口号，不是连接数上限。
+
+TCP 连接靠四元组区分：源 IP、源端口、目的 IP、目的端口。只要四元组不同，内核就识别为不同连接。服务端监听同一个端口时，只要客户端 IP 或客户端端口不同，连接就可以继续增加。
+
+![TCP 连接靠四元组区分和真正的限制](https://oss.javaguide.cn/github/javaguide/cs-basics/network/maximum-number-of-tcp-connections-per-host-tcp-four-tuple-and-server-connection.png)
+
+真正限制连接数的因素：
+
+- **服务端**：主要受文件描述符、内存、CPU、网卡和应用处理能力限制，而不是端口数。
+- **客户端**：连同一个目标时，源 IP 和目的 IP:Port 都固定，只剩源端口可变，更容易撞到临时端口上限（Linux 默认约 2.8 万个）。`TIME_WAIT` 堆积会加剧这个问题。
+- **NAT 网关**：大量内网机器共享同一个公网 IP 访问同一个外部目标时，NAT 侧的公网源端口也会成为瓶颈。
+
+生产环境最常见的坑不是端口不够，而是**连接池没配好导致短连接疯狂创建和销毁**，把临时端口耗光。排查时优先看连接池和 keep-alive 是否生效，不要一上来就改内核参数。
+
+详细介绍：[一台主机上只能保持最多 65535 个 TCP 连接吗？](./maximum-number-of-tcp-connections-per-host.md)
+
+## IP
+
+### IP 协议的作用是什么？
+
+**IP（Internet Protocol，网际协议）** 是 TCP/IP 协议中最重要的协议之一，属于网络层的协议，主要作用是定义数据包的格式、对数据包进行路由和寻址，以便它们可以跨网络传播并到达正确的目的地。
+
+目前 IP 协议主要分为两种，一种是过去的 IPv4，另一种是较新的 IPv6，目前这两种协议都在使用，但后者已经被提议来取代前者。
+
+### 什么是 IP 地址？IP 寻址如何工作？
+
+IP 地址通常分配给网络接口，用于在特定作用域和路由上下文中标识通信端点。一个接口可以有多个地址，地址也可能动态变化；私有地址可以在不同网络中重复使用，Anycast 地址还可以分配给多个接口。IPv4 地址示例为 `192.168.1.1`，IPv6 地址示例为 `2001:0db8:85a3:0000:0000:8a2e:0370:7334`。
+
+当网络设备发送 IP 数据包时，数据包中包含 **源 IP 地址** 和 **目的 IP 地址**。它们标识本次通信使用的源接口地址和目标地址，而不是设备永久不变的身份。
+
+网络设备根据目的 IP 地址来判断数据包的目的地，并将数据包转发到正确的目的地网络或子网络，从而实现了设备间的通信。
+
+这种基于 IP 地址的寻址方式是互联网通信的基础，它允许数据包在不同网络之间传递。地址是否唯一、能否全局路由取决于地址类型和作用域，不能笼统地把 IP 地址描述为每台设备全球唯一的身份证。
+
+![IP 地址使数据包到达其目的地](https://oss.javaguide.cn/github/javaguide/cs-basics/network/internet_protocol_ip_address_diagram.png)
+
+### 什么是 IP 地址过滤？
+
+**IP 地址过滤（IP Address Filtering）** 简单来说就是限制或阻止特定 IP 地址或 IP 地址范围的访问。例如，你有一个图片服务突然被某一个 IP 地址攻击，那我们就可以禁止这个 IP 地址访问图片服务。
+
+IP 地址过滤是一种简单的网络安全措施，实际应用中一般会结合其他网络安全措施，如认证、授权、加密等一起使用。单独使用 IP 地址过滤并不能完全保证网络的安全。
+
+### ⭐️ IPv4 和 IPv6 有什么区别？
+
+**IPv4（Internet Protocol version 4）** 是目前广泛使用的 IP 地址版本，其格式是四组由点分隔的数字，例如：123.89.46.72。IPv4 使用 32 位地址作为其 Internet 地址，这意味着共有约 42 亿（2^32）个可用 IP 地址。
+
+![IPv4 地址使用点分十进制格式表示 32 位地址](https://oss.javaguide.cn/github/javaguide/cs-basics/network/Figure-1-IPv4Addressformatwithdotteddecimalnotation-29c824f6a451d48d8c27759799f0c995.png)
+
+这么少当然不够用啦！为了解决 IP 地址耗尽的问题，最根本的办法是采用具有更大地址空间的新版本 IP 协议 - **IPv6（Internet Protocol version 6）**。IPv6 地址使用更复杂的格式，该格式使用由单或双冒号分隔的一组数字和字母，例如：2001:0db8:85a3:0000:0000:8a2e:0370:7334。IPv6 使用 128 位互联网地址，这意味着越有 2^128（3 开头的 39 位数字，恐怖如斯）个可用 IP 地址。
+
+![IPv6 地址使用十六进制冒号分隔格式表示 128 位地址](https://oss.javaguide.cn/github/javaguide/cs-basics/network/Figure-2-IPv6Addressformatwithhexadecimalnotation-7da3a419bd81627a9b2cef3b0efb4940.png)
+
+除了更大的地址空间之外，IPv6 的优势还包括：
+
+- **无状态地址自动配置（Stateless Address Autoconfiguration，简称 SLAAC）**：主机可以根据路由器通告的前缀和接口标识生成 IPv6 地址，不必依赖 DHCPv6 分配地址。地址使用前通常会执行重复地址检测（DAD），但 DAD 检查的是本链路内是否存在重复，而且检测并非完全可靠，不能据此声称地址得到“全球唯一”保证。
+- **NAT（Network Address Translation，网络地址转换）成为可选项**：IPv6 地址资源充足，可以给全球每个设备一个独立的地址。
+- **对标头结构进行了改进**：IPv6 基本头部简化了常见转发路径上的部分处理，但实际性能仍取决于硬件、扩展头、网络策略和具体实现，不能只凭头部结构保证整体性能一定提高。
+- **可选的扩展头**：允许在 IPv6 标头中添加不同的扩展头（Extension Headers），用于实现不同类型的功能和选项。
+- **ICMPv6（Internet Control Message Protocol for IPv6）**：IPv6 中的 ICMPv6 相较于 IPv4 中的 ICMP 有了一些改进，如邻居发现、路径 MTU 发现等功能的改进，从而提升了网络的可靠性和性能。
+- ……
+
+### 如何获取客户端真实 IP？
+
+获取客户端真实 IP 的方法有多种，主要分为应用层方法、传输层方法和网络层方法。
+
+**应用层方法**：
+
+`X-Forwarded-For` 是 HTTP 代理生态中广泛使用但未标准化的请求头；IETF 标准化的对应机制是 HTTP `Forwarded` 头。它们都属于 HTTP，不能直接套用于 SMTP 等其他应用层协议。业务服务也不能无条件信任客户端传入的 `X-Forwarded-For`：可信反向代理应覆盖或规范化外部传入值，服务端只解析由已知代理追加的部分。
+
+**传输层方法**：
+
+利用 TCP Options 字段承载真实源 IP 信息。这种方法适用于任何基于 TCP 的协议，不受应用层的限制。不过，这并非是 TCP 标准所支持的，所以需要通信双方都进行改造。也就是：对于发送方来说，需要有能力把真实源 IP 插入到 TCP Options 里面。对于接收方来说，需要有能力把 TCP Options 里面的 IP 地址读取出来。
+
+也可以通过 Proxy Protocol 协议来传递客户端 IP 和 Port 信息。这种方法可以利用 Nginx 或者其他支持该协议的反向代理服务器来获取真实 IP 或者在业务服务器解析真实 IP。
+
+**网络层方法**：
+
+隧道 + DSR 模式。这种方法可以适用于任何协议，就是实施起来会比较麻烦，也存在一定限制，实际应用中一般不会使用这种方法。
+
+### NAT 的作用是什么？
+
+**NAT（Network Address Translation，网络地址转换）** 主要用于在不同网络之间转换 IP 地址。它允许将私有 IP 地址（如在局域网中使用的 IP 地址）映射为公有 IP 地址（在互联网中使用的 IP 地址）或者反向映射，从而实现局域网内的多个设备通过单一公有 IP 地址访问互联网。
+
+NAT 不光可以缓解 IPv4 地址资源短缺的问题，还会隐藏内部地址和拓扑。许多 NAT 设备的过滤行为使没有既有映射的外部流量难以直接到达内部主机，但决定哪些入站报文可以通过的是过滤策略，而不是地址转换本身。NAT 不能替代状态防火墙、访问控制和主机安全措施。
+
+![NAT 实现 IP地址转换](https://oss.javaguide.cn/github/javaguide/cs-basics/network/network-address-translation.png)
+
+相关阅读：[NAT 协议详解（网络层）](https://javaguide.cn/cs-basics/network/nat.html)。
+
+## ARP
+
+### 什么是 Mac 地址？
+
+MAC 地址的全称是 **媒体访问控制地址（Media Access Control Address）**，用于标识链路层接口并在本地网络中传输数据帧。它属于网络接口，而不是整台设备的永久身份证；一台设备可以有多个网络接口，每个接口可以使用不同的 MAC 地址。
+
+![路由器的背面就会注明 MAC 位址](https://oss.javaguide.cn/github/javaguide/cs-basics/network/router-back-will-indicate-mac-address.png)
+
+MAC 地址也常被称为 LAN 地址、物理地址或以太网地址。与用于网络层路由的 IP 地址不同，MAC 地址主要在当前链路或广播域内使用。
+
+> 还有一点要知道的是，不仅仅是网络资源才有 IP 地址，网络设备也有 IP 地址，比如路由器。但从结构上说，路由器等网络设备的作用是组成一个网络，而且通常是内网，所以它们使用的 IP 地址通常是内网 IP，内网的设备在与内网以外的设备进行通信时，需要用到 NAT 协议。
+
+以太网常见的 MAC 地址是 6 字节（48 比特）的 EUI-48。IEEE 会分配 MA-L、MA-M、MA-S 等不同大小的地址块，由厂商继续分配全局管理地址；此外还存在本地管理地址，不需要由 IEEE 全局分配。操作系统可以修改或随机化 MAC 地址，因此地址并不保证永久不变，不同网络中也可能出现相同地址。
+
+最后，记住，MAC 地址有一个特殊地址：FF-FF-FF-FF-FF-FF（全 1 地址），该地址表示广播地址。
+
+### ⭐️ ARP 协议解决了什么问题？
+
+ARP 协议，全称 **地址解析协议（Address Resolution Protocol）**，它解决的是网络层地址和链路层地址之间的转换问题。因为一个 IP 数据报在物理上传输的过程中，总是需要知道下一跳（物理上的下一个目的地）该去往何处，但 IP 地址属于逻辑地址，而 MAC 地址才是物理地址，ARP 协议解决了 IP 地址转 MAC 地址的一些问题。
+
+### ARP 协议的工作原理？
+
+[ARP 协议详解(网络层)](https://javaguide.cn/cs-basics/network/arp.html)
+
+## 复习建议
+
+非常推荐大家看一下 《图解 HTTP》这本书，这本书页数不多，但是内容很是充实，不管是用来系统的掌握网络方面的一些知识还是说纯粹为了应付面试都有很大帮助。下面的一些文章只是参考。大二学习这门课程的时候，我们使用的教材是 《计算机网络第七版》（谢希仁编著），不推荐大家看这本教材，书非常厚而且知识偏理论，不确定大家能不能心平气和的读完。
+
+## 参考
+
+- 《图解 HTTP》
+- 《计算机网络自顶向下方法》（第七版）
+- 什么是 Internet 协议（IP）？：<https://www.cloudflare.com/zh-cn/learning/network-layer/internet-protocol/>
+- 透传真实源 IP 的各种方法 - 极客时间：<https://time.geekbang.org/column/article/497864>
+- What Is NAT and What Are the Benefits of NAT Firewalls?：<https://community.fs.com/blog/what-is-nat-and-what-are-the-benefits-of-nat-firewalls.html>
+
+<!-- @include: @article-footer.snippet.md -->
