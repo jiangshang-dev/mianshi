@@ -2,27 +2,27 @@
   "string": [
     {
       "name": "module_desc",
-      "value": "码上 Offer 面试刷题模块"
+      "value": "碼上 Offer 面試刷題模組"
     },
     {
       "name": "EntryAbility_desc",
-      "value": "码上 Offer"
+      "value": "碼上 Offer"
     },
     {
       "name": "EntryAbility_label",
-      "value": "码上 Offer"
+      "value": "碼上 Offer"
     },
     {
       "name": "login_title",
-      "value": "登录码上 Offer"
+      "value": "登錄碼上 Offer"
     },
     {
       "name": "internet_permission_reason",
-      "value": "用于请求远程题库与 AI 服务"
+      "value": "用於請求遠端題庫與 AI 服務"
     },
     {
       "name": "microphone_permission_reason",
-      "value": "用于模拟面试语音对话与语音识别"
+      "value": "用於模擬面試語音對話與語音識別"
     }
   ]
 }

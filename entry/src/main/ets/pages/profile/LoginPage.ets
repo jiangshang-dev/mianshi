@@ -69,7 +69,7 @@ struct LoginPage {
         .backgroundColor('#E5E7EB')
 
         Column({ space: 8 }) {
-          Text('登录码上 Offer')
+          Text($r('app.string.login_title'))
             .fontSize(22)
             .fontWeight(FontWeight.Bold)
           Text('使用华为账号登录，同步学习记录与简历')

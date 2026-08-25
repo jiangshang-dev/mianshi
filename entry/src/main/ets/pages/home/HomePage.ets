@@ -1,6 +1,5 @@
 import { common } from '@kit.AbilityKit';
 import { router } from '@kit.ArkUI';
-import { AppConfig } from '../../common/constants/AppConfig';
 import { Category, QuestionItem, TodayStudyStats } from '../../common/models/Types';
 import { CategoryGroupUtil } from '../../common/utils/CategoryGroupUtil';
 import { CategoryTagSection } from '../../components/CategoryTagSection';
@@ -56,7 +55,7 @@ export struct HomePage {
             Text('你好，面试选手')
               .fontSize(14)
               .fontColor('#E0E7FF')
-            Text(AppConfig.APP_NAME)
+            Text($r('app.string.app_name'))
               .fontSize(24)
               .fontWeight(FontWeight.Bold)
               .fontColor(Color.White)
