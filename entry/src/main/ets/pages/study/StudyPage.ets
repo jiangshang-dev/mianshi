@@ -12,7 +12,15 @@ export struct StudyPage {
   };
 
   aboutToAppear(): void {
-    this.stats = this.repo.getTodayStudyStats();
+    this.loadStats();
+  }
+
+  private async loadStats(): Promise<void> {
+    try {
+      this.stats = await this.repo.getTodayStudyStats();
+    } catch (_e) {
+      this.stats = { questionCount: 0, minutes: 0, mastered: 0, toReview: 0 };
+    }
   }
 
   build() {

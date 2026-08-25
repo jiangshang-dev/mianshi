@@ -39,6 +39,9 @@ struct QuestionDetailPage {
       const ctx = getContext(this) as common.UIAbilityContext;
       this.question = await this.repo.getDetail(ctx, this.questionId);
       this.favorited = this.question?.favorited ?? false;
+      if (this.question) {
+        this.repo.recordQuestionView(this.question.id);
+      }
     } catch (_e) {
       this.question = null;
     } finally {

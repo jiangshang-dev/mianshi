@@ -169,8 +169,23 @@ export class QuestionRepository {
     return true;
   }
 
-  getTodayStudyStats(): TodayStudyStats {
-    return { questionCount: 23, minutes: 42, mastered: 18, toReview: 5 };
+  async getTodayStudyStats(): Promise<TodayStudyStats> {
+    return await this.remote.getTodayStudy(this.currentUserId());
+  }
+
+  async recordQuestionView(questionId: string): Promise<void> {
+    try {
+      await this.remote.recordQuestionView(this.currentUserId(), questionId);
+    } catch (_e) {
+    }
+  }
+
+  private currentUserId(): string {
+    const id = AppStorage.get('userId') as string;
+    if (id !== undefined && id.length > 0) {
+      return id;
+    }
+    return '';
   }
 
   private articleToListItem(a: ArticleSummary): QuestionItem {

@@ -1,5 +1,5 @@
 import { AppConfig } from '../../common/constants/AppConfig';
-import { Category, QuestionItem, SubCategory, AiStreamSnapshot } from '../../common/models/Types';
+import { Category, QuestionItem, SubCategory, AiStreamSnapshot, TodayStudyStats } from '../../common/models/Types';
 import { HttpClient, SseAbort } from '../../common/network/HttpClient';
 
 interface RemoteQuestionDto {
@@ -73,6 +73,19 @@ interface RemoteHotResponse {
   data?: RemoteQuestionDto[];
 }
 
+interface RemoteTodayStudyDto {
+  questionCount?: number;
+  minutes?: number;
+  mastered?: number;
+  toReview?: number;
+}
+
+interface RemoteTodayStudyResponse {
+  code: number;
+  result?: RemoteTodayStudyDto;
+  data?: RemoteTodayStudyDto;
+}
+
 /** 远程 API 题库；仅当 REMOTE_USE_MOCK_FALLBACK 开启时才降级 Mock */
 export class RemoteApiDataSource {
   async listCategories(): Promise<Category[]> {
@@ -115,6 +128,61 @@ export class RemoteApiDataSource {
       return merged.slice(0, limit);
     }
     return [];
+  }
+
+  async getTodayStudy(userId: string): Promise<TodayStudyStats> {
+    const empty: TodayStudyStats = {
+      questionCount: 0,
+      minutes: 0,
+      mastered: 0,
+      toReview: 0
+    };
+    if (userId.length === 0) {
+      return empty;
+    }
+    const resp = await HttpClient.get('/api/study/today', `userId=${encodeURIComponent(userId)}`);
+    if (resp.ok) {
+      try {
+        const parsed = JSON.parse(resp.body) as RemoteTodayStudyResponse;
+        const d = parsed.result ?? parsed.data;
+        if (d) {
+          return {
+            questionCount: d.questionCount ?? 0,
+            minutes: d.minutes ?? 0,
+            mastered: d.mastered ?? 0,
+            toReview: d.toReview ?? 0
+          };
+        }
+      } catch (_e) {
+      }
+    }
+    return empty;
+  }
+
+  async recordQuestionView(userId: string, questionId: string): Promise<TodayStudyStats | null> {
+    if (userId.length === 0 || questionId.length === 0) {
+      return null;
+    }
+    const resp = await HttpClient.postJson('/api/study/view', JSON.stringify({
+      userId: userId,
+      questionId: questionId
+    }));
+    if (resp.ok) {
+      try {
+        const parsed = JSON.parse(resp.body) as RemoteTodayStudyResponse;
+        const d = parsed.result ?? parsed.data;
+        if (d) {
+          return {
+            questionCount: d.questionCount ?? 0,
+            minutes: d.minutes ?? 0,
+            mastered: d.mastered ?? 0,
+            toReview: d.toReview ?? 0
+          };
+        }
+      } catch (_e) {
+      }
+    }
+    return null;
   }
 
   async listByCategory(categoryId: string): Promise<QuestionItem[]> {

@@ -36,12 +36,13 @@ export struct HomePage {
       this.companies = CategoryGroupUtil.browseItems(all, CategoryGroupUtil.COMPANY);
       this.specials = CategoryGroupUtil.browseItems(all, CategoryGroupUtil.SPECIAL);
       this.hotList = await this.repo.getHot(ctx);
-      this.stats = this.repo.getTodayStudyStats();
+      this.stats = await this.repo.getTodayStudyStats();
     } catch (_e) {
       this.skills = [];
       this.companies = [];
       this.specials = [];
       this.hotList = [];
+      this.stats = { questionCount: 0, minutes: 0, mastered: 0, toReview: 0 };
     } finally {
       this.loading = false;
     }
@@ -114,14 +115,7 @@ export struct HomePage {
                 Text('继续学习 ›')
                   .fontSize(13)
                   .fontColor('#2563EB')
-                  .onClick(() => {
-                    if (this.hotList.length > 0) {
-                      router.pushUrl({
-                        url: 'pages/bank/QuestionDetailPage',
-                        params: { 'id': this.hotList[0].id }
-                      });
-                    }
-                  })
+                  .onClick(() => this.continueStudy())
               }
               .width('100%')
 
@@ -187,17 +181,25 @@ export struct HomePage {
                 .fontWeight(FontWeight.Bold)
                 .width('100%')
 
-              ForEach(this.hotList, (item: QuestionItem) => {
-                QuestionListItem({
-                  item: item,
-                  onItemClick: (q: QuestionItem) => {
-                    router.pushUrl({
-                      url: 'pages/bank/QuestionDetailPage',
-                      params: { 'id': q.id }
-                    });
-                  }
-                })
-              }, (item: QuestionItem) => item.id)
+              if (this.hotList.length === 0) {
+                Text('暂无推荐题目')
+                  .fontSize(13)
+                  .fontColor('#9CA3AF')
+                  .width('100%')
+                  .padding({ top: 8, bottom: 8 })
+              } else {
+                ForEach(this.hotList, (item: QuestionItem) => {
+                  QuestionListItem({
+                    item: item,
+                    onItemClick: (q: QuestionItem) => {
+                      router.pushUrl({
+                        url: 'pages/bank/QuestionDetailPage',
+                        params: { 'id': q.id }
+                      });
+                    }
+                  })
+                }, (item: QuestionItem) => item.id)
+              }
             }
             .width('100%')
             .padding({ bottom: 24 })
@@ -213,6 +215,17 @@ export struct HomePage {
     .width('100%')
     .height('100%')
     .backgroundColor('#F3F4F6')
+  }
+
+  private continueStudy(): void {
+    if (this.hotList.length > 0) {
+      router.pushUrl({
+        url: 'pages/bank/QuestionDetailPage',
+        params: { 'id': this.hotList[0].id }
+      });
+      return;
+    }
+    AppStorage.setOrCreate('mainTabIndex', 1);
   }
 
   private openCategory(cat: Category): void {
