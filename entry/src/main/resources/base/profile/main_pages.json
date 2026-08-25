@@ -7,6 +7,7 @@
     "pages/search/SearchPage",
     "pages/interview/InterviewSessionPage",
     "pages/profile/LoginPage",
-    "pages/profile/SettingsPage"
+    "pages/profile/SettingsPage",
+    "pages/profile/LegalPage"
   ]
 }

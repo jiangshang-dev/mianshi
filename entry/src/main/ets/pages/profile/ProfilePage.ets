@@ -1,6 +1,5 @@
 import { common } from '@kit.AbilityKit';
 import { promptAction, router } from '@kit.ArkUI';
-import { AppConfig } from '../../common/constants/AppConfig';
 import { ResumeProfile } from '../../common/models/ResumeTypes';
 import { AuthRepository } from '../../data/repository/AuthRepository';
 import { ResumeRepository } from '../../data/repository/ResumeRepository';
@@ -38,6 +37,16 @@ export struct ProfilePage {
 
   private goSettings(): void {
     router.pushUrl({ url: 'pages/profile/SettingsPage' });
+  }
+
+  private onProfileCardClick(): void {
+    if (!this.isLoggedIn) {
+      this.goLogin();
+    }
+  }
+
+  private soon(name: string): void {
+    promptAction.showToast({ message: `${name}即将上线` });
   }
 
   private async pickResume(): Promise<void> {
@@ -102,20 +111,18 @@ export struct ProfilePage {
           .alignItems(HorizontalAlign.Start)
           .layoutWeight(1)
 
-          Text('›')
-            .fontSize(18)
-            .fontColor('#D1D5DB')
+          if (!this.isLoggedIn) {
+            Text('›')
+              .fontSize(18)
+              .fontColor('#D1D5DB')
+          }
         }
         .width('100%')
         .padding(12)
         .backgroundColor(Color.White)
         .borderRadius(14)
         .onClick(() => {
-          if (this.isLoggedIn) {
-            this.goSettings();
-          } else {
-            this.goLogin();
-          }
+          this.onProfileCardClick();
         })
 
         Column({ space: 10 }) {
@@ -197,7 +204,7 @@ export struct ProfilePage {
               .onClick(() => {
                 this.pickResume();
               })
-            Text('支持 PDF、Word、TXT、Markdown，后续将同步至服务端解析')
+            Text('支持 PDF、Word、TXT、Markdown')
               .fontSize(11)
               .fontColor('#9CA3AF')
               .width('100%')
@@ -209,13 +216,28 @@ export struct ProfilePage {
         .borderRadius(14)
 
         Column() {
-          this.menuRow('收藏夹', '本地暂存', () => {})
-          this.menuRow('学习记录', '今日 / 连续天数', () => {})
-          this.menuRow('设置', '账号管理与退出登录', () => {
+          this.menuRow('收藏夹', '收藏的题目', () => {
+            this.soon('收藏夹');
+          })
+          this.menuRow('学习记录', '刷题天数与进度', () => {
+            this.soon('学习记录');
+          })
+          this.menuRow('错题本', '回顾答错的题目', () => {
+            this.soon('错题本');
+          })
+          this.menuRow('面试记录', '模拟面试历史', () => {
+            this.soon('面试记录');
+          })
+        }
+        .width('100%')
+        .backgroundColor(Color.White)
+        .borderRadius(14)
+        .padding({ left: 16, right: 16 })
+
+        Column() {
+          this.menuRow('设置', '通知、缓存与退出登录', () => {
             this.goSettings();
           })
-          this.menuRow('数据源', `API: ${AppConfig.REMOTE_API_BASE}`, () => {})
-          this.menuRow('关于', AppConfig.APP_NAME, () => {})
         }
         .width('100%')
         .backgroundColor(Color.White)
