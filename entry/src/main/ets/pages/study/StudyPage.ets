@@ -28,10 +28,10 @@ export struct StudyPage {
   build() {
     Scroll() {
       Column({ space: 10 }) {
-        Text(I18n.t('tab_study', this.lang))
-          .fontSize(20)
-          .fontWeight(FontWeight.Bold)
-          .width('100%')
+        // Text(I18n.t('tab_study', this.lang))
+        //   .fontSize(20)
+        //   .fontWeight(FontWeight.Bold)
+        //   .width('100%')
 
         Column({ space: 10 }) {
           Text(I18n.t('today_progress', this.lang)).fontSize(15).fontWeight(FontWeight.Medium).width('100%')

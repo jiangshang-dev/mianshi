@@ -117,7 +117,7 @@ export class I18n {
     I18n.put('tab_home', '首页', '首頁', 'Home');
     I18n.put('tab_bank', '题库', '題庫', 'Bank');
     I18n.put('tab_interview', 'AI面试', 'AI面試', 'Interview');
-    I18n.put('tab_study', '学习', '學習', 'Study');
+    // I18n.put('tab_study', '学习', '學習', 'Study');
     I18n.put('tab_profile', '我的', '我的', 'Me');
     I18n.put('hello_candidate', '你好，面试选手', '你好，面試選手', 'Hi, candidate');
     I18n.put('search_home', '搜面试题 / 技能 / 公司题库', '搜面試題 / 技能 / 公司題庫', 'Search questions / skills / companies');

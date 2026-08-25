@@ -52,10 +52,10 @@ struct Index {
       }
       .tabBar(this.tabBuilder('tab_interview', 2, '🤖'))
 
-      TabContent() {
-        StudyPage()
-      }
-      .tabBar(this.tabBuilder('tab_study', 3, '📈'))
+      // TabContent() {
+      //   StudyPage()
+      // }
+      // .tabBar(this.tabBuilder('tab_study', 3, '📈'))
 
       TabContent() {
         ProfilePage()
