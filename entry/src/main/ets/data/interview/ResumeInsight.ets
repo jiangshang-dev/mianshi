@@ -53,22 +53,7 @@ export class ResumeInsightBuilder {
   }
 
   private static inferLevel(text: string): string {
-    if (text.indexOf('应届') >= 0 || text.indexOf('实习') >= 0 || text.indexOf('校园') >= 0) {
-      return '应届';
-    }
-    if (text.indexOf('5 年') >= 0 || text.indexOf('五年') >= 0 || text.indexOf('6年') >= 0 ||
-      text.indexOf('十年') >= 0 || text.indexOf('8年') >= 0) {
-      return '5 年以上';
-    }
-    if (text.indexOf('3～5') >= 0 || text.indexOf('3-5') >= 0 || text.indexOf('四年') >= 0 ||
-      text.indexOf('4年') >= 0) {
-      return '3～5 年';
-    }
-    if (text.indexOf('1～3') >= 0 || text.indexOf('1-3') >= 0 || text.indexOf('两年') >= 0 ||
-      text.indexOf('2年') >= 0 || text.indexOf('三年') >= 0 || text.indexOf('3年') >= 0) {
-      return '1～3 年';
-    }
-    return '1～3 年';
+    return InterviewRoleCatalog.matchLevel(text);
   }
 
   static bodyOf(profile: ResumeProfile | null): string {

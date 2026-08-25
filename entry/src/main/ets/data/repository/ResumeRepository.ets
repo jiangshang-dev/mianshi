@@ -72,6 +72,11 @@ export class ResumeRepository {
     if (this.picking && this.cached) {
       return this.cached;
     }
+    if (this.currentUserId().length === 0) {
+      this.cached = null;
+      this.publish(null);
+      return null;
+    }
     const local = await this.loadLocal(context);
     const remote = await this.fetchRemote();
     if (this.cached && this.cached.filePath.length > 0 && this.cached.syncStatus === 'local') {
@@ -269,6 +274,12 @@ export class ResumeRepository {
   }
 
   async clear(context: common.UIAbilityContext): Promise<void> {
+    await this.clearLocalSession(context);
+    this.deleteRemote();
+  }
+
+  /** 退出登录只清本机，不删云端简历 */
+  async clearLocalSession(context: common.UIAbilityContext): Promise<void> {
     if (this.cached && this.cached.filePath.length > 0) {
       try {
         fileIo.accessSync(this.cached.filePath);
@@ -280,7 +291,6 @@ export class ResumeRepository {
     await this.clearMeta(context);
     this.cached = null;
     this.publish(null);
-    this.deleteRemote();
   }
 
   formatFileSize(bytes: number): string {

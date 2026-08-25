@@ -4,6 +4,7 @@ import { ResumeProfile } from '../../common/models/ResumeTypes';
 import { ResumeInsight, ResumeInsightBuilder } from '../../data/interview/ResumeInsight';
 import { InterviewRoleCatalog } from '../../data/interview/InterviewRoleCatalog';
 import { ResumeRepository } from '../../data/repository/ResumeRepository';
+import { InterviewOptionRepository } from '../../data/repository/InterviewOptionRepository';
 
 interface SessionNavParams {
   role: string;
@@ -13,21 +14,40 @@ interface SessionNavParams {
 
 @Component
 export struct InterviewPage {
-  private roles: string[] = InterviewRoleCatalog.names();
-  private levels: string[] = ['应届', '1～3 年', '3～5 年', '5 年以上'];
-  private difficulties: string[] = ['简单', '中等', '困难', '大厂'];
-  @State private selectedRole: string = 'Java 后端';
-  @State private selectedLevel: string = '1～3 年';
-  @State private selectedDiff: string = '中等';
+  @State private roles: string[] = InterviewRoleCatalog.names();
+  @State private levels: string[] = InterviewRoleCatalog.levelNames();
+  @State private difficulties: string[] = InterviewRoleCatalog.difficulties;
+  @State private selectedRole: string = InterviewRoleCatalog.defaultRole();
+  @State private selectedLevel: string = InterviewRoleCatalog.defaultLevel();
+  @State private selectedDiff: string = InterviewRoleCatalog.defaultDifficulty;
   @State private resume: ResumeProfile | null = null;
   @State private recommended: boolean = false;
-  @State private interviewerTitle: string = InterviewRoleCatalog.interviewerTitle('Java 后端');
+  @State private interviewerTitle: string = InterviewRoleCatalog.interviewerTitle(InterviewRoleCatalog.defaultRole());
   @State private modulesText: string = '岗位核心技能、系统设计、简历项目深挖';
 
   private repo: ResumeRepository = ResumeRepository.getInstance();
+  private optionRepo: InterviewOptionRepository = InterviewOptionRepository.getInstance();
 
   aboutToAppear(): void {
-    this.loadResume();
+    this.bootstrap();
+  }
+
+  private async bootstrap(): Promise<void> {
+    const opts = await this.optionRepo.load();
+    this.roles = opts.roles;
+    this.levels = opts.levels;
+    this.difficulties = opts.difficulties;
+    await this.loadResume();
+    if (this.roles.indexOf(this.selectedRole) < 0) {
+      this.selectedRole = opts.defaultRole;
+    }
+    if (this.levels.indexOf(this.selectedLevel) < 0) {
+      this.selectedLevel = opts.defaultLevel;
+    }
+    if (this.difficulties.indexOf(this.selectedDiff) < 0) {
+      this.selectedDiff = opts.defaultDifficulty;
+    }
+    this.refreshTrack();
   }
 
   private async loadResume(): Promise<void> {
@@ -39,8 +59,12 @@ export struct InterviewPage {
   private applyResumeInsight(): void {
     const insight: ResumeInsight = ResumeInsightBuilder.from(this.resume);
     if (this.resume) {
-      this.selectedRole = insight.role;
-      this.selectedLevel = insight.level;
+      if (this.roles.indexOf(insight.role) >= 0) {
+        this.selectedRole = insight.role;
+      }
+      if (this.levels.indexOf(insight.level) >= 0) {
+        this.selectedLevel = insight.level;
+      }
       this.recommended = true;
     }
     this.refreshTrack();
@@ -212,7 +236,7 @@ export struct InterviewPage {
     .scrollBar(BarState.Off)
     .align(Alignment.Top)
     .onAppear(() => {
-      this.loadResume();
+      this.bootstrap();
     })
   }
 }

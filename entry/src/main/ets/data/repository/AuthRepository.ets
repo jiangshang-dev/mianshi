@@ -5,6 +5,7 @@ import { hilog } from '@kit.PerformanceAnalysisKit';
 import { AppConfig } from '../../common/constants/AppConfig';
 import { LoginOutcome, UserProfile } from '../../common/models/UserTypes';
 import { HttpClient } from '../../common/network/HttpClient';
+import { ResumeRepository } from './ResumeRepository';
 
 const DOMAIN = 0xC0DE;
 const PREF_NAME = 'user_auth';
@@ -89,6 +90,7 @@ export class AuthRepository {
   async load(context: common.UIAbilityContext): Promise<UserProfile | null> {
     if (this.cached) {
       this.syncAppStorage();
+      await this.ensureActiveSession(context);
       return this.cached;
     }
     try {
@@ -110,6 +112,7 @@ export class AuthRepository {
         this.cached.userId = '';
       }
       this.syncAppStorage();
+      await this.ensureActiveSession(context);
       return this.cached;
     } catch (err) {
       hilog.warn(DOMAIN, 'AuthRepository', 'load failed %{public}s', JSON.stringify(err));
@@ -176,6 +179,7 @@ export class AuthRepository {
       await this.persist(context, profile);
       this.cached = profile;
       this.syncAppStorage();
+      await ResumeRepository.getInstance().load(context as common.UIAbilityContext);
       return { ok: true, profile, message: '' };
     } catch (err) {
       hilog.warn(DOMAIN, 'AuthRepository', 'loginWithHuawei failed %{public}s', JSON.stringify(err));
@@ -185,6 +189,7 @@ export class AuthRepository {
 
   async logout(context: common.UIAbilityContext): Promise<void> {
     await this.clearLocal(context);
+    await ResumeRepository.getInstance().clearLocalSession(context);
   }
 
   async clearLocal(context: common.UIAbilityContext): Promise<void> {
@@ -193,6 +198,22 @@ export class AuthRepository {
     await pref.flush();
     this.cached = null;
     this.syncAppStorage();
+  }
+
+  private async ensureActiveSession(context: common.UIAbilityContext): Promise<void> {
+    if (this.cached === null || this.cached.token.length === 0) {
+      return;
+    }
+    const resp = await HttpClient.get('/user/auth/info');
+    if (resp.code === -1) {
+      return;
+    }
+    const parsed = this.parseLoginBody(resp.body);
+    const message = parsed.message ?? '';
+    if (parsed.success === false && message.indexOf('禁用') >= 0) {
+      hilog.warn(DOMAIN, 'AuthRepository', 'account disabled, clear local session');
+      await this.logout(context);
+    }
   }
 
   private async requestHuaweiAccount(context: common.Context): Promise<HuaweiAuthAttempt> {

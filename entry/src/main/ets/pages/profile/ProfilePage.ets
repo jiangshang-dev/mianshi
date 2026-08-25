@@ -6,7 +6,9 @@ import { ResumeRepository } from '../../data/repository/ResumeRepository';
 
 @Component
 export struct ProfilePage {
-  @StorageLink('isLoggedIn') isLoggedIn: boolean = false;
+  @StorageLink('isLoggedIn')
+  @Watch('onLoginStateChange')
+  isLoggedIn: boolean = false;
   @StorageLink('userDisplayName') displayName: string = '';
   @StorageLink('userAvatarUrl') avatarUrl: string = '';
   @State private resume: ResumeProfile | null = null;
@@ -17,6 +19,10 @@ export struct ProfilePage {
 
   aboutToAppear(): void {
     this.refreshUser();
+    this.loadResume();
+  }
+
+  onLoginStateChange(): void {
     this.loadResume();
   }
 
@@ -61,6 +67,10 @@ export struct ProfilePage {
   }
 
   private async pickResume(): Promise<void> {
+    if (!this.isLoggedIn) {
+      this.goLogin();
+      return;
+    }
     if (this.uploading) {
       return;
     }
@@ -154,7 +164,7 @@ export struct ProfilePage {
               Text(this.resume ?
                 (this.resume.fileUrl.length > 0 ?
                   '已上传到云端，模拟面试会用这一份' : '已作为全局简历，模拟面试会用这一份') :
-                '上传简历，AI 面试更精准')
+                (this.isLoggedIn ? '上传简历，AI 面试更精准' : '登录后自动同步云端简历'))
                 .fontSize(12)
                 .fontColor('#9CA3AF')
             }
@@ -218,7 +228,8 @@ export struct ProfilePage {
               .width('100%')
             }
           } else {
-            Button(this.uploading ? '选择文件中…' : '上传简历（PDF / Word / TXT）')
+            Button(this.uploading ? '选择文件中…' :
+              (this.isLoggedIn ? '上传简历（PDF / Word / TXT）' : '登录后上传简历'))
               .width('100%')
               .height(42)
               .fontSize(14)
@@ -226,7 +237,7 @@ export struct ProfilePage {
               .onClick(() => {
                 this.pickResume();
               })
-            Text('支持 PDF、Word、TXT、Markdown')
+            Text(this.isLoggedIn ? '支持 PDF、Word、TXT、Markdown' : '简历跟账号走，退出后本机不保留')
               .fontSize(11)
               .fontColor('#9CA3AF')
               .width('100%')
