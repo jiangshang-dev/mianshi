@@ -4,6 +4,8 @@
     "pages/bank/QuestionListPage",
     "pages/bank/QuestionDetailPage",
     "pages/search/SearchPage",
-    "pages/interview/InterviewSessionPage"
+    "pages/interview/InterviewSessionPage",
+    "pages/profile/LoginPage",
+    "pages/profile/SettingsPage"
   ]
 }

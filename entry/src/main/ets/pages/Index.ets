@@ -1,13 +1,20 @@
+import { common } from '@kit.AbilityKit';
 import { HomePage } from './home/HomePage';
 import { BankPage } from './bank/BankPage';
 import { InterviewPage } from './interview/InterviewPage';
 import { StudyPage } from './study/StudyPage';
 import { ProfilePage } from './profile/ProfilePage';
+import { AuthRepository } from '../data/repository/AuthRepository';
 
 @Entry
 @Component
 struct Index {
   @State private currentIndex: number = 0;
+
+  aboutToAppear(): void {
+    const ctx = getContext(this) as common.UIAbilityContext;
+    AuthRepository.getInstance().load(ctx);
+  }
 
   @Builder
   tabBuilder(title: string, targetIndex: number, icon: string) {

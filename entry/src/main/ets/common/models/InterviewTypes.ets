@@ -3,6 +3,9 @@ export interface InterviewConfig {
   role: string;
   level: string;
   difficulty: string;
+  resumeId: string;
+  resumePreview: string;
+  resumeFileName: string;
 }
 
 /** 聊天消息 */

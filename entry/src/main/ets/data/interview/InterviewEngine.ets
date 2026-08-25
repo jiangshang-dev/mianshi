@@ -32,9 +32,19 @@ export class InterviewEngine {
   }
 
   getOpening(): InterviewMessage {
+    let resumePart = '';
+    if (this.config.resumePreview.length > 0) {
+      if (this.config.resumeFileName.length > 0) {
+        resumePart = `\n\n我已阅读你的简历「${this.config.resumeFileName}」，接下来会结合你的项目与技术背景提问。`;
+      } else {
+        resumePart = '\n\n我已阅读你的简历，接下来会结合你的项目与技术背景提问。';
+      }
+    } else {
+      resumePart = '\n\n（提示：在「我的」页上传简历后，AI 可更精准地针对性提问。）';
+    }
     return this.makeMsg('interviewer',
       `你好，我是今天的 AI 面试官。我们面试的是「${this.config.role}」岗位，` +
-        `你的经验是「${this.config.level}」，难度「${this.config.difficulty}」。\n\n` +
+        `你的经验是「${this.config.level}」，难度「${this.config.difficulty}」。${resumePart}\n\n` +
         '请先做一个 1 分钟左右的自我介绍，可以从技术栈、项目经历和优势说起。');
   }
 
@@ -236,9 +246,61 @@ export class InterviewEngine {
       });
     }
 
-    const count = this.config.difficulty === '大厂' ? 5 :
+    const resumeQuestions = this.buildResumeQuestions();
+    const genericCount = this.config.difficulty === '大厂' ? 5 :
       this.config.difficulty === '困难' ? 4 : 3;
-    return base.slice(0, count);
+    const merged: QuestionBankItem[] = [];
+    let added = 0;
+    for (let i = 0; i < base.length && added < genericCount; i++) {
+      merged.push(base[i]);
+      added++;
+    }
+    resumeQuestions.forEach((q: QuestionBankItem) => merged.push(q));
+    return merged;
+  }
+
+  private buildResumeQuestions(): QuestionBankItem[] {
+    const preview = this.config.resumePreview;
+    if (preview.length === 0) {
+      return [];
+    }
+    const items: QuestionBankItem[] = [];
+    const lower = preview.toLowerCase();
+
+    if (preview.includes('项目') || lower.includes('project')) {
+      items.push({
+        question: '请结合你简历中的核心项目，介绍你负责的部分、技术难点以及最终成果。',
+        topic: '简历 · 项目经历',
+        keywords: ['负责', '难点', '优化', '指标', '架构', '性能'],
+        followUp: '如果让你重新设计这个项目，你会做哪些改进？'
+      });
+    }
+    if (preview.includes('Spring') || preview.includes('Java') || lower.includes('backend')) {
+      items.push({
+        question: '简历里提到了 Java / Spring 相关经验，请说说你在实际项目中最有代表性的一个技术方案。',
+        topic: '简历 · 技术栈',
+        keywords: ['Spring', 'Boot', '微服务', '事务', '并发', '设计'],
+        followUp: '这个方案遇到过什么线上问题？你是怎么排查的？'
+      });
+    }
+    if (preview.includes('Redis') || preview.includes('MySQL') || preview.includes('数据库')) {
+      items.push({
+        question: '结合简历中的数据库或缓存使用场景，说说你是如何保证数据一致性的？',
+        topic: '简历 · 数据层',
+        keywords: ['缓存', '一致性', '事务', '索引', '慢查询'],
+        followUp: '高并发下缓存与数据库不一致时，你的兜底策略是什么？'
+      });
+    }
+
+    if (items.length === 0) {
+      items.push({
+        question: '根据你的简历背景，请挑一段最有代表性的工作经历深入展开。',
+        topic: '简历 · 综合',
+        keywords: ['经历', '成果', '挑战', '团队', '负责'],
+        followUp: '这段经历中你最大的收获是什么？'
+      });
+    }
+    return items.slice(0, 2);
   }
 
   private makeMsg(role: 'interviewer' | 'candidate' | 'system', content: string): InterviewMessage {

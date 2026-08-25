@@ -1,69 +1,239 @@
+import { common } from '@kit.AbilityKit';
+import { promptAction, router } from '@kit.ArkUI';
 import { AppConfig } from '../../common/constants/AppConfig';
+import { ResumeProfile } from '../../common/models/ResumeTypes';
+import { AuthRepository } from '../../data/repository/AuthRepository';
+import { ResumeRepository } from '../../data/repository/ResumeRepository';
 
 @Component
 export struct ProfilePage {
+  @StorageLink('isLoggedIn') isLoggedIn: boolean = false;
+  @StorageLink('userDisplayName') displayName: string = '';
+  @StorageLink('userAvatarUrl') avatarUrl: string = '';
+  @State private resume: ResumeProfile | null = null;
+  @State private uploading: boolean = false;
+
+  private repo: ResumeRepository = ResumeRepository.getInstance();
+  private auth: AuthRepository = AuthRepository.getInstance();
+
+  aboutToAppear(): void {
+    this.refreshUser();
+    this.loadResume();
+  }
+
+  private async refreshUser(): Promise<void> {
+    const ctx = getContext(this) as common.UIAbilityContext;
+    await this.auth.load(ctx);
+    this.auth.syncAppStorage();
+  }
+
+  private async loadResume(): Promise<void> {
+    const ctx = getContext(this) as common.UIAbilityContext;
+    this.resume = await this.repo.load(ctx);
+  }
+
+  private goLogin(): void {
+    router.pushUrl({ url: 'pages/profile/LoginPage' });
+  }
+
+  private goSettings(): void {
+    router.pushUrl({ url: 'pages/profile/SettingsPage' });
+  }
+
+  private async pickResume(): Promise<void> {
+    if (this.uploading) {
+      return;
+    }
+    this.uploading = true;
+    const ctx = getContext(this) as common.UIAbilityContext;
+    const profile = await this.repo.pickAndSave(ctx);
+    this.uploading = false;
+    if (profile) {
+      this.resume = profile;
+      promptAction.showToast({ message: '简历已保存，可用于模拟面试' });
+    }
+  }
+
+  private async removeResume(): Promise<void> {
+    const ctx = getContext(this) as common.UIAbilityContext;
+    await this.repo.clear(ctx);
+    this.resume = null;
+    promptAction.showToast({ message: '简历已删除' });
+  }
+
   build() {
-    Column() {
-      Text('我的')
-        .fontSize(22)
-        .fontWeight(FontWeight.Bold)
-        .width('100%')
-        .padding({ left: 20, right: 20, top: 16, bottom: 8 })
+    Scroll() {
+      Column({ space: 10 }) {
+        Text('我的')
+          .fontSize(20)
+          .fontWeight(FontWeight.Bold)
+          .width('100%')
 
-      Scroll() {
-        Column({ space: 14 }) {
-          Row({ space: 12 }) {
+        Row({ space: 12 }) {
+          if (this.isLoggedIn && this.avatarUrl.length > 0) {
+            Image(this.avatarUrl)
+              .width(48)
+              .height(48)
+              .borderRadius(24)
+              .objectFit(ImageFit.Cover)
+          } else {
             Column() {
-              Text('面')
-                .fontSize(22)
-                .fontColor(Color.White)
+              Text(this.isLoggedIn ? '华' : '👤')
+                .fontSize(this.isLoggedIn ? 18 : 22)
+                .fontColor(this.isLoggedIn ? Color.White : '#9CA3AF')
             }
-            .width(56)
-            .height(56)
-            .borderRadius(28)
+            .width(48)
+            .height(48)
+            .borderRadius(24)
             .justifyContent(FlexAlign.Center)
-            .backgroundColor('#2563EB')
+            .backgroundColor(this.isLoggedIn ? '#CF0A2C' : '#E5E7EB')
+          }
 
-            Column({ space: 4 }) {
-              Text('面试选手')
-                .fontSize(18)
-                .fontWeight(FontWeight.Bold)
-              Text('本地 MD + 远程 API 双数据源')
+          Column({ space: 2 }) {
+            Text(this.isLoggedIn ?
+              (this.displayName.length > 0 ? this.displayName : '华为用户') : '去登录')
+              .fontSize(17)
+              .fontWeight(FontWeight.Bold)
+              .fontColor(this.isLoggedIn ? '#111827' : '#2563EB')
+            Text(this.isLoggedIn ? '华为账号 · 已登录' : '点击登录，同步学习数据')
+              .fontSize(12)
+              .fontColor('#9CA3AF')
+          }
+          .alignItems(HorizontalAlign.Start)
+          .layoutWeight(1)
+
+          Text('›')
+            .fontSize(18)
+            .fontColor('#D1D5DB')
+        }
+        .width('100%')
+        .padding(12)
+        .backgroundColor(Color.White)
+        .borderRadius(14)
+        .onClick(() => {
+          if (this.isLoggedIn) {
+            this.goSettings();
+          } else {
+            this.goLogin();
+          }
+        })
+
+        Column({ space: 10 }) {
+          Row() {
+            Column({ space: 2 }) {
+              Text('我的简历')
+                .fontSize(15)
+                .fontWeight(FontWeight.Medium)
+                .fontColor('#111827')
+              Text(this.resume ? '已上传，模拟面试将结合简历提问' : '上传简历，AI 面试更精准')
                 .fontSize(12)
-                .fontColor('#6B7280')
+                .fontColor('#9CA3AF')
             }
             .alignItems(HorizontalAlign.Start)
             .layoutWeight(1)
           }
           .width('100%')
-          .padding(16)
-          .backgroundColor(Color.White)
-          .borderRadius(14)
 
-          Column() {
-            this.menuRow('收藏夹', '本地暂存')
-            this.menuRow('学习记录', '今日 / 连续天数')
-            this.menuRow('数据源', `API: ${AppConfig.REMOTE_API_BASE}`)
-            this.menuRow('关于', AppConfig.APP_NAME)
+          if (this.resume) {
+            Column({ space: 6 }) {
+              Row({ space: 8 }) {
+                Text('📄')
+                  .fontSize(18)
+                Column({ space: 2 }) {
+                  Text(this.resume.fileName)
+                    .fontSize(14)
+                    .fontColor('#111827')
+                    .maxLines(1)
+                    .textOverflow({ overflow: TextOverflow.Ellipsis })
+                  Text(`${this.repo.formatFileSize(this.resume.fileSize)} · ` +
+                    `${this.repo.formatUploadTime(this.resume.uploadedAt)}`)
+                    .fontSize(12)
+                    .fontColor('#9CA3AF')
+                }
+                .alignItems(HorizontalAlign.Start)
+                .layoutWeight(1)
+              }
+              .width('100%')
+
+              Text(this.resume.textPreview)
+                .fontSize(12)
+                .fontColor('#6B7280')
+                .lineHeight(18)
+                .maxLines(3)
+                .textOverflow({ overflow: TextOverflow.Ellipsis })
+                .width('100%')
+                .padding(10)
+                .backgroundColor('#F9FAFB')
+                .borderRadius(8)
+
+              Row({ space: 8 }) {
+                Button(this.uploading ? '上传中…' : '更换简历')
+                  .layoutWeight(1)
+                  .height(38)
+                  .fontSize(14)
+                  .backgroundColor('#EFF6FF')
+                  .fontColor('#2563EB')
+                  .onClick(() => {
+                    this.pickResume();
+                  })
+                Button('删除')
+                  .layoutWeight(1)
+                  .height(38)
+                  .fontSize(14)
+                  .backgroundColor('#FEF2F2')
+                  .fontColor('#DC2626')
+                  .onClick(() => {
+                    this.removeResume();
+                  })
+              }
+              .width('100%')
+            }
+          } else {
+            Button(this.uploading ? '选择文件中…' : '上传简历（PDF / Word / TXT）')
+              .width('100%')
+              .height(42)
+              .fontSize(14)
+              .backgroundColor('#2563EB')
+              .onClick(() => {
+                this.pickResume();
+              })
+            Text('支持 PDF、Word、TXT、Markdown，后续将同步至服务端解析')
+              .fontSize(11)
+              .fontColor('#9CA3AF')
+              .width('100%')
           }
-          .width('100%')
-          .backgroundColor(Color.White)
-          .borderRadius(14)
-          .padding({ left: 16, right: 16 })
         }
-        .padding({ left: 16, right: 16, bottom: 24 })
         .width('100%')
+        .padding(14)
+        .backgroundColor(Color.White)
+        .borderRadius(14)
+
+        Column() {
+          this.menuRow('收藏夹', '本地暂存', () => {})
+          this.menuRow('学习记录', '今日 / 连续天数', () => {})
+          this.menuRow('设置', '账号管理与退出登录', () => {
+            this.goSettings();
+          })
+          this.menuRow('数据源', `API: ${AppConfig.REMOTE_API_BASE}`, () => {})
+          this.menuRow('关于', AppConfig.APP_NAME, () => {})
+        }
+        .width('100%')
+        .backgroundColor(Color.White)
+        .borderRadius(14)
+        .padding({ left: 16, right: 16 })
       }
-      .layoutWeight(1)
-      .scrollBar(BarState.Off)
+      .padding({ left: 16, right: 16, top: 8, bottom: 24 })
+      .width('100%')
     }
     .width('100%')
     .height('100%')
     .backgroundColor('#F3F4F6')
+    .scrollBar(BarState.Off)
+    .align(Alignment.Top)
   }
 
   @Builder
-  menuRow(title: string, subtitle: string) {
+  menuRow(title: string, subtitle: string, onTap: () => void) {
     Row() {
       Column({ space: 2 }) {
         Text(title).fontSize(15).fontColor('#111827')
@@ -77,5 +247,8 @@ export struct ProfilePage {
     .width('100%')
     .padding({ top: 14, bottom: 14 })
     .border({ width: { bottom: 0.5 }, color: '#F3F4F6' })
+    .onClick(() => {
+      onTap();
+    })
   }
 }

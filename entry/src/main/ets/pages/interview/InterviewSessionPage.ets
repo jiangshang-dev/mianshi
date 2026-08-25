@@ -13,6 +13,9 @@ interface SessionRouteParams {
   role?: string;
   level?: string;
   difficulty?: string;
+  resumeId?: string;
+  resumePreview?: string;
+  resumeFileName?: string;
 }
 
 @Entry
@@ -43,9 +46,13 @@ struct InterviewSessionPage {
     const config: InterviewConfig = {
       role: params.role ?? 'Java 后端',
       level: params.level ?? '1～3 年',
-      difficulty: params.difficulty ?? '中等'
+      difficulty: params.difficulty ?? '中等',
+      resumeId: params.resumeId ?? '',
+      resumePreview: params.resumePreview ?? '',
+      resumeFileName: params.resumeFileName ?? ''
     };
-    this.sessionTitle = `${config.role} · ${config.level}`;
+    this.sessionTitle = params.resumeFileName && params.resumeFileName.length > 0 ?
+      `${config.role} · 已关联简历` : `${config.role} · ${config.level}`;
     this.engine = new InterviewEngine(config);
     const opening = this.engine.getOpening();
     this.messages = [opening];

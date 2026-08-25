@@ -6,6 +6,9 @@ const DOMAIN = 0x0000;
 
 export default class EntryAbility extends UIAbility {
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
+    AppStorage.setOrCreate('isLoggedIn', false);
+    AppStorage.setOrCreate('userDisplayName', '');
+    AppStorage.setOrCreate('userAvatarUrl', '');
     try {
       this.context.getApplicationContext().setColorMode(ConfigurationConstant.ColorMode.COLOR_MODE_NOT_SET);
     } catch (err) {

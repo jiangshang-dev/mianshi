@@ -41,37 +41,38 @@ export struct BankPage {
   }
 
   build() {
-    Column() {
-      Text('题库')
-        .fontSize(22)
-        .fontWeight(FontWeight.Bold)
-        .fontColor('#111827')
-        .width('100%')
-        .padding({ left: 20, right: 20, top: 16, bottom: 8 })
-
-      if (this.loading) {
-        Column() {
-          LoadingProgress().width(36).height(36)
-        }.layoutWeight(1).justifyContent(FlexAlign.Center).width('100%')
-      } else {
-        Scroll() {
-          Column({ space: 18 }) {
-            this.sectionTitle('本地 Markdown 题库', '来自 rawfile/docs，离线可用')
-            this.categoryList(this.localCategories)
-
-            this.sectionTitle('远程 API 题库', '后端接口 / Mock 降级')
-            this.categoryList(this.remoteCategories)
-          }
-          .padding({ left: 16, right: 16, bottom: 24 })
-          .width('100%')
-        }
-        .layoutWeight(1)
-        .scrollBar(BarState.Off)
+    if (this.loading) {
+      Column() {
+        LoadingProgress().width(36).height(36)
       }
+      .width('100%')
+      .height('100%')
+      .justifyContent(FlexAlign.Center)
+      .backgroundColor('#F3F4F6')
+    } else {
+      Scroll() {
+        Column({ space: 10 }) {
+          Text('题库')
+            .fontSize(20)
+            .fontWeight(FontWeight.Bold)
+            .fontColor('#111827')
+            .width('100%')
+
+          this.sectionTitle('本地 Markdown 题库', '来自 rawfile/docs，离线可用')
+          this.categoryList(this.localCategories)
+
+          this.sectionTitle('远程 API 题库', '后端接口 / Mock 降级')
+          this.categoryList(this.remoteCategories)
+        }
+        .padding({ left: 16, right: 16, top: 8, bottom: 24 })
+        .width('100%')
+      }
+      .width('100%')
+      .height('100%')
+      .backgroundColor('#F3F4F6')
+      .scrollBar(BarState.Off)
+      .align(Alignment.Top)
     }
-    .width('100%')
-    .height('100%')
-    .backgroundColor('#F3F4F6')
   }
 
   @Builder

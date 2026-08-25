@@ -1,9 +1,15 @@
+import { common } from '@kit.AbilityKit';
 import { router } from '@kit.ArkUI';
+import { ResumeProfile } from '../../common/models/ResumeTypes';
+import { ResumeRepository } from '../../data/repository/ResumeRepository';
 
 interface SessionNavParams {
   role: string;
   level: string;
   difficulty: string;
+  resumeId: string;
+  resumePreview: string;
+  resumeFileName: string;
 }
 
 @Component
@@ -14,18 +20,28 @@ export struct InterviewPage {
   @State private selectedRole: string = 'Java 后端';
   @State private selectedLevel: string = '1～3 年';
   @State private selectedDiff: string = '中等';
+  @State private resume: ResumeProfile | null = null;
+
+  private repo: ResumeRepository = ResumeRepository.getInstance();
+
+  aboutToAppear(): void {
+    this.loadResume();
+  }
+
+  private async loadResume(): Promise<void> {
+    const ctx = getContext(this) as common.UIAbilityContext;
+    this.resume = await this.repo.load(ctx);
+  }
 
   build() {
-    Column() {
-      Text('AI 面试')
-        .fontSize(22)
-        .fontWeight(FontWeight.Bold)
-        .width('100%')
-        .padding({ left: 20, right: 20, top: 16, bottom: 8 })
+    Scroll() {
+      Column({ space: 10 }) {
+        Text('AI 面试')
+          .fontSize(20)
+          .fontWeight(FontWeight.Bold)
+          .width('100%')
 
-      Scroll() {
-        Column({ space: 16 }) {
-          Column({ space: 8 }) {
+        Column({ space: 8 }) {
             Text('选择岗位').fontSize(15).fontWeight(FontWeight.Medium).width('100%')
             Flex({ wrap: FlexWrap.Wrap }) {
               ForEach(this.roles, (r: string) => {
@@ -100,6 +116,17 @@ export struct InterviewPage {
               .fontSize(13)
               .fontColor('#6B7280')
               .width('100%')
+            if (this.resume) {
+              Text(`已关联简历：${this.resume.fileName}`)
+                .fontSize(13)
+                .fontColor('#2563EB')
+                .width('100%')
+            } else {
+              Text('未上传简历，建议在「我的」页上传以获得更精准的面试提问')
+                .fontSize(13)
+                .fontColor('#F59E0B')
+                .width('100%')
+            }
             Text('支持文字聊天与 AI 语音对话，自动追问并生成面试报告。')
               .fontSize(13)
               .fontColor('#6B7280')
@@ -109,11 +136,16 @@ export struct InterviewPage {
               .width('100%')
               .height(44)
               .backgroundColor('#2563EB')
-              .onClick(() => {
+              .onClick(async () => {
+                const ctx = getContext(this) as common.UIAbilityContext;
+                this.resume = await this.repo.load(ctx);
                 const navParams: SessionNavParams = {
                   role: this.selectedRole,
                   level: this.selectedLevel,
-                  difficulty: this.selectedDiff
+                  difficulty: this.selectedDiff,
+                  resumeId: this.resume?.resumeId ?? '',
+                  resumePreview: this.resume?.textPreview ?? '',
+                  resumeFileName: this.resume?.fileName ?? ''
                 };
                 router.pushUrl({
                   url: 'pages/interview/InterviewSessionPage',
@@ -126,14 +158,13 @@ export struct InterviewPage {
           .backgroundColor(Color.White)
           .borderRadius(14)
         }
-        .padding({ left: 16, right: 16, bottom: 24 })
+        .padding({ left: 16, right: 16, top: 8, bottom: 24 })
         .width('100%')
       }
-      .layoutWeight(1)
-      .scrollBar(BarState.Off)
-    }
     .width('100%')
     .height('100%')
     .backgroundColor('#F3F4F6')
+    .scrollBar(BarState.Off)
+    .align(Alignment.Top)
   }
 }
