@@ -290,9 +290,9 @@ export struct ProfilePage {
             this.openNeedLogin(I18n.t('iv_logs', this.lang), 'pages/profile/AiHistoryPage', 'interview',
               I18n.t('iv_logs', this.lang));
           })
-          this.menuRow('study_log', 'study_log_sub', () => {
-            this.soon(I18n.t('study_log', this.lang));
-          })
+          // this.menuRow('study_log', 'study_log_sub', () => {
+          //   this.soon(I18n.t('study_log', this.lang));
+          // })
         }
         .width('100%')
         .backgroundColor(Color.White)

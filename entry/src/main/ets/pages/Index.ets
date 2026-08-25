@@ -2,7 +2,6 @@ import { common } from '@kit.AbilityKit';
 import { HomePage } from './home/HomePage';
 import { BankPage } from './bank/BankPage';
 import { InterviewPage } from './interview/InterviewPage';
-import { StudyPage } from './study/StudyPage';
 import { ProfilePage } from './profile/ProfilePage';
 import { AuthRepository } from '../data/repository/AuthRepository';
 import { I18n } from '../common/i18n/I18n';
@@ -60,7 +59,7 @@ struct Index {
       TabContent() {
         ProfilePage()
       }
-      .tabBar(this.tabBuilder('tab_profile', 4, '👤'))
+      .tabBar(this.tabBuilder('tab_profile', 3, '👤'))
     }
     .width('100%')
     .height('100%')
