@@ -17,12 +17,14 @@ interface RemoteQuestionDto {
 
 interface RemoteListResponse {
   code: number;
-  data: RemoteQuestionDto[];
+  result?: RemoteQuestionDto[];
+  data?: RemoteQuestionDto[];
 }
 
 interface RemoteDetailResponse {
   code: number;
-  data: RemoteQuestionDto;
+  result?: RemoteQuestionDto;
+  data?: RemoteQuestionDto;
 }
 
 interface AiChatRequest {
@@ -36,6 +38,7 @@ interface AiChatData {
 }
 
 interface AiChatResponse {
+  result?: AiChatData;
   data?: AiChatData;
 }
 
@@ -60,12 +63,14 @@ interface RemoteCategoryDto {
 
 interface RemoteCategoryListResponse {
   code: number;
-  data: RemoteCategoryDto[];
+  result?: RemoteCategoryDto[];
+  data?: RemoteCategoryDto[];
 }
 
 interface RemoteHotResponse {
   code: number;
-  data: RemoteQuestionDto[];
+  result?: RemoteQuestionDto[];
+  data?: RemoteQuestionDto[];
 }
 
 /** 远程 API 题库；失败时按配置降级 Mock */
@@ -75,8 +80,9 @@ export class RemoteApiDataSource {
     if (resp.ok) {
       try {
         const parsed = JSON.parse(resp.body) as RemoteCategoryListResponse;
-        if (parsed.data && parsed.data.length > 0) {
-          return parsed.data.map((d: RemoteCategoryDto) => this.toCategory(d));
+        const list = parsed.result ?? parsed.data;
+        if (list && list.length > 0) {
+          return list.map((d: RemoteCategoryDto) => this.toCategory(d));
         }
       } catch (_e) {
       }
@@ -93,8 +99,9 @@ export class RemoteApiDataSource {
     if (resp.ok) {
       try {
         const parsed = JSON.parse(resp.body) as RemoteHotResponse;
-        if (parsed.data && parsed.data.length > 0) {
-          return parsed.data.map((d: RemoteQuestionDto) => this.toQuestion(d));
+        const list = parsed.result ?? parsed.data;
+        if (list && list.length > 0) {
+          return list.map((d: RemoteQuestionDto) => this.toQuestion(d));
         }
       } catch (_e) {
       }
@@ -116,8 +123,9 @@ export class RemoteApiDataSource {
     if (resp.ok) {
       try {
         const parsed = JSON.parse(resp.body) as RemoteListResponse;
-        if (parsed.data && parsed.data.length > 0) {
-          return parsed.data.map((d: RemoteQuestionDto) => this.toQuestion(d));
+        const list = parsed.result ?? parsed.data;
+        if (list && list.length > 0) {
+          return list.map((d: RemoteQuestionDto) => this.toQuestion(d));
         }
       } catch (_e) {
       }
@@ -133,8 +141,9 @@ export class RemoteApiDataSource {
     if (resp.ok) {
       try {
         const parsed = JSON.parse(resp.body) as RemoteDetailResponse;
-        if (parsed.data) {
-          return this.toQuestion(parsed.data);
+        const item = parsed.result ?? parsed.data;
+        if (item) {
+          return this.toQuestion(item);
         }
       } catch (_e) {
       }
@@ -153,8 +162,9 @@ export class RemoteApiDataSource {
     if (resp.ok) {
       try {
         const parsed = JSON.parse(resp.body) as RemoteListResponse;
-        if (parsed.data) {
-          return parsed.data.map((d: RemoteQuestionDto) => this.toQuestion(d));
+        const list = parsed.result ?? parsed.data;
+        if (list) {
+          return list.map((d: RemoteQuestionDto) => this.toQuestion(d));
         }
       } catch (_e) {
       }
@@ -176,16 +186,46 @@ export class RemoteApiDataSource {
     };
     const resp = await HttpClient.postJson('/api/ai/chat', JSON.stringify(req));
     if (resp.ok) {
+      const streamed = this.parseSseReply(resp.body);
+      if (streamed) {
+        return streamed;
+      }
       try {
         const parsed = JSON.parse(resp.body) as AiChatResponse;
-        if (parsed.data && parsed.data.reply) {
-          return parsed.data.reply;
+        const payload = parsed.result ?? parsed.data;
+        if (payload && payload.reply) {
+          return payload.reply;
         }
       } catch (_e) {
       }
     }
     return `（离线演示）关于「${title}」：\n\n你问的是「${userMessage}」。\n\n` +
       '后端 AI 接入后，会结合当前题目上下文给出解释、举例和面试回答建议。';
+  }
+
+  private parseSseReply(body: string): string {
+    if (!body || body.indexOf('data:') < 0) {
+      return '';
+    }
+    const lines = body.split('\n');
+    let lastReply = '';
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (line.indexOf('data:') !== 0) {
+        continue;
+      }
+      const json = line.substring(5).trim();
+      try {
+        const chunk = JSON.parse(json) as Record<string, string | boolean>;
+        if (chunk.markdown && ('done' === chunk.type || chunk.done)) {
+          lastReply = `${chunk.markdown}`;
+        } else if (chunk.reply) {
+          lastReply = `${chunk.reply}`;
+        }
+      } catch (_e) {
+      }
+    }
+    return lastReply;
   }
 
   private toQuestion(d: RemoteQuestionDto): QuestionItem {
