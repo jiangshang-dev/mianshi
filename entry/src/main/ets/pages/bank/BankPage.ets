@@ -119,9 +119,7 @@ export struct BankPage {
                 .fontSize(16)
                 .fontWeight(FontWeight.Medium)
                 .fontColor('#111827')
-              Text(cat.articleCount > 0 ?
-                `${cat.articleCount} 道题` :
-                (cat.children.length > 0 ? `${cat.children.length} 个专题` : '题库'))
+              Text(`${cat.articleCount} 道题`)
                 .fontSize(12)
                 .fontColor('#6B7280')
             }
