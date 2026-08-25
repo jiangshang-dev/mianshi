@@ -5,10 +5,12 @@ import {
   Category,
   DocCatalog,
   QuestionItem,
-  TodayStudyStats
+  TodayStudyStats,
+  AiStreamSnapshot
 } from '../../common/models/Types';
 import { LocalMdDataSource } from './LocalMdDataSource';
 import { RemoteApiDataSource } from './RemoteApiDataSource';
+import { SseAbort } from '../../common/network/HttpClient';
 
 /** 统一题库仓库：按 source 路由本地 MD / 远程 API */
 export class QuestionRepository {
@@ -25,18 +27,23 @@ export class QuestionRepository {
   }
 
   async init(context: common.UIAbilityContext): Promise<DocCatalog> {
-    if (!AppConfig.PREFER_REMOTE_API) {
-      return await this.local.loadCatalog(context);
+    if (AppConfig.PREFER_REMOTE_API) {
+      return {
+        version: 'remote',
+        generatedAt: '',
+        localSource: '',
+        remoteApiBase: AppConfig.REMOTE_API_BASE,
+        categories: [],
+        articles: [],
+        stats: { localArticleCount: 0, localCategoryCount: 0, remoteCategoryCount: 0 }
+      };
     }
     return await this.local.loadCatalog(context);
   }
 
   async getCategories(context: common.UIAbilityContext): Promise<Category[]> {
     if (AppConfig.PREFER_REMOTE_API) {
-      const remote = await this.remote.listCategories();
-      if (remote.length > 0) {
-        return remote;
-      }
+      return await this.remote.listCategories();
     }
     return await this.local.getAllCategories(context);
   }
@@ -52,7 +59,26 @@ export class QuestionRepository {
   }
 
   isRemoteCategory(categoryId: string): boolean {
-    return categoryId.startsWith('api.');
+    if (AppConfig.PREFER_REMOTE_API) {
+      return true;
+    }
+    if (categoryId.startsWith('api.')) {
+      return true;
+    }
+    return this.isDigitId(categoryId);
+  }
+
+  private isDigitId(id: string): boolean {
+    if (id.length === 0) {
+      return false;
+    }
+    for (let i = 0; i < id.length; i++) {
+      const code = id.charCodeAt(i);
+      if (code < 48 || code > 57) {
+        return false;
+      }
+    }
+    return true;
   }
 
   async listQuestions(context: common.UIAbilityContext, categoryId: string,
@@ -123,6 +149,11 @@ export class QuestionRepository {
     localItems.forEach((item: QuestionItem) => merged.push(item));
     remoteItems.forEach((item: QuestionItem) => merged.push(item));
     return merged;
+  }
+
+  async askAiStream(question: QuestionItem, message: string, onUpdate: (snap: AiStreamSnapshot) => void,
+    abort?: SseAbort): Promise<string> {
+    return await this.remote.askAiStream(question.id, question.title, message, onUpdate, abort);
   }
 
   async askAi(question: QuestionItem, message: string): Promise<string> {

@@ -1,9 +1,9 @@
 import { common } from '@kit.AbilityKit';
 import { promptAction, router } from '@kit.ArkUI';
-import { AiChatMessage, QuestionItem } from '../../common/models/Types';
+import { AiChatMessage, AiStreamSnapshot, QuestionItem } from '../../common/models/Types';
 import { MdContentView } from '../../components/MdContentView';
-import { MdParser } from '../../data/parser/MdParser';
 import { QuestionRepository } from '../../data/repository/QuestionRepository';
+import { SseAbort } from '../../common/network/HttpClient';
 
 interface DetailRouteParams {
   id?: string;
@@ -21,11 +21,16 @@ struct QuestionDetailPage {
   @State private favorited: boolean = false;
   private questionId: string = '';
   private repo: QuestionRepository = QuestionRepository.getInstance();
+  private aiAbort: SseAbort | null = null;
 
   aboutToAppear(): void {
     const params = router.getParams() as DetailRouteParams;
     this.questionId = params.id ?? '';
     this.loadDetail();
+  }
+
+  aboutToDisappear(): void {
+    this.aiAbort?.abort();
   }
 
   private async loadDetail(): Promise<void> {
@@ -46,19 +51,139 @@ struct QuestionDetailPage {
       return;
     }
     const userText = text.trim();
-    this.aiMessages = this.aiMessages.concat([{ role: 'user', content: userText }]);
+    this.aiMessages = this.aiMessages.concat([
+      {
+        role: 'user',
+        content: userText,
+        thinking: '',
+        thinkingDone: false,
+        thinkingOpen: false,
+        phase: ''
+      },
+      {
+        role: 'assistant',
+        content: '',
+        thinking: '',
+        thinkingDone: false,
+        thinkingOpen: false,
+        phase: 'thinking'
+      }
+    ]);
     this.aiInput = '';
     this.aiBusy = true;
+    const abort = new SseAbort();
+    this.aiAbort = abort;
     try {
-      const reply = await this.repo.askAi(this.question, userText);
-      this.aiMessages = this.aiMessages.concat([{ role: 'assistant', content: reply }]);
+      const reply = await this.repo.askAiStream(this.question, userText, (snap: AiStreamSnapshot) => {
+        if (!abort.stopped) {
+          this.applyStream(snap);
+        }
+      }, abort);
+      if (abort.stopped) {
+        return;
+      }
+      const last = this.lastAssistant();
+      if (last && last.content.length === 0 && last.thinking.length === 0) {
+        this.applyStream({
+          thinking: '',
+          markdown: reply.length > 0 ? reply : 'AI 没有返回内容，请稍后重试。',
+          phase: 'error',
+          thinkingDone: false
+        });
+      }
     } catch (_e) {
-      this.aiMessages = this.aiMessages.concat([{
-        role: 'assistant',
-        content: 'AI 服务暂时不可用，请稍后重试。'
-      }]);
+      if (!abort.stopped) {
+        this.applyStream({
+          thinking: '',
+          markdown: 'AI 服务暂时不可用，请稍后重试。',
+          phase: 'error',
+          thinkingDone: false
+        });
+      }
     } finally {
+      if (this.aiAbort === abort) {
+        this.aiAbort = null;
+      }
       this.aiBusy = false;
+    }
+  }
+
+  private stopAi(): void {
+    if (!this.aiBusy) {
+      return;
+    }
+    this.markStopped();
+    this.aiAbort?.abort();
+    this.aiBusy = false;
+  }
+
+  private markStopped(): void {
+    const last = this.lastAssistant();
+    if (!last) {
+      return;
+    }
+    const body = last.content.length > 0 ? last.content : last.thinking;
+    this.patchLastAssistant({
+      role: 'assistant',
+      content: body.length > 0 ? `${body}\n\n（已停止）` : '已停止',
+      thinking: last.thinking,
+      thinkingDone: last.thinking.length > 0,
+      thinkingOpen: last.thinkingOpen,
+      phase: 'done'
+    });
+  }
+
+  private lastAssistant(): AiChatMessage | null {
+    if (this.aiMessages.length === 0) {
+      return null;
+    }
+    const last = this.aiMessages[this.aiMessages.length - 1];
+    return last.role === 'assistant' ? last : null;
+  }
+
+  private applyStream(snap: AiStreamSnapshot): void {
+    const last = this.lastAssistant();
+    if (!last) {
+      return;
+    }
+    this.patchLastAssistant({
+      role: 'assistant',
+      content: snap.markdown,
+      thinking: snap.thinking,
+      thinkingDone: snap.thinkingDone,
+      thinkingOpen: last.thinkingOpen,
+      phase: snap.phase
+    });
+  }
+
+  private toggleThinking(idx: number): void {
+    if (idx < 0 || idx >= this.aiMessages.length) {
+      return;
+    }
+    const list = this.aiMessages.slice();
+    const m = list[idx];
+    if (m.role !== 'assistant') {
+      return;
+    }
+    list[idx] = {
+      role: 'assistant',
+      content: m.content,
+      thinking: m.thinking,
+      thinkingDone: m.thinkingDone,
+      thinkingOpen: !m.thinkingOpen,
+      phase: m.phase
+    };
+    this.aiMessages = list;
+  }
+
+  private patchLastAssistant(next: AiChatMessage): void {
+    if (this.aiMessages.length === 0) {
+      return;
+    }
+    const list = this.aiMessages.slice();
+    if (list[list.length - 1].role === 'assistant') {
+      list[list.length - 1] = next;
+      this.aiMessages = list;
     }
   }
 
@@ -124,8 +249,7 @@ struct QuestionDetailPage {
               if (this.question.interviewAnswer) {
                 Column({ space: 8 }) {
                   Text('面试推荐回答').fontSize(15).fontWeight(FontWeight.Medium).width('100%')
-                  Text(MdParser.toPlainReadable(this.question.interviewAnswer))
-                    .fontSize(14).fontColor('#1F2937').lineHeight(22).width('100%')
+                  MdContentView({ content: this.question.interviewAnswer })
                 }
                 .width('100%').padding(14).backgroundColor('#EEF2FF').borderRadius(14)
               }
@@ -161,7 +285,7 @@ struct QuestionDetailPage {
               }.width('100%').padding({ bottom: 80 })
             }
             .padding({ left: 16, right: 16, bottom: 16 }).width('100%')
-          }.layoutWeight(1).scrollBar(BarState.Off)
+          }.layoutWeight(1).scrollBar(BarState.Off).align(Alignment.Top)
         }
       }
       .width('100%').height('100%').backgroundColor('#F3F4F6')
@@ -180,9 +304,21 @@ struct QuestionDetailPage {
 
       if (this.showAi) {
         Column() {
+          Column()
+            .width('100%')
+            .layoutWeight(1)
+            .onClick(() => {
+              this.showAi = false;
+            })
+
           Column() {
             Row() {
               Text('AI 面试助手').fontSize(16).fontWeight(FontWeight.Bold).layoutWeight(1)
+              if (this.aiBusy) {
+                Text('停止').fontSize(13).fontColor('#DC2626').margin({ right: 12 }).onClick(() => {
+                  this.stopAi();
+                })
+              }
               Text('收起').fontSize(13).fontColor('#2563EB').onClick(() => {
                 this.showAi = false;
               })
@@ -192,22 +328,89 @@ struct QuestionDetailPage {
               .fontSize(12).fontColor('#6B7280').maxLines(1)
               .textOverflow({ overflow: TextOverflow.Ellipsis }).width('100%').margin({ bottom: 10 })
 
-            List({ space: 8 }) {
-              ForEach(this.aiMessages, (m: AiChatMessage, idx: number) => {
-                ListItem() {
-                  Column() {
-                    Text(m.role === 'user' ? '我' : 'AI')
-                      .fontSize(11).fontColor('#9CA3AF').width('100%')
-                      .textAlign(m.role === 'user' ? TextAlign.End : TextAlign.Start)
-                    Text(m.content).fontSize(14).fontColor('#111827').padding(10)
-                      .backgroundColor(m.role === 'user' ? '#DBEAFE' : '#F3F4F6')
-                      .borderRadius(10).width('100%')
+            if (this.aiMessages.length === 0) {
+              Text('可以问这道题的解法、例子或面试怎么答')
+                .fontSize(13)
+                .fontColor('#9CA3AF')
+                .width('100%')
+                .padding({ top: 4, bottom: 8 })
+            } else {
+              List({ space: 8 }) {
+                ForEach(this.aiMessages, (m: AiChatMessage, idx: number) => {
+                  ListItem() {
+                    Column() {
+                      Text(m.role === 'user' ? '我' : 'AI')
+                        .fontSize(11).fontColor('#9CA3AF').width('100%')
+                        .textAlign(m.role === 'user' ? TextAlign.End : TextAlign.Start)
+                      if (m.role === 'user') {
+                        Text(m.content).fontSize(14).fontColor('#111827').padding(10)
+                          .backgroundColor('#DBEAFE')
+                          .borderRadius(10)
+                      } else {
+                        Column({ space: 8 }) {
+                          if (m.phase === 'thinking' || m.thinking.length > 0 || m.thinkingDone) {
+                            Column({ space: 6 }) {
+                              Row() {
+                                Text(m.thinkingDone ? '思考完成' : '正在思考…')
+                                  .fontSize(12)
+                                  .fontWeight(FontWeight.Medium)
+                                  .fontColor(m.thinkingDone ? '#059669' : '#2563EB')
+                                  .layoutWeight(1)
+                                Text(m.thinkingOpen ? '收起' : '展开')
+                                  .fontSize(12)
+                                  .fontColor('#6B7280')
+                              }
+                              .width('100%')
+                              .onClick(() => {
+                                this.toggleThinking(idx);
+                              })
+
+                              if (m.thinkingOpen && m.thinking.length > 0) {
+                                Text(m.thinking)
+                                  .fontSize(12)
+                                  .fontColor('#6B7280')
+                                  .lineHeight(18)
+                                  .width('100%')
+                              } else if (m.thinkingOpen) {
+                                Text('暂无思考步骤')
+                                  .fontSize(12)
+                                  .fontColor('#9CA3AF')
+                                  .width('100%')
+                              }
+                            }
+                            .width('100%')
+                            .padding(8)
+                            .backgroundColor('#EEF2FF')
+                            .borderRadius(8)
+                          }
+
+                          if (m.thinkingDone) {
+                            Text('思考完成，开始输出正文')
+                              .fontSize(12)
+                              .fontColor('#059669')
+                              .width('100%')
+                          }
+
+                          if (m.content.length > 0) {
+                            MdContentView({ content: m.content, compact: true })
+                          }
+                        }
+                        .padding(10)
+                        .backgroundColor('#F3F4F6')
+                        .borderRadius(10)
+                        .width('100%')
+                      }
+                    }
+                    .alignItems(m.role === 'user' ? HorizontalAlign.End : HorizontalAlign.Start)
+                    .width('100%')
                   }
-                  .alignItems(m.role === 'user' ? HorizontalAlign.End : HorizontalAlign.Start)
-                  .width('100%')
-                }
-              }, (_m: AiChatMessage, idx: number) => `m-${idx}`)
-            }.layoutWeight(1).width('100%')
+                }, (m: AiChatMessage, idx: number) =>
+                  `m-${idx}-${m.phase}-${m.thinkingDone}-${m.thinkingOpen}-${m.thinking.length}-${m.content.length}`)
+              }
+              .width('100%')
+              .constraintSize({ maxHeight: 220 })
+              .scrollBar(BarState.Auto)
+            }
 
             Row({ space: 8 }) {
               TextInput({ placeholder: '针对这道题提问…', text: this.aiInput })
@@ -216,15 +419,25 @@ struct QuestionDetailPage {
                 .onChange((v: string) => {
                   this.aiInput = v;
                 })
-              Button(this.aiBusy ? '…' : '发送').height(40).enabled(!this.aiBusy).onClick(() => {
-                this.sendAi(this.aiInput);
-              })
+              Button(this.aiBusy ? '停止' : '发送')
+                .height(40)
+                .fontColor(this.aiBusy ? '#B91C1C' : Color.White)
+                .backgroundColor(this.aiBusy ? '#FEE2E2' : '#2563EB')
+                .onClick(() => {
+                  if (this.aiBusy) {
+                    this.stopAi();
+                  } else {
+                    this.sendAi(this.aiInput);
+                  }
+                })
             }.width('100%').padding({ top: 8 })
           }
-          .width('100%').height('55%').padding(16).backgroundColor(Color.White)
+          .width('100%').padding(16).backgroundColor(Color.White)
           .borderRadius({ topLeft: 18, topRight: 18 })
         }
-        .width('100%').height('100%').backgroundColor('#00000055').justifyContent(FlexAlign.End)
+        .width('100%')
+        .height('100%')
+        .backgroundColor('#00000055')
       }
     }
     .width('100%').height('100%')

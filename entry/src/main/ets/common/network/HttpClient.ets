@@ -1,6 +1,9 @@
 import { http } from '@kit.NetworkKit';
+import { util } from '@kit.ArkTS';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { AppConfig } from '../constants/AppConfig';
+import { AiStreamSnapshot } from '../models/Types';
+import { SseParser } from './SseParser';
 
 const DOMAIN = 0xC0DE;
 
@@ -9,6 +12,34 @@ export interface HttpResult {
   code: number;
   body: string;
   message: string;
+}
+
+export class SseAbort {
+  stopped: boolean = false;
+  private client: http.HttpRequest | null = null;
+
+  bind(client: http.HttpRequest): void {
+    this.client = client;
+    if (this.stopped) {
+      this.kill();
+    }
+  }
+
+  abort(): void {
+    this.stopped = true;
+    this.kill();
+  }
+
+  private kill(): void {
+    const current = this.client;
+    this.client = null;
+    if (current) {
+      try {
+        current.destroy();
+      } catch (_e) {
+      }
+    }
+  }
 }
 
 export class HttpClient {
@@ -65,6 +96,94 @@ export class HttpClient {
       return { ok: false, code: -1, body: '', message: JSON.stringify(err) };
     } finally {
       client.destroy();
+    }
+  }
+
+  static async postSse(path: string, body: string, onUpdate: (snap: AiStreamSnapshot) => void,
+    abort?: SseAbort): Promise<HttpResult> {
+    const url = path.startsWith('http') ? path : `${AppConfig.REMOTE_API_BASE}${path}`;
+    const client = http.createHttp();
+    const decoder = util.TextDecoder.create('utf-8');
+    const parser = new SseParser();
+    const gate = abort ?? new SseAbort();
+    gate.bind(client);
+    try {
+      const markdown = await new Promise<string>((resolve) => {
+        let settled = false;
+        const finish = (ok: boolean, err?: string) => {
+          if (settled) {
+            return;
+          }
+          settled = true;
+          const text = parser.finish(onUpdate);
+          if (ok || gate.stopped) {
+            resolve(text);
+          } else {
+            resolve(text.length > 0 ? text : (err ?? 'stream failed'));
+          }
+        };
+        client.on('headersReceive', (_header: Object) => {
+          hilog.info(DOMAIN, 'HttpClient', 'SSE headers %{public}s', JSON.stringify(_header));
+        });
+        client.on('dataReceive', (data: ArrayBuffer) => {
+          if (gate.stopped) {
+            return;
+          }
+          try {
+            const bytes = new Uint8Array(data);
+            const piece = decoder.decodeWithStream(bytes, { stream: true });
+            if (piece && piece.length > 0) {
+              parser.feed(piece, onUpdate);
+            }
+          } catch (err) {
+            hilog.warn(DOMAIN, 'HttpClient', 'SSE decode %{public}s', JSON.stringify(err));
+          }
+        });
+        client.on('dataEnd', () => {
+          try {
+            const tail = decoder.decodeWithStream(new Uint8Array(), { stream: false });
+            if (tail && tail.length > 0) {
+              parser.feed(tail, onUpdate);
+            }
+          } catch (_e) {
+          }
+          finish(true);
+        });
+        client.requestInStream(url, {
+          method: http.RequestMethod.POST,
+          connectTimeout: AppConfig.REQUEST_TIMEOUT_MS,
+          readTimeout: AppConfig.AI_STREAM_TIMEOUT_MS,
+          header: {
+            'Content-Type': 'application/json',
+            'Accept': 'text/event-stream',
+            'Cache-Control': 'no-cache'
+          },
+          extraData: body
+        }).then((code: number) => {
+          if (code < 200 || code >= 300) {
+            finish(false, `HTTP ${code}`);
+          }
+        }).catch((err: Error) => {
+          finish(gate.stopped, JSON.stringify(err));
+        });
+      });
+      return { ok: !gate.stopped, code: 200, body: markdown, message: gate.stopped ? 'stopped' : '' };
+    } catch (err) {
+      hilog.warn(DOMAIN, 'HttpClient', 'SSE failed %{public}s %{public}s', url, JSON.stringify(err));
+      return { ok: false, code: -1, body: parser.current(), message: JSON.stringify(err) };
+    } finally {
+      try {
+        client.off('headersReceive');
+        client.off('dataReceive');
+        client.off('dataEnd');
+      } catch (_e) {
+      }
+      if (!gate.stopped) {
+        try {
+          client.destroy();
+        } catch (_e) {
+        }
+      }
     }
   }
 }

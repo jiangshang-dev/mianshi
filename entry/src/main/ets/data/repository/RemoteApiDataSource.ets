@@ -1,6 +1,6 @@
 import { AppConfig } from '../../common/constants/AppConfig';
-import { Category, QuestionItem, SubCategory } from '../../common/models/Types';
-import { HttpClient } from '../../common/network/HttpClient';
+import { Category, QuestionItem, SubCategory, AiStreamSnapshot } from '../../common/models/Types';
+import { HttpClient, SseAbort } from '../../common/network/HttpClient';
 
 interface RemoteQuestionDto {
   id: string;
@@ -73,7 +73,7 @@ interface RemoteHotResponse {
   data?: RemoteQuestionDto[];
 }
 
-/** 远程 API 题库；失败时按配置降级 Mock */
+/** 远程 API 题库；仅当 REMOTE_USE_MOCK_FALLBACK 开启时才降级 Mock */
 export class RemoteApiDataSource {
   async listCategories(): Promise<Category[]> {
     const resp = await HttpClient.get('/api/categories', '');
@@ -81,7 +81,7 @@ export class RemoteApiDataSource {
       try {
         const parsed = JSON.parse(resp.body) as RemoteCategoryListResponse;
         const list = parsed.result ?? parsed.data;
-        if (list && list.length > 0) {
+        if (list) {
           return list.map((d: RemoteCategoryDto) => this.toCategory(d));
         }
       } catch (_e) {
@@ -100,7 +100,7 @@ export class RemoteApiDataSource {
       try {
         const parsed = JSON.parse(resp.body) as RemoteHotResponse;
         const list = parsed.result ?? parsed.data;
-        if (list && list.length > 0) {
+        if (list) {
           return list.map((d: RemoteQuestionDto) => this.toQuestion(d));
         }
       } catch (_e) {
@@ -124,7 +124,7 @@ export class RemoteApiDataSource {
       try {
         const parsed = JSON.parse(resp.body) as RemoteListResponse;
         const list = parsed.result ?? parsed.data;
-        if (list && list.length > 0) {
+        if (list) {
           return list.map((d: RemoteQuestionDto) => this.toQuestion(d));
         }
       } catch (_e) {
@@ -176,6 +176,25 @@ export class RemoteApiDataSource {
           q.tags.some((t: string) => t.toLowerCase().includes(key)));
     }
     return [];
+  }
+
+  async askAiStream(questionId: string, title: string, userMessage: string,
+    onUpdate: (snap: AiStreamSnapshot) => void, abort?: SseAbort): Promise<string> {
+    const req: AiChatRequest = {
+      questionId: questionId,
+      title: title,
+      message: userMessage
+    };
+    const resp = await HttpClient.postSse('/api/ai/chat', JSON.stringify(req), onUpdate, abort);
+    if (abort?.stopped) {
+      return resp.body;
+    }
+    if (resp.body.length > 0) {
+      return resp.body;
+    }
+    const err = resp.message.length > 0 ? resp.message : 'AI 流式请求失败';
+    onUpdate({ thinking: '', markdown: err, phase: 'error', thinkingDone: false });
+    return err;
   }
 
   async askAi(questionId: string, title: string, userMessage: string): Promise<string> {
@@ -265,7 +284,7 @@ export class RemoteApiDataSource {
       name: d.name,
       icon: d.icon ?? '📘',
       order: d.order ?? 0,
-      group: d.group ?? '技术方向',
+      group: d.group ?? '技能',
       source: 'remote_api',
       articleCount: d.articleCount ?? 0,
       children
@@ -278,7 +297,7 @@ export class RemoteApiDataSource {
     });
     return [
       {
-        id: 'java', name: 'Java', icon: '☕', order: 1, group: '技术方向', source: 'remote_api',
+        id: 'java', name: 'Java', icon: '☕', order: 1, group: '技能', source: 'remote_api',
         articleCount: 73,
         children: [
           mkSub('java.basis', '基础', 'java', 14),
@@ -288,7 +307,7 @@ export class RemoteApiDataSource {
         ]
       },
       {
-        id: 'database', name: '数据库', icon: '🗄️', order: 2, group: '技术方向', source: 'remote_api',
+        id: 'database', name: '数据库', icon: '🗄️', order: 2, group: '技能', source: 'remote_api',
         articleCount: 41,
         children: [
           mkSub('database.mysql', 'MySQL', 'database', 16),
@@ -297,37 +316,37 @@ export class RemoteApiDataSource {
         ]
       },
       {
-        id: 'cs-basics', name: '计算机基础', icon: '💻', order: 3, group: '技术方向', source: 'remote_api',
+        id: 'cs-basics', name: '计算机基础', icon: '💻', order: 3, group: '技能', source: 'remote_api',
         articleCount: 63,
         children: [mkSub('cs-basics.os', '操作系统', 'cs-basics', 20)]
       },
       {
-        id: 'system-design', name: '系统设计', icon: '🏗️', order: 4, group: '技术方向', source: 'remote_api',
+        id: 'system-design', name: '系统设计', icon: '🏗️', order: 4, group: '技能', source: 'remote_api',
         articleCount: 31,
         children: [mkSub('system-design.arch', '架构设计', 'system-design', 15)]
       },
       {
-        id: 'distributed', name: '分布式', icon: '🌐', order: 5, group: '技术方向', source: 'remote_api',
+        id: 'distributed', name: '分布式', icon: '🌐', order: 5, group: '技能', source: 'remote_api',
         articleCount: 24,
         children: [mkSub('distributed.lock', '分布式锁', 'distributed', 8)]
       },
       {
-        id: 'high-performance', name: '高性能', icon: '⚡', order: 6, group: '技术方向', source: 'remote_api',
+        id: 'high-performance', name: '高性能', icon: '⚡', order: 6, group: '技能', source: 'remote_api',
         articleCount: 13,
         children: []
       },
       {
-        id: 'high-availability', name: '高可用', icon: '🛡️', order: 7, group: '技术方向', source: 'remote_api',
+        id: 'high-availability', name: '高可用', icon: '🛡️', order: 7, group: '技能', source: 'remote_api',
         articleCount: 8,
         children: []
       },
       {
-        id: 'ai', name: 'AI / LLM', icon: '🤖', order: 8, group: '技术方向', source: 'remote_api',
+        id: 'ai', name: 'AI / LLM', icon: '🤖', order: 8, group: '技能', source: 'remote_api',
         articleCount: 33,
         children: [mkSub('ai.agent', 'Agent', 'ai', 12), mkSub('ai.rag', 'RAG', 'ai', 10)]
       },
       {
-        id: 'api.company', name: '大厂真题', icon: '🏢', order: 9, group: '大厂真题', source: 'remote_api',
+        id: 'api.company', name: '公司题库', icon: '🏢', order: 9, group: '公司', source: 'remote_api',
         articleCount: 16,
         children: [
           mkSub('api.company.alibaba', '阿里巴巴', 'api.company', 4),
@@ -337,7 +356,7 @@ export class RemoteApiDataSource {
         ]
       },
       {
-        id: 'api.hot', name: '高频精选', icon: '🔥', order: 10, group: '高频精选', source: 'remote_api',
+        id: 'api.hot', name: '高频精选', icon: '🔥', order: 10, group: '专项', source: 'remote_api',
         articleCount: 7,
         children: [
           mkSub('api.hot.java100', 'Java 高频 100 题', 'api.hot', 4),

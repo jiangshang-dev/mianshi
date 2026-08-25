@@ -71,6 +71,17 @@ export interface CatalogStats {
 export interface AiChatMessage {
   role: 'user' | 'assistant';
   content: string;
+  thinking: string;
+  thinkingDone: boolean;
+  thinkingOpen: boolean;
+  phase: string;
+}
+
+export interface AiStreamSnapshot {
+  thinking: string;
+  markdown: string;
+  phase: string;
+  thinkingDone: boolean;
 }
 
 export interface TodayStudyStats {

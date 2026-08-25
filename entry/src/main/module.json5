@@ -11,6 +11,16 @@
     "deliveryWithInstall": true,
     "installationFree": false,
     "pages": "$profile:main_pages",
+    "metadata": [
+      {
+        "name": "network_security_config",
+        "resource": "$profile:network_config"
+      },
+      {
+        "name": "ohos.network.security.policy",
+        "resource": "$profile:network_config"
+      }
+    ],
     "requestPermissions": [
       {
         "name": "ohos.permission.INTERNET",

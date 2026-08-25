@@ -1,6 +1,7 @@
 import { common } from '@kit.AbilityKit';
 import { router } from '@kit.ArkUI';
 import { Category } from '../../common/models/Types';
+import { CategoryGroupUtil } from '../../common/utils/CategoryGroupUtil';
 import { CategoryCard } from '../../components/CategoryCard';
 import { QuestionRepository } from '../../data/repository/QuestionRepository';
 
@@ -24,12 +25,12 @@ struct CategoryAllPage {
       this.categories = await this.repo.getCategories(ctx);
       const groups: string[] = [];
       this.categories.forEach((c: Category) => {
-        const g = c.group.length > 0 ? c.group : '其他';
+        const g = CategoryGroupUtil.normalize(c.group);
         if (!groups.includes(g)) {
           groups.push(g);
         }
       });
-      this.groupNames = groups;
+      this.groupNames = CategoryGroupUtil.sortGroupNames(groups);
     } catch (_e) {
       this.categories = [];
       this.groupNames = [];
@@ -49,15 +50,8 @@ struct CategoryAllPage {
     });
   }
 
-  private categoriesInGroup(group: string): Category[] {
-    const result: Category[] = [];
-    this.categories.forEach((c: Category) => {
-      const g = c.group.length > 0 ? c.group : '其他';
-      if (g === group) {
-        result.push(c);
-      }
-    });
-    return result;
+  private displayList(group: string): Category[] {
+    return CategoryGroupUtil.browseItems(this.categories, group);
   }
 
   build() {
@@ -85,6 +79,14 @@ struct CategoryAllPage {
         .layoutWeight(1)
         .width('100%')
         .justifyContent(FlexAlign.Center)
+      } else if (this.categories.length === 0) {
+        Column({ space: 8 }) {
+          Text('未拉到分类').fontSize(16).fontColor('#6B7280')
+          Text('请确认后端已启动，且 App 能访问局域网地址').fontSize(13).fontColor('#9CA3AF')
+        }
+        .layoutWeight(1)
+        .width('100%')
+        .justifyContent(FlexAlign.Center)
       } else {
         Scroll() {
           Column({ space: 16 }) {
@@ -97,7 +99,7 @@ struct CategoryAllPage {
                   .width('100%')
 
                 Grid() {
-                  ForEach(this.categoriesInGroup(group), (c: Category) => {
+                  ForEach(this.displayList(group), (c: Category) => {
                     GridItem() {
                       CategoryCard({
                         category: c,

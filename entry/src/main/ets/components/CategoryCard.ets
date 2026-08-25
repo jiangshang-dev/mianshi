@@ -1,4 +1,5 @@
 import { Category } from '../common/models/Types';
+import { CategoryIcon } from './CategoryIcon';
 
 @Component
 export struct CategoryCard {
@@ -16,8 +17,7 @@ export struct CategoryCard {
 
   build() {
     Column({ space: 8 }) {
-      Text(this.category.icon)
-        .fontSize(28)
+      CategoryIcon({ icon: this.category.icon, iconSize: 28 })
       Text(this.category.name)
         .fontSize(14)
         .fontWeight(FontWeight.Medium)

@@ -2,13 +2,16 @@ import { common } from '@kit.AbilityKit';
 import { router } from '@kit.ArkUI';
 import { AppConfig } from '../../common/constants/AppConfig';
 import { Category, QuestionItem, TodayStudyStats } from '../../common/models/Types';
-import { CategoryCard } from '../../components/CategoryCard';
+import { CategoryGroupUtil } from '../../common/utils/CategoryGroupUtil';
+import { CategoryTagSection } from '../../components/CategoryTagSection';
 import { QuestionListItem } from '../../components/QuestionListItem';
 import { QuestionRepository } from '../../data/repository/QuestionRepository';
 
 @Component
 export struct HomePage {
-  @State private categories: Category[] = [];
+  @State private skills: Category[] = [];
+  @State private companies: Category[] = [];
+  @State private specials: Category[] = [];
   @State private hotList: QuestionItem[] = [];
   @State private stats: TodayStudyStats = {
     questionCount: 0,
@@ -28,11 +31,16 @@ export struct HomePage {
     try {
       const ctx = getContext(this) as common.UIAbilityContext;
       await this.repo.init(ctx);
-      this.categories = (await this.repo.getCategories(ctx)).slice(0, 8);
+      const all = await this.repo.getCategories(ctx);
+      this.skills = CategoryGroupUtil.browseItems(all, CategoryGroupUtil.SKILL);
+      this.companies = CategoryGroupUtil.browseItems(all, CategoryGroupUtil.COMPANY);
+      this.specials = CategoryGroupUtil.browseItems(all, CategoryGroupUtil.SPECIAL);
       this.hotList = await this.repo.getHot(ctx);
       this.stats = this.repo.getTodayStudyStats();
     } catch (_e) {
-      this.categories = [];
+      this.skills = [];
+      this.companies = [];
+      this.specials = [];
       this.hotList = [];
     } finally {
       this.loading = false;
@@ -65,7 +73,7 @@ export struct HomePage {
         .width('100%')
 
         Row() {
-          Text('搜面试题 / 知识点 / 技术方向')
+          Text('搜面试题 / 技能 / 公司题库')
             .fontSize(14)
             .fontColor('#94A3B8')
             .layoutWeight(1)
@@ -131,46 +139,47 @@ export struct HomePage {
             .backgroundColor(Color.White)
             .borderRadius(16)
 
-            Column({ space: 12 }) {
-              Row() {
-                Text('技术方向')
-                  .fontSize(16)
-                  .fontWeight(FontWeight.Bold)
-                Blank()
-                Text('全部 ›')
-                  .fontSize(13)
-                  .fontColor('#2563EB')
-                  .onClick(() => {
-                    router.pushUrl({ url: 'pages/bank/CategoryAllPage' });
-                  })
-              }
-              .width('100%')
+            if (this.skills.length === 0 && this.companies.length === 0 && this.specials.length === 0) {
+              Text('未拉到分类，请检查网络与后端地址')
+                .fontSize(13)
+                .fontColor('#9CA3AF')
+                .width('100%')
+            }
 
-              Grid() {
-                ForEach(this.categories, (c: Category) => {
-                  GridItem() {
-                    CategoryCard({
-                      category: c,
-                      onCardClick: (cat: Category) => {
-                        router.pushUrl({
-                          url: 'pages/bank/QuestionListPage',
-                          params: {
-                            'categoryId': cat.id,
-                            'title': cat.name,
-                            'source': cat.source
-                          }
-                        });
-                      }
-                    })
-                  }
-                }, (c: Category) => c.id)
-              }
-              .columnsTemplate('1fr 1fr 1fr 1fr')
-              .columnsGap(10)
-              .rowsGap(10)
-              .width('100%')
+            Column({ space: 16 }) {
+              CategoryTagSection({
+                title: '热门技能',
+                items: this.skills,
+                textColor: '#9A3412',
+                chipColor: '#FFEDD5',
+                onTagClick: (cat: Category) => this.openCategory(cat)
+              })
+              CategoryTagSection({
+                title: '公司题库',
+                items: this.companies,
+                textColor: '#1E40AF',
+                chipColor: '#DBEAFE',
+                onTagClick: (cat: Category) => this.openCategory(cat)
+              })
+              CategoryTagSection({
+                title: '专项',
+                items: this.specials,
+                textColor: '#166534',
+                chipColor: '#DCFCE7',
+                onTagClick: (cat: Category) => this.openCategory(cat)
+              })
+              Text('全部 ›')
+                .fontSize(13)
+                .fontColor('#2563EB')
+                .width('100%')
+                .onClick(() => {
+                  router.pushUrl({ url: 'pages/bank/CategoryAllPage' });
+                })
             }
             .width('100%')
+            .padding(16)
+            .backgroundColor(Color.White)
+            .borderRadius(16)
 
             Column({ space: 10 }) {
               Text('热门推荐')
@@ -204,6 +213,17 @@ export struct HomePage {
     .width('100%')
     .height('100%')
     .backgroundColor('#F3F4F6')
+  }
+
+  private openCategory(cat: Category): void {
+    router.pushUrl({
+      url: 'pages/bank/QuestionListPage',
+      params: {
+        'categoryId': cat.id,
+        'title': cat.name,
+        'source': cat.source
+      }
+    });
   }
 
   @Builder

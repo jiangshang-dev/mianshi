@@ -15,7 +15,7 @@ interface ListRouteParams {
 struct QuestionListPage {
   @State private title: string = '题库';
   @State private categoryId: string = '';
-  @State private source: DataSourceType = 'local_md';
+  @State private source: DataSourceType = 'remote_api';
   @State private subCategories: SubCategory[] = [];
   @State private selectedSubId: string = '';
   @State private questions: QuestionItem[] = [];
@@ -27,7 +27,7 @@ struct QuestionListPage {
     if (params) {
       this.categoryId = params.categoryId ?? '';
       this.title = params.title ?? '题库';
-      this.source = (params.source as DataSourceType) ?? 'local_md';
+      this.source = (params.source as DataSourceType) ?? 'remote_api';
     }
     this.bootstrap();
   }
@@ -37,11 +37,13 @@ struct QuestionListPage {
     try {
       const ctx = getContext(this) as common.UIAbilityContext;
       const cats = await this.repo.getCategories(ctx);
-      const cat = cats.find((c) => c.id === this.categoryId);
-      this.subCategories = cat ? cat.children : [];
-      if (this.subCategories.length > 0) {
-        this.selectedSubId = this.subCategories[0].id;
+      const root = cats.find((c) => c.id === this.categoryId);
+      if (root) {
+        this.subCategories = root.children;
+      } else {
+        this.subCategories = [];
       }
+      this.selectedSubId = '';
       await this.reloadList(ctx);
     } catch (_e) {
       this.questions = [];
@@ -90,6 +92,16 @@ struct QuestionListPage {
       if (this.subCategories.length > 0) {
         Scroll() {
           Row({ space: 8 }) {
+            Text('全部')
+              .fontSize(13)
+              .fontColor(this.selectedSubId.length === 0 ? Color.White : '#374151')
+              .backgroundColor(this.selectedSubId.length === 0 ? '#2563EB' : Color.White)
+              .padding({ left: 12, right: 12, top: 8, bottom: 8 })
+              .borderRadius(16)
+              .onClick(() => {
+                this.selectedSubId = '';
+                this.reloadList();
+              })
             ForEach(this.subCategories, (sub: SubCategory) => {
               Text(sub.name)
                 .fontSize(13)
@@ -118,7 +130,7 @@ struct QuestionListPage {
       } else if (this.questions.length === 0) {
         Column({ space: 8 }) {
           Text('暂无内容').fontSize(16).fontColor('#6B7280')
-          Text(this.source === 'remote_api' ? '可检查后端接口或使用 Mock' : '该分类下没有文章')
+          Text(this.source === 'remote_api' ? '该分类下暂无题目，或接口请求失败' : '该分类下没有文章')
             .fontSize(13).fontColor('#9CA3AF')
         }.layoutWeight(1).width('100%').justifyContent(FlexAlign.Center)
       } else {

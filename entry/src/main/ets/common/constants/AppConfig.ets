@@ -4,8 +4,9 @@ export class AppConfig {
   static readonly DOCS_RAW_PREFIX: string = 'docs/';
   static readonly REMOTE_API_BASE: string = 'http://192.168.1.170:8080/jeecg-boot';
   static readonly REMOTE_RESUME_UPLOAD_PATH: string = '/api/resume/upload';
-  /** 优先使用后端 API（分类/题目/热门），本地 MD 仅作离线降级 */
+  /** 分类 / 题库 / 热门 / 搜索走后端 API，不再回落本地 MD 或 Mock */
   static readonly PREFER_REMOTE_API: boolean = true;
-  static readonly REMOTE_USE_MOCK_FALLBACK: boolean = true;
+  static readonly REMOTE_USE_MOCK_FALLBACK: boolean = false;
   static readonly REQUEST_TIMEOUT_MS: number = 8000;
+  static readonly AI_STREAM_TIMEOUT_MS: number = 60000;
 }
