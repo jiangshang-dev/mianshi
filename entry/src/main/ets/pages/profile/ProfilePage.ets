@@ -289,9 +289,9 @@ export struct ProfilePage {
           this.menuRow('学习记录', '刷题天数与进度', () => {
             this.soon('学习记录');
           })
-          this.menuRow('错题本', '回顾答错的题目', () => {
-            this.soon('错题本');
-          })
+          // this.menuRow('错题本', '回顾答错的题目', () => {
+          //   this.soon('错题本');
+          // })
         }
         .width('100%')
         .backgroundColor(Color.White)
