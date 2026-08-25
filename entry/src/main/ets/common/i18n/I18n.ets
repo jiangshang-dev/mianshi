@@ -158,7 +158,7 @@ export class I18n {
     I18n.put('empty_local', '该分类下没有文章', '該分類下沒有文章', 'No articles in this category');
     I18n.put('hot', '高频', '高頻', 'Hot');
     I18n.put('src_local', '本地 MD', '本地 MD', 'Local MD');
-    I18n.put('src_remote', '远程 API', '遠端 API', 'Remote API');
+    // I18n.put('src_remote', '远程 API', '遠端 API', 'Remote API');
     I18n.put('detail_title', '题目详情', '題目詳情', 'Question');
     I18n.put('not_found', '未找到题目内容', '未找到題目內容', 'Question not found');
     I18n.put('answer_body', '标准答案 / 正文', '標準答案 / 正文', 'Answer');

@@ -301,12 +301,12 @@ struct QuestionDetailPage {
           Scroll() {
             Column({ space: 14 }) {
               Row({ space: 6 }) {
-                Text(this.question.source === 'local_md' ? I18n.t('src_local', this.lang) : I18n.t('src_remote', this.lang))
-                  .fontSize(11)
-                  .fontColor(this.question.source === 'local_md' ? '#047857' : '#1D4ED8')
-                  .backgroundColor(this.question.source === 'local_md' ? '#D1FAE5' : '#DBEAFE')
-                  .padding({ left: 8, right: 8, top: 3, bottom: 3 })
-                  .borderRadius(6)
+                // Text(this.question.source === 'local_md' ? I18n.t('src_local', this.lang) : I18n.t('src_remote', this.lang))
+                //   .fontSize(11)
+                //   .fontColor(this.question.source === 'local_md' ? '#047857' : '#1D4ED8')
+                //   .backgroundColor(this.question.source === 'local_md' ? '#D1FAE5' : '#DBEAFE')
+                //   .padding({ left: 8, right: 8, top: 3, bottom: 3 })
+                //   .borderRadius(6)
                 Text(this.question.difficulty)
                   .fontSize(11).fontColor('#6B7280').backgroundColor('#F3F4F6')
                   .padding({ left: 8, right: 8, top: 3, bottom: 3 }).borderRadius(6)
