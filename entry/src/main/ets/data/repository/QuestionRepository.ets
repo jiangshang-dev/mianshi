@@ -1,4 +1,5 @@
 import { common } from '@kit.AbilityKit';
+import { AppConfig } from '../../common/constants/AppConfig';
 import {
   ArticleSummary,
   Category,
@@ -24,11 +25,30 @@ export class QuestionRepository {
   }
 
   async init(context: common.UIAbilityContext): Promise<DocCatalog> {
+    if (!AppConfig.PREFER_REMOTE_API) {
+      return await this.local.loadCatalog(context);
+    }
     return await this.local.loadCatalog(context);
   }
 
   async getCategories(context: common.UIAbilityContext): Promise<Category[]> {
+    if (AppConfig.PREFER_REMOTE_API) {
+      const remote = await this.remote.listCategories();
+      if (remote.length > 0) {
+        return remote;
+      }
+    }
     return await this.local.getAllCategories(context);
+  }
+
+  shouldUseRemote(categoryId: string, subCategoryId?: string): boolean {
+    if (AppConfig.PREFER_REMOTE_API) {
+      return true;
+    }
+    if (subCategoryId !== undefined && this.isRemoteCategory(subCategoryId)) {
+      return true;
+    }
+    return this.isRemoteCategory(categoryId);
   }
 
   isRemoteCategory(categoryId: string): boolean {
@@ -37,10 +57,9 @@ export class QuestionRepository {
 
   async listQuestions(context: common.UIAbilityContext, categoryId: string,
     subCategoryId?: string): Promise<QuestionItem[]> {
-    const useRemote = this.isRemoteCategory(categoryId) ||
-      (subCategoryId !== undefined && this.isRemoteCategory(subCategoryId));
+    const useRemote = this.shouldUseRemote(categoryId, subCategoryId);
     if (useRemote) {
-      const id = (subCategoryId !== undefined && this.isRemoteCategory(subCategoryId)) ?
+      const id = (subCategoryId !== undefined && subCategoryId.length > 0) ?
         subCategoryId : categoryId;
       const list = await this.remote.listByCategory(id);
       return list.map((q: QuestionItem) => this.withLocalState(q));
@@ -50,7 +69,7 @@ export class QuestionRepository {
   }
 
   async getDetail(context: common.UIAbilityContext, id: string): Promise<QuestionItem | null> {
-    if (id.startsWith('api-') || id.startsWith('api.')) {
+    if (AppConfig.PREFER_REMOTE_API || id.startsWith('api-') || id.startsWith('api.')) {
       const detail = await this.remote.getDetail(id);
       return detail ? this.withLocalState(detail) : null;
     }
@@ -78,6 +97,10 @@ export class QuestionRepository {
   }
 
   async search(context: common.UIAbilityContext, keyword: string): Promise<QuestionItem[]> {
+    if (AppConfig.PREFER_REMOTE_API) {
+      const remoteItems = await this.remote.search(keyword);
+      return remoteItems.map((q: QuestionItem) => this.withLocalState(q));
+    }
     const localArticles = await this.local.searchArticles(context, keyword);
     const localItems = localArticles.slice(0, 30).map((a: ArticleSummary) => this.articleToListItem(a));
     const remoteItems = await this.remote.search(keyword);
@@ -88,6 +111,10 @@ export class QuestionRepository {
   }
 
   async getHot(context: common.UIAbilityContext): Promise<QuestionItem[]> {
+    if (AppConfig.PREFER_REMOTE_API) {
+      const remote = await this.remote.getHotQuestions(8);
+      return remote.map((q: QuestionItem) => this.withLocalState(q));
+    }
     const local = await this.local.getHotArticles(context, 8);
     const remote = await this.remote.listByCategory('api.hot.java100');
     const localItems = local.map((a: ArticleSummary) => this.articleToListItem(a));

@@ -3,6 +3,7 @@
     "pages/Index",
     "pages/bank/QuestionListPage",
     "pages/bank/QuestionDetailPage",
+    "pages/bank/CategoryAllPage",
     "pages/search/SearchPage",
     "pages/interview/InterviewSessionPage",
     "pages/profile/LoginPage",

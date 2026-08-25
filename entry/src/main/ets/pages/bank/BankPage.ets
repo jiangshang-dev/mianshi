@@ -5,8 +5,7 @@ import { QuestionRepository } from '../../data/repository/QuestionRepository';
 
 @Component
 export struct BankPage {
-  @State private localCategories: Category[] = [];
-  @State private remoteCategories: Category[] = [];
+  @State private categories: Category[] = [];
   @State private loading: boolean = true;
   private repo: QuestionRepository = QuestionRepository.getInstance();
 
@@ -18,12 +17,9 @@ export struct BankPage {
     this.loading = true;
     try {
       const ctx = getContext(this) as common.UIAbilityContext;
-      const all = await this.repo.getCategories(ctx);
-      this.localCategories = all.filter((c: Category) => c.source === 'local_md');
-      this.remoteCategories = all.filter((c: Category) => c.source === 'remote_api');
+      this.categories = await this.repo.getCategories(ctx);
     } catch (_e) {
-      this.localCategories = [];
-      this.remoteCategories = [];
+      this.categories = [];
     } finally {
       this.loading = false;
     }
@@ -52,17 +48,27 @@ export struct BankPage {
     } else {
       Scroll() {
         Column({ space: 10 }) {
-          Text('题库')
-            .fontSize(20)
-            .fontWeight(FontWeight.Bold)
-            .fontColor('#111827')
+          Row() {
+            Text('题库')
+              .fontSize(20)
+              .fontWeight(FontWeight.Bold)
+              .fontColor('#111827')
+              .layoutWeight(1)
+            Text('全部分类 ›')
+              .fontSize(13)
+              .fontColor('#2563EB')
+              .onClick(() => {
+                router.pushUrl({ url: 'pages/bank/CategoryAllPage' });
+              })
+          }
+          .width('100%')
+
+          Text('数据来自后端服务接口')
+            .fontSize(12)
+            .fontColor('#9CA3AF')
             .width('100%')
 
-          this.sectionTitle('本地 Markdown 题库', '来自 rawfile/docs，离线可用')
-          this.categoryList(this.localCategories)
-
-          this.sectionTitle('远程 API 题库', '后端接口 / Mock 降级')
-          this.categoryList(this.remoteCategories)
+          this.categoryList(this.categories)
         }
         .padding({ left: 16, right: 16, top: 8, bottom: 24 })
         .width('100%')
@@ -73,23 +79,6 @@ export struct BankPage {
       .scrollBar(BarState.Off)
       .align(Alignment.Top)
     }
-  }
-
-  @Builder
-  sectionTitle(title: string, subtitle: string) {
-    Column({ space: 4 }) {
-      Text(title)
-        .fontSize(16)
-        .fontWeight(FontWeight.Bold)
-        .fontColor('#111827')
-        .width('100%')
-      Text(subtitle)
-        .fontSize(12)
-        .fontColor('#6B7280')
-        .width('100%')
-    }
-    .width('100%')
-    .alignItems(HorizontalAlign.Start)
   }
 
   @Builder
@@ -105,9 +94,9 @@ export struct BankPage {
               .fontSize(16)
               .fontWeight(FontWeight.Medium)
               .fontColor('#111827')
-            Text(cat.source === 'local_md' ?
-              `${cat.articleCount} 篇文章 · ${cat.children.length} 个子类` :
-              `${cat.children.length} 个专题 · 远程拉取`)
+            Text(cat.articleCount > 0 ?
+              `${cat.articleCount} 道题 · ${cat.children.length} 个子类` :
+              `${cat.children.length} 个专题`)
               .fontSize(12)
               .fontColor('#6B7280')
           }

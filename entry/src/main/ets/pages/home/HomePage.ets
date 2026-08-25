@@ -88,7 +88,7 @@ export struct HomePage {
       if (this.loading) {
         Column() {
           LoadingProgress().width(40).height(40).color('#2563EB')
-          Text('正在加载本地题库…').fontSize(13).fontColor('#6B7280').margin({ top: 8 })
+          Text('正在加载…').fontSize(13).fontColor('#6B7280').margin({ top: 8 })
         }
         .width('100%')
         .layoutWeight(1)
@@ -140,6 +140,9 @@ export struct HomePage {
                 Text('全部 ›')
                   .fontSize(13)
                   .fontColor('#2563EB')
+                  .onClick(() => {
+                    router.pushUrl({ url: 'pages/bank/CategoryAllPage' });
+                  })
               }
               .width('100%')
 

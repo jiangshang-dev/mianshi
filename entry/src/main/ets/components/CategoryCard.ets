@@ -23,8 +23,9 @@ export struct CategoryCard {
         .fontWeight(FontWeight.Medium)
         .fontColor('#111827')
         .maxLines(1)
-      Text(this.category.source === 'local_md' ?
-        `${this.category.articleCount} 篇` : 'API')
+      Text(this.category.articleCount > 0 ?
+        `${this.category.articleCount} 题` :
+        (this.category.children.length > 0 ? `${this.category.children.length} 专题` : '题库'))
         .fontSize(11)
         .fontColor('#6B7280')
     }
