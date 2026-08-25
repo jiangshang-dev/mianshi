@@ -1,4 +1,4 @@
-import { Category, SubCategory } from '../models/Types';
+import { Category } from '../models/Types';
 
 export class CategoryGroupUtil {
   static readonly SKILL: string = '技能';
@@ -45,27 +45,8 @@ export class CategoryGroupUtil {
     return result;
   }
 
-  /** 公司题库展开成可点的公司条目；其他类型保留一级分类 */
+  /** 按类型分区展示，不再使用父子分类 */
   static browseItems(all: Category[], group: string): Category[] {
-    const result: Category[] = [];
-    CategoryGroupUtil.ofGroup(all, group).forEach((c: Category) => {
-      if (group === CategoryGroupUtil.COMPANY && c.children.length > 0) {
-        c.children.forEach((sub: SubCategory) => {
-          result.push({
-            id: sub.id,
-            name: sub.name,
-            icon: c.icon,
-            order: c.order,
-            group: group,
-            source: c.source,
-            articleCount: sub.articleCount,
-            children: []
-          });
-        });
-      } else {
-        result.push(c);
-      }
-    });
-    return result;
+    return CategoryGroupUtil.ofGroup(all, group);
   }
 }

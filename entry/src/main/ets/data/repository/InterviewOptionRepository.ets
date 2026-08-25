@@ -53,17 +53,15 @@ export class InterviewOptionRepository {
   }
 
   async load(): Promise<InterviewOptionBundle> {
-    if (this.cached) {
-      return this.cached;
-    }
     const remote = await this.fetchRemote();
-    if (remote) {
+    if (remote && remote.roles.length > 0) {
       this.cached = remote;
       return remote;
     }
-    const local = this.fallback();
-    this.cached = local;
-    return local;
+    if (this.cached && this.cached.roles.length > 0) {
+      return this.cached;
+    }
+    return this.fallback();
   }
 
   private async fetchRemote(): Promise<InterviewOptionBundle | null> {
