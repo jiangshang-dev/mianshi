@@ -5,10 +5,6 @@ import { QuestionListItem } from '../../components/QuestionListItem';
 import { QuestionRepository } from '../../data/repository/QuestionRepository';
 import { I18n } from '../../common/i18n/I18n';
 
-interface SearchRouteParams {
-  keyword?: string;
-}
-
 @Entry
 @Component
 struct SearchPage {
@@ -18,15 +14,6 @@ struct SearchPage {
   @State private searching: boolean = false;
   @State private searched: boolean = false;
   private repo: QuestionRepository = QuestionRepository.getInstance();
-
-  aboutToAppear(): void {
-    const params = router.getParams() as SearchRouteParams;
-    const kw = params !== undefined && params.keyword !== undefined ? params.keyword : '';
-    if (kw.length > 0) {
-      this.keyword = kw;
-      this.doSearch();
-    }
-  }
 
   private async doSearch(): Promise<void> {
     if (this.keyword.trim().length === 0) {

@@ -272,18 +272,9 @@ export class I18n {
     I18n.put('done_q', '已刷题', '已刷題', 'Done');
     I18n.put('study_min', '学习分钟', '學習分鐘', 'Minutes');
     I18n.put('done_master', '已掌握', '已掌握', 'Mastered');
-    I18n.put('cal_title', '学习日历', '學習日曆', 'Study calendar');
-    I18n.put('cal_streak', '已连续打卡 {0} 天', '已連續打卡 {0} 天', '{0}-day streak');
-    I18n.put('cal_none', '进入题目详情后计入已刷题，并完成今日打卡',
-      '進入題目詳情後計入已刷題，並完成今日打卡',
-      'Open a question’s detail to count it and check in today');
-    I18n.put('cal_today_ok', '今天已打卡', '今天已打卡', 'Checked in today');
-    I18n.put('weak_title', '薄弱知识', '薄弱知識', 'Weak topics');
-    I18n.put('weak_empty', '刷题后会在这里列出掌握度较低的知识点', '刷題後會在這裡列出掌握度較低的知識點', 'Topics you have not mastered will show up here');
-    I18n.put('weak_guest', '登录后根据刷题记录生成薄弱知识点', '登入後根據刷題記錄生成薄弱知識點', 'Sign in to see weak topics from your practice');
-    I18n.put('study_guest_sub', '登录后同步刷题进度、打卡与薄弱知识。',
-      '登入後同步刷題進度、打卡與薄弱知識。',
-      'Sign in to sync progress, check-ins, and weak topics.');
+    I18n.put('cal_ph', '学习日历（占位）', '學習日曆（佔位）', 'Study calendar (placeholder)');
+    I18n.put('cal_hint', '后续可接入连续打卡与 GitHub 风格贡献图。', '後續可接入連續打卡與 GitHub 風格貢獻圖。', 'Streaks and a contribution graph can be added later.');
+    I18n.put('weak_ph', '薄弱知识（占位）', '薄弱知識（佔位）', 'Weak topics (placeholder)');
     I18n.put('go_review', '去复习 ›', '去複習 ›', 'Review ›');
     I18n.put('week_1', '一', '一', 'M');
     I18n.put('week_2', '二', '二', 'T');
