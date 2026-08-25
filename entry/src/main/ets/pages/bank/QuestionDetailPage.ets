@@ -88,7 +88,8 @@ struct QuestionDetailPage {
           thinking: '',
           markdown: reply.length > 0 ? reply : 'AI 没有返回内容，请稍后重试。',
           phase: 'error',
-          thinkingDone: false
+          thinkingDone: false,
+          sessionId: ''
         });
       }
     } catch (_e) {
@@ -97,7 +98,8 @@ struct QuestionDetailPage {
           thinking: '',
           markdown: 'AI 服务暂时不可用，请稍后重试。',
           phase: 'error',
-          thinkingDone: false
+          thinkingDone: false,
+          sessionId: ''
         });
       }
     } finally {

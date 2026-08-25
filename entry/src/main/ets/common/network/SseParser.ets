@@ -6,6 +6,7 @@ export class SseParser {
   private thinking: string = '';
   private phase: string = 'thinking';
   private thinkingDone: boolean = false;
+  private sessionId: string = '';
 
   feed(piece: string, onUpdate: (snap: AiStreamSnapshot) => void): void {
     this.leftover += piece.split('\r\n').join('\n').split('\r').join('\n');
@@ -38,7 +39,8 @@ export class SseParser {
       thinking: this.thinking,
       markdown: this.markdown,
       phase: this.phase,
-      thinkingDone: this.thinkingDone
+      thinkingDone: this.thinkingDone,
+      sessionId: this.sessionId
     };
   }
 
@@ -59,6 +61,9 @@ export class SseParser {
     try {
       const chunk = JSON.parse(json) as Record<string, string>;
       const type = chunk.type ?? '';
+      if (chunk.sessionId && chunk.sessionId.length > 0) {
+        this.sessionId = chunk.sessionId;
+      }
       if (type === 'think_start') {
         this.phase = 'thinking';
         this.thinkingDone = false;

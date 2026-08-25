@@ -55,6 +55,20 @@ interface HttpSseHeader {
   'Authorization': string;
 }
 
+interface HttpMultipartHeader {
+  'Content-Type': string;
+  'Accept': string;
+  'Authorization': string;
+}
+
+export interface MultipartPart {
+  name: string;
+  data?: string;
+  filePath?: string;
+  fileName?: string;
+  mimeType?: string;
+}
+
 export class HttpClient {
   private static authValue(): string {
     const token = AppStorage.get('userToken') as string;
@@ -106,6 +120,60 @@ export class HttpClient {
       };
     } catch (err) {
       hilog.warn(DOMAIN, 'HttpClient', 'GET failed %{public}s %{public}s', url, JSON.stringify(err));
+      return { ok: false, code: -1, body: '', message: JSON.stringify(err) };
+    } finally {
+      client.destroy();
+    }
+  }
+
+  static async postMultipart(path: string, parts: MultipartPart[], timeoutMs?: number): Promise<HttpResult> {
+    const url = path.startsWith('http') ? path : `${AppConfig.REMOTE_API_BASE}${path}`;
+    const timeout = timeoutMs !== undefined ? timeoutMs : AppConfig.UPLOAD_TIMEOUT_MS;
+    const header: HttpMultipartHeader = {
+      'Content-Type': 'multipart/form-data',
+      'Accept': 'application/json',
+      'Authorization': HttpClient.authValue()
+    };
+    const formList: Array<http.MultiFormData> = [];
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+      if (part.filePath !== undefined && part.filePath.length > 0) {
+        const item: http.MultiFormData = {
+          name: part.name,
+          contentType: part.mimeType !== undefined && part.mimeType.length > 0 ?
+            part.mimeType : 'application/octet-stream',
+          remoteFileName: part.fileName !== undefined && part.fileName.length > 0 ? part.fileName : 'file',
+          filePath: part.filePath
+        };
+        formList.push(item);
+      } else {
+        const item: http.MultiFormData = {
+          name: part.name,
+          contentType: 'text/plain',
+          data: part.data !== undefined ? part.data : ''
+        };
+        formList.push(item);
+      }
+    }
+    const client = http.createHttp();
+    try {
+      const resp = await client.request(url, {
+        method: http.RequestMethod.POST,
+        connectTimeout: timeout,
+        readTimeout: timeout,
+        expectDataType: http.HttpDataType.STRING,
+        header: header,
+        multiFormDataList: formList
+      });
+      const respBody = typeof resp.result === 'string' ? resp.result : JSON.stringify(resp.result);
+      return {
+        ok: resp.responseCode >= 200 && resp.responseCode < 300,
+        code: resp.responseCode,
+        body: respBody,
+        message: ''
+      };
+    } catch (err) {
+      hilog.warn(DOMAIN, 'HttpClient', 'UPLOAD failed %{public}s %{public}s', url, JSON.stringify(err));
       return { ok: false, code: -1, body: '', message: JSON.stringify(err) };
     } finally {
       client.destroy();

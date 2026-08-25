@@ -5,10 +5,13 @@ export type ResumeSyncStatus = 'local' | 'pending' | 'uploaded';
 export interface ResumeProfile {
   fileName: string;
   filePath: string;
+  fileUrl: string;
   fileSize: number;
   mimeType: string;
   uploadedAt: string;
   textPreview: string;
+  textContent: string;
   resumeId: string;
+  parseStatus: string;
   syncStatus: ResumeSyncStatus;
 }

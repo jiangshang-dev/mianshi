@@ -10,6 +10,9 @@ export default class EntryAbility extends UIAbility {
     AppStorage.setOrCreate('userDisplayName', '');
     AppStorage.setOrCreate('userAvatarUrl', '');
     AppStorage.setOrCreate('userToken', '');
+    AppStorage.setOrCreate('userId', '');
+    AppStorage.setOrCreate('mainTabIndex', 0);
+    AppStorage.setOrCreate('globalResumeFileName', '');
     try {
       this.context.getApplicationContext().setColorMode(ConfigurationConstant.ColorMode.COLOR_MODE_NOT_SET);
     } catch (err) {

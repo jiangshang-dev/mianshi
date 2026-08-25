@@ -6,6 +6,10 @@ export interface InterviewConfig {
   resumeId: string;
   resumePreview: string;
   resumeFileName: string;
+  /** 本场考察模块，逗号分隔 */
+  focus: string;
+  /** 对应面试官人设 */
+  interviewerTitle: string;
 }
 
 /** 聊天消息 */

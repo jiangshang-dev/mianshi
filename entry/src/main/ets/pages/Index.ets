@@ -9,7 +9,7 @@ import { AuthRepository } from '../data/repository/AuthRepository';
 @Entry
 @Component
 struct Index {
-  @State private currentIndex: number = 0;
+  @StorageLink('mainTabIndex') currentIndex: number = 0;
 
   aboutToAppear(): void {
     const ctx = getContext(this) as common.UIAbilityContext;

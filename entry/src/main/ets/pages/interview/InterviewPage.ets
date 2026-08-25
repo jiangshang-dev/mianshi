@@ -1,26 +1,28 @@
 import { common } from '@kit.AbilityKit';
 import { router } from '@kit.ArkUI';
 import { ResumeProfile } from '../../common/models/ResumeTypes';
+import { ResumeInsight, ResumeInsightBuilder } from '../../data/interview/ResumeInsight';
+import { InterviewRoleCatalog } from '../../data/interview/InterviewRoleCatalog';
 import { ResumeRepository } from '../../data/repository/ResumeRepository';
 
 interface SessionNavParams {
   role: string;
   level: string;
   difficulty: string;
-  resumeId: string;
-  resumePreview: string;
-  resumeFileName: string;
 }
 
 @Component
 export struct InterviewPage {
-  private roles: string[] = ['Java 后端', '高级 Java', 'AI 应用开发', '前端', '测试开发'];
+  private roles: string[] = InterviewRoleCatalog.names();
   private levels: string[] = ['应届', '1～3 年', '3～5 年', '5 年以上'];
   private difficulties: string[] = ['简单', '中等', '困难', '大厂'];
   @State private selectedRole: string = 'Java 后端';
   @State private selectedLevel: string = '1～3 年';
   @State private selectedDiff: string = '中等';
   @State private resume: ResumeProfile | null = null;
+  @State private recommended: boolean = false;
+  @State private interviewerTitle: string = InterviewRoleCatalog.interviewerTitle('Java 后端');
+  @State private modulesText: string = '岗位核心技能、系统设计、简历项目深挖';
 
   private repo: ResumeRepository = ResumeRepository.getInstance();
 
@@ -31,6 +33,22 @@ export struct InterviewPage {
   private async loadResume(): Promise<void> {
     const ctx = getContext(this) as common.UIAbilityContext;
     this.resume = await this.repo.load(ctx);
+    this.applyResumeInsight();
+  }
+
+  private applyResumeInsight(): void {
+    const insight: ResumeInsight = ResumeInsightBuilder.from(this.resume);
+    if (this.resume) {
+      this.selectedRole = insight.role;
+      this.selectedLevel = insight.level;
+      this.recommended = true;
+    }
+    this.refreshTrack();
+  }
+
+  private refreshTrack(): void {
+    this.interviewerTitle = ResumeInsightBuilder.interviewerOf(this.selectedRole);
+    this.modulesText = ResumeInsightBuilder.modulesOf(this.resume, this.selectedRole).join('、');
   }
 
   build() {
@@ -54,6 +72,8 @@ export struct InterviewPage {
                   .margin({ right: 8, bottom: 8 })
                   .onClick(() => {
                     this.selectedRole = r;
+                    this.recommended = false;
+                    this.refreshTrack();
                   })
               }, (r: string) => r)
             }.width('100%')
@@ -76,6 +96,7 @@ export struct InterviewPage {
                   .margin({ right: 8, bottom: 8 })
                   .onClick(() => {
                     this.selectedLevel = r;
+                    this.recommended = false;
                   })
               }, (r: string) => r)
             }.width('100%')
@@ -116,16 +137,42 @@ export struct InterviewPage {
               .fontSize(13)
               .fontColor('#6B7280')
               .width('100%')
+            Text(`面试官：${this.interviewerTitle}`)
+              .fontSize(13)
+              .fontColor('#2563EB')
+              .width('100%')
+            Text(`考察方向：${this.modulesText}`)
+              .fontSize(13)
+              .fontColor('#374151')
+              .width('100%')
             if (this.resume) {
-              Text(`已关联简历：${this.resume.fileName}`)
+              Text(`当前使用「我的」简历：${this.resume.fileName}`)
                 .fontSize(13)
                 .fontColor('#2563EB')
                 .width('100%')
+              if (this.recommended) {
+                Text('已根据这份简历推荐岗位、面试官和考察方向')
+                  .fontSize(12)
+                  .fontColor('#6B7280')
+                  .width('100%')
+              }
+              if (!ResumeInsightBuilder.isParsedText(this.resume.textPreview)) {
+                Text('云端正在解析这份 PDF/Word。解析完成后面试官就能按项目点名提问。')
+                  .fontSize(12)
+                  .fontColor('#F59E0B')
+                  .width('100%')
+              }
             } else {
-              Text('未上传简历，建议在「我的」页上传以获得更精准的面试提问')
+              Text('尚未上传全局简历。模拟面试会使用「我的」页那一份，请先去上传。')
                 .fontSize(13)
                 .fontColor('#F59E0B')
                 .width('100%')
+              Text('去「我的」上传简历')
+                .fontSize(13)
+                .fontColor('#2563EB')
+                .onClick(() => {
+                  AppStorage.setOrCreate('mainTabIndex', 4);
+                })
             }
             Text('支持文字聊天与 AI 语音对话，自动追问并生成面试报告。')
               .fontSize(13)
@@ -139,13 +186,11 @@ export struct InterviewPage {
               .onClick(async () => {
                 const ctx = getContext(this) as common.UIAbilityContext;
                 this.resume = await this.repo.load(ctx);
+                this.refreshTrack();
                 const navParams: SessionNavParams = {
                   role: this.selectedRole,
                   level: this.selectedLevel,
-                  difficulty: this.selectedDiff,
-                  resumeId: this.resume?.resumeId ?? '',
-                  resumePreview: this.resume?.textPreview ?? '',
-                  resumeFileName: this.resume?.fileName ?? ''
+                  difficulty: this.selectedDiff
                 };
                 router.pushUrl({
                   url: 'pages/interview/InterviewSessionPage',
@@ -166,5 +211,8 @@ export struct InterviewPage {
     .backgroundColor('#F3F4F6')
     .scrollBar(BarState.Off)
     .align(Alignment.Top)
+    .onAppear(() => {
+      this.loadResume();
+    })
   }
 }

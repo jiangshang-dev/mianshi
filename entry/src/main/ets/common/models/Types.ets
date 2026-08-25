@@ -82,6 +82,7 @@ export interface AiStreamSnapshot {
   markdown: string;
   phase: string;
   thinkingDone: boolean;
+  sessionId: string;
 }
 
 export interface TodayStudyStats {

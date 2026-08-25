@@ -82,6 +82,7 @@ export class SpeechService {
     if (!this.ttsEngine || text.trim().length === 0) {
       return;
     }
+    await this.stopSpeak();
     const speakParams: textToSpeech.SpeakParams = {
       requestId: `${Date.now()}`
     };

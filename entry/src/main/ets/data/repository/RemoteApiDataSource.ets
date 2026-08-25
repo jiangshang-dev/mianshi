@@ -193,7 +193,7 @@ export class RemoteApiDataSource {
       return resp.body;
     }
     const err = resp.message.length > 0 ? resp.message : 'AI 流式请求失败';
-    onUpdate({ thinking: '', markdown: err, phase: 'error', thinkingDone: false });
+    onUpdate({ thinking: '', markdown: err, phase: 'error', thinkingDone: false, sessionId: '' });
     return err;
   }
 

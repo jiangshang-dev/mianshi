@@ -3,6 +3,7 @@ import {
   InterviewMessage,
   InterviewReport
 } from '../../common/models/InterviewTypes';
+import { ResumeInsightBuilder } from './ResumeInsight';
 
 interface QuestionBankItem {
   question: string;
@@ -11,7 +12,7 @@ interface QuestionBankItem {
   followUp: string;
 }
 
-/** 本地模拟面试引擎：出题 / 追问 / 评分 */
+/** 本地兜底引擎：AI 接口不可用时出题 / 追问 / 评分 */
 export class InterviewEngine {
   private config: InterviewConfig;
   private questionIndex: number = 0;
@@ -33,18 +34,16 @@ export class InterviewEngine {
 
   getOpening(): InterviewMessage {
     let resumePart = '';
-    if (this.config.resumePreview.length > 0) {
-      if (this.config.resumeFileName.length > 0) {
-        resumePart = `\n\n我已阅读你的简历「${this.config.resumeFileName}」，接下来会结合你的项目与技术背景提问。`;
-      } else {
-        resumePart = '\n\n我已阅读你的简历，接下来会结合你的项目与技术背景提问。';
-      }
+    if (ResumeInsightBuilder.isParsedText(this.config.resumePreview)) {
+      resumePart = `\n\n我已阅读你的简历「${this.config.resumeFileName}」，接下来会按「${this.config.focus}」结合项目提问。`;
+    } else if (this.config.resumeFileName.length > 0) {
+      resumePart = `\n\n看到你上传了简历「${this.config.resumeFileName}」，正文还没解析完，请结合项目做自我介绍，我按「${this.config.focus}」来问。`;
     } else {
-      resumePart = '\n\n（提示：在「我的」页上传简历后，AI 可更精准地针对性提问。）';
+      resumePart = '\n\n（提示：在「我的」页上传 TXT/MD 简历后，可以按你的项目定向提问。）';
     }
     return this.makeMsg('interviewer',
-      `你好，我是今天的 AI 面试官。我们面试的是「${this.config.role}」岗位，` +
-        `你的经验是「${this.config.level}」，难度「${this.config.difficulty}」。${resumePart}\n\n` +
+      `你好，我是本场的${this.config.interviewerTitle}。我们面的是「${this.config.role}」，` +
+        `经验「${this.config.level}」，难度「${this.config.difficulty}」。${resumePart}\n\n` +
         '请先做一个 1 分钟左右的自我介绍，可以从技术栈、项目经历和优势说起。');
   }
 

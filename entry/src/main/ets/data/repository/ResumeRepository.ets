@@ -3,7 +3,9 @@ import { preferences } from '@kit.ArkData';
 import { fileIo, picker } from '@kit.CoreFileKit';
 import { util } from '@kit.ArkTS';
 import { hilog } from '@kit.PerformanceAnalysisKit';
+import { AppConfig } from '../../common/constants/AppConfig';
 import { ResumeProfile } from '../../common/models/ResumeTypes';
+import { HttpClient } from '../../common/network/HttpClient';
 
 const DOMAIN = 0xC0DE;
 const PREF_NAME = 'resume_profile';
@@ -11,9 +13,45 @@ const PREF_KEY = 'resume_meta';
 const RESUME_DIR = 'resume';
 const PREVIEW_MAX_LEN = 2000;
 
+interface CopyResult {
+  ok: boolean;
+  size: number;
+  buffer: ArrayBuffer;
+  error: string;
+}
+
+interface ResumeSaveBody {
+  userId: string;
+  fileName: string;
+  fileSize: number;
+  mimeType: string;
+  textPreview: string;
+  textContent: string;
+}
+
+interface ResumeApiVo {
+  id?: string;
+  fileName?: string;
+  fileUrl?: string;
+  fileSize?: number;
+  mimeType?: string;
+  textPreview?: string;
+  textContent?: string;
+  parseStatus?: string;
+}
+
+interface ResumeApiWrap {
+  success?: boolean;
+  message?: string;
+  result?: ResumeApiVo;
+  data?: ResumeApiVo;
+}
+
 export class ResumeRepository {
   private static instance: ResumeRepository | null = null;
   private cached: ResumeProfile | null = null;
+  private picking: boolean = false;
+  private lastPickError: string = '';
 
   static getInstance(): ResumeRepository {
     if (!ResumeRepository.instance) {
@@ -31,6 +69,34 @@ export class ResumeRepository {
   }
 
   async load(context: common.UIAbilityContext): Promise<ResumeProfile | null> {
+    if (this.picking && this.cached) {
+      return this.cached;
+    }
+    const local = await this.loadLocal(context);
+    const remote = await this.fetchRemote();
+    if (this.cached && this.cached.filePath.length > 0 && this.cached.syncStatus === 'local') {
+      return this.cached;
+    }
+    if (remote && ResumeRepository.remoteWins(remote, local)) {
+      this.cached = remote;
+      await this.persist(context, remote);
+      this.publish(remote);
+      return remote;
+    }
+    if (local) {
+      this.cached = local;
+      this.publish(local);
+      if (local.syncStatus !== 'uploaded' || local.fileUrl.length === 0) {
+        await this.pushRemote(context, local);
+      }
+      return this.cached;
+    }
+    this.cached = null;
+    this.publish(null);
+    return null;
+  }
+
+  private async loadLocal(context: common.UIAbilityContext): Promise<ResumeProfile | null> {
     if (this.cached) {
       return this.cached;
     }
@@ -41,13 +107,23 @@ export class ResumeRepository {
         return null;
       }
       const profile = JSON.parse(raw) as ResumeProfile;
+      if (!profile.textContent) {
+        profile.textContent = profile.textPreview ?? '';
+      }
+      if (!profile.fileUrl) {
+        profile.fileUrl = '';
+      }
+      if (!profile.parseStatus) {
+        profile.parseStatus = ResumeRepository.isParsed(profile.textContent) ? 'done' : 'pending';
+      }
       try {
-        fileIo.accessSync(profile.filePath);
+        if (profile.filePath && profile.filePath.length > 0) {
+          fileIo.accessSync(profile.filePath);
+        }
         this.cached = profile;
         return profile;
       } catch (err) {
-        await this.clearMeta(context);
-        return null;
+        return profile;
       }
     } catch (err) {
       hilog.warn(DOMAIN, 'ResumeRepository', 'load failed %{public}s', JSON.stringify(err));
@@ -55,54 +131,141 @@ export class ResumeRepository {
     }
   }
 
+  consumePickError(): string {
+    const msg = this.lastPickError;
+    this.lastPickError = '';
+    return msg;
+  }
+
   async pickAndSave(context: common.UIAbilityContext): Promise<ResumeProfile | null> {
+    this.picking = true;
+    this.lastPickError = '';
     try {
       const documentPicker = new picker.DocumentViewPicker(context);
       const options = new picker.DocumentSelectOptions();
       options.maxSelectNumber = 1;
-      options.fileSuffixFilters = ['.pdf', '.doc', '.docx', '.txt', '.md'];
+      // API 10+ 必须用「描述|后缀,后缀」，写成 ['.pdf'] 会选完无法确认
+      options.fileSuffixFilters = ['简历文档|.pdf,.doc,.docx,.txt,.md'];
       const uris = await documentPicker.select(options);
       if (!uris || uris.length === 0) {
         return null;
       }
       return await this.saveFromUri(context, uris[0]);
     } catch (err) {
+      this.lastPickError = ResumeRepository.describeError('保存失败', err);
       hilog.warn(DOMAIN, 'ResumeRepository', 'pickAndSave failed %{public}s', JSON.stringify(err));
       return null;
+    } finally {
+      this.picking = false;
     }
   }
 
   async saveFromUri(context: common.UIAbilityContext, uri: string): Promise<ResumeProfile | null> {
-    const fileName = this.extractFileName(uri);
+    const displayName = this.extractFileName(uri);
     const dir = `${context.filesDir}/${RESUME_DIR}`;
-    fileIo.mkdirSync(dir, true);
-    const destPath = `${dir}/${fileName}`;
+    try {
+      fileIo.mkdirSync(dir, true);
+    } catch (_e) {
+    }
+    const destPath = `${dir}/resume_${Date.now()}${this.fileExt(displayName)}`;
+    const copied = this.copyPickerFile(uri, destPath);
+    if (!copied.ok) {
+      this.lastPickError = copied.error;
+      return null;
+    }
 
-    const srcFile = fileIo.openSync(uri, fileIo.OpenMode.READ_ONLY);
-    const stat = fileIo.statSync(srcFile.fd);
-    const buffer = new ArrayBuffer(stat.size);
-    fileIo.readSync(srcFile.fd, buffer);
-    fileIo.closeSync(srcFile);
-
-    const destFile = fileIo.openSync(destPath,
-      fileIo.OpenMode.READ_WRITE | fileIo.OpenMode.CREATE | fileIo.OpenMode.TRUNC);
-    fileIo.writeSync(destFile.fd, buffer);
-    fileIo.closeSync(destFile);
-
-    const textPreview = await this.extractTextPreview(destPath, fileName, buffer);
+    const textFull = await this.extractTextFull(displayName, copied.buffer);
     const profile: ResumeProfile = {
-      fileName,
+      fileName: displayName,
       filePath: destPath,
-      fileSize: stat.size,
-      mimeType: this.guessMime(fileName),
+      fileUrl: '',
+      fileSize: copied.size,
+      mimeType: this.guessMime(displayName),
       uploadedAt: new Date().toISOString(),
-      textPreview,
+      textPreview: this.trimPreview(textFull),
+      textContent: textFull,
       resumeId: '',
+      parseStatus: ResumeRepository.isParsed(textFull) ? 'done' : 'pending',
       syncStatus: 'local'
     };
     await this.persist(context, profile);
     this.cached = profile;
+    this.publish(profile);
+    this.pushRemote(context, profile);
     return profile;
+  }
+
+  private copyPickerFile(uri: string, destPath: string): CopyResult {
+    try {
+      const srcFile = fileIo.openSync(uri, fileIo.OpenMode.READ_ONLY);
+      try {
+        const stat = fileIo.statSync(srcFile.fd);
+        if (stat.size <= 0) {
+          return { ok: false, size: 0, buffer: new ArrayBuffer(0), error: '文件是空的' };
+        }
+        if (stat.size > 15 * 1024 * 1024) {
+          return { ok: false, size: 0, buffer: new ArrayBuffer(0), error: '文件过大，请小于 15MB' };
+        }
+        const buffer = new ArrayBuffer(stat.size);
+        fileIo.readSync(srcFile.fd, buffer);
+        const destFile = fileIo.openSync(destPath,
+          fileIo.OpenMode.READ_WRITE | fileIo.OpenMode.CREATE | fileIo.OpenMode.TRUNC);
+        try {
+          fileIo.writeSync(destFile.fd, buffer);
+        } finally {
+          fileIo.closeSync(destFile);
+        }
+        return { ok: true, size: stat.size, buffer: buffer, error: '' };
+      } finally {
+        fileIo.closeSync(srcFile);
+      }
+    } catch (err) {
+      hilog.warn(DOMAIN, 'ResumeRepository', 'copyPickerFile failed %{public}s uri=%{public}s',
+        JSON.stringify(err), uri);
+      return {
+        ok: false,
+        size: 0,
+        buffer: new ArrayBuffer(0),
+        error: ResumeRepository.describeError('无法读取所选文件', err)
+      };
+    }
+  }
+
+  private static describeError(prefix: string, err: Object): string {
+    const raw = JSON.stringify(err);
+    if (raw.indexOf('13900002') >= 0) {
+      return `${prefix}：找不到文件`;
+    }
+    if (raw.indexOf('13900012') >= 0) {
+      return `${prefix}：没有文件权限`;
+    }
+    if (raw.indexOf('13900020') >= 0) {
+      return `${prefix}：文件参数无效`;
+    }
+    if (raw.length > 0 && raw !== '{}') {
+      return `${prefix}：${raw.substring(0, 80)}`;
+    }
+    return `${prefix}，请换一份文件再试`;
+  }
+
+  private fileExt(fileName: string): string {
+    const lower = fileName.toLowerCase();
+    if (lower.endsWith('.docx')) {
+      return '.docx';
+    }
+    if (lower.endsWith('.doc')) {
+      return '.doc';
+    }
+    if (lower.endsWith('.pdf')) {
+      return '.pdf';
+    }
+    if (lower.endsWith('.md')) {
+      return '.md';
+    }
+    if (lower.endsWith('.txt')) {
+      return '.txt';
+    }
+    return '.pdf';
   }
 
   async clear(context: common.UIAbilityContext): Promise<void> {
@@ -116,6 +279,8 @@ export class ResumeRepository {
     }
     await this.clearMeta(context);
     this.cached = null;
+    this.publish(null);
+    this.deleteRemote();
   }
 
   formatFileSize(bytes: number): string {
@@ -141,6 +306,159 @@ export class ResumeRepository {
     await pref.flush();
   }
 
+  private publish(profile: ResumeProfile | null): void {
+    AppStorage.setOrCreate('globalResumeFileName', profile !== null ? profile.fileName : '');
+  }
+
+  private currentUserId(): string {
+    const id = AppStorage.get('userId') as string;
+    if (id !== undefined && id.length > 0) {
+      return id;
+    }
+    return '';
+  }
+
+  private async fetchRemote(): Promise<ResumeProfile | null> {
+    const userId = this.currentUserId();
+    if (userId.length === 0) {
+      return null;
+    }
+    const resp = await HttpClient.get('/api/resume/current', `userId=${encodeURIComponent(userId)}`);
+    if (!resp.ok || resp.body.length === 0) {
+      return null;
+    }
+    try {
+      const parsed = JSON.parse(resp.body) as ResumeApiWrap;
+      const vo = parsed.result ?? parsed.data;
+      if (!vo || !vo.fileName) {
+        return null;
+      }
+      const text = vo.textContent ?? vo.textPreview ?? '';
+      return {
+        fileName: vo.fileName,
+        filePath: '',
+        fileUrl: vo.fileUrl ?? '',
+        fileSize: vo.fileSize ?? 0,
+        mimeType: vo.mimeType ?? '',
+        uploadedAt: new Date().toISOString(),
+        textPreview: this.trimPreview(text),
+        textContent: text,
+        resumeId: vo.id ?? '',
+        parseStatus: vo.parseStatus ?? (ResumeRepository.isParsed(text) ? 'done' : 'pending'),
+        syncStatus: 'uploaded'
+      };
+    } catch (err) {
+      hilog.warn(DOMAIN, 'ResumeRepository', 'fetchRemote failed %{public}s', JSON.stringify(err));
+      return null;
+    }
+  }
+
+  private async pushRemote(context: common.UIAbilityContext, profile: ResumeProfile): Promise<void> {
+    const userId = this.currentUserId();
+    if (userId.length === 0) {
+      return;
+    }
+    if (profile.filePath.length === 0) {
+      return;
+    }
+    try {
+      fileIo.accessSync(profile.filePath);
+    } catch (_e) {
+      hilog.warn(DOMAIN, 'ResumeRepository', 'local file missing, skip upload');
+      return;
+    }
+    const resp = await HttpClient.postMultipart(AppConfig.REMOTE_RESUME_UPLOAD_PATH, [
+      { name: 'userId', data: userId },
+      {
+        name: 'file',
+        filePath: profile.filePath,
+        fileName: profile.fileName,
+        mimeType: profile.mimeType
+      }
+    ], AppConfig.UPLOAD_TIMEOUT_MS);
+    if (!resp.ok) {
+      hilog.warn(DOMAIN, 'ResumeRepository', 'upload failed %{public}s %{public}s', `${resp.code}`, resp.message);
+      return;
+    }
+    try {
+      const parsed = JSON.parse(resp.body) as ResumeApiWrap;
+      if (parsed.success === false) {
+        hilog.warn(DOMAIN, 'ResumeRepository', 'upload rejected %{public}s', parsed.message ?? '');
+        return;
+      }
+      const vo = parsed.result ?? parsed.data;
+      if (!vo) {
+        return;
+      }
+      if (vo.id) {
+        profile.resumeId = vo.id;
+      }
+      if (vo.fileUrl) {
+        profile.fileUrl = vo.fileUrl;
+      }
+      const text = vo.textContent ?? vo.textPreview ?? '';
+      if (ResumeRepository.isParsed(text)) {
+        profile.textContent = text;
+        profile.textPreview = this.trimPreview(text);
+      }
+      profile.parseStatus = vo.parseStatus ?? profile.parseStatus;
+      profile.syncStatus = 'uploaded';
+      await this.persist(context, profile);
+      this.cached = profile;
+      this.publish(profile);
+    } catch (err) {
+      hilog.warn(DOMAIN, 'ResumeRepository', 'upload parse failed %{public}s', JSON.stringify(err));
+    }
+  }
+
+  private static isParsed(text: string): boolean {
+    if (text.length < 20) {
+      return false;
+    }
+    return text.indexOf('服务端将解析') < 0;
+  }
+
+  private async deleteRemote(): Promise<void> {
+    const userId = this.currentUserId();
+    if (userId.length === 0) {
+      return;
+    }
+    const body: ResumeSaveBody = {
+      userId: userId,
+      fileName: '',
+      fileSize: 0,
+      mimeType: '',
+      textPreview: '',
+      textContent: ''
+    };
+    await HttpClient.postJson('/api/resume/clear', JSON.stringify(body));
+  }
+
+  private static remoteWins(remote: ResumeProfile, local: ResumeProfile | null): boolean {
+    const remoteLen = remote.textContent.length;
+    if (remoteLen < 20 || remote.textContent.indexOf('服务端将解析') >= 0) {
+      return local === null;
+    }
+    if (local === null) {
+      return true;
+    }
+    return remoteLen > local.textContent.length;
+  }
+
+  private async extractTextFull(fileName: string, buffer: ArrayBuffer): Promise<string> {
+    const lower = fileName.toLowerCase();
+    if (lower.endsWith('.txt') || lower.endsWith('.md')) {
+      const decoder = util.TextDecoder.create('utf-8', { ignoreBOM: true });
+      const text = decoder.decodeWithStream(new Uint8Array(buffer), { stream: false });
+      const normalized = text.replace(/\r\n/g, '\n').trim();
+      if (normalized.length > 12000) {
+        return `${normalized.substring(0, 12000)}…`;
+      }
+      return normalized;
+    }
+    return `已上传简历「${fileName}」，服务端将解析 PDF/Word 内容并用于个性化面试。`;
+  }
+
   private async clearMeta(context: common.UIAbilityContext): Promise<void> {
     const pref = await preferences.getPreferences(context, PREF_NAME);
     await pref.delete(PREF_KEY);
@@ -148,12 +466,22 @@ export class ResumeRepository {
   }
 
   private extractFileName(uri: string): string {
-    const parts = uri.split('/');
-    const last = parts[parts.length - 1];
-    if (last.length > 0) {
-      return decodeURIComponent(last);
+    let raw = uri;
+    const queryAt = raw.indexOf('?');
+    if (queryAt >= 0) {
+      raw = raw.substring(0, queryAt);
     }
-    return `resume_${Date.now()}.txt`;
+    const parts = raw.split('/');
+    let last = parts[parts.length - 1];
+    try {
+      last = decodeURIComponent(last);
+    } catch (_e) {
+    }
+    last = last.replace(/[\\/:*?"<>|]/g, '_');
+    if (last.length > 0) {
+      return last;
+    }
+    return `resume_${Date.now()}.pdf`;
   }
 
   private guessMime(fileName: string): string {

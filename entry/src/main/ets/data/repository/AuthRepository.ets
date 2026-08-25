@@ -76,11 +76,13 @@ export class AuthRepository {
       AppStorage.setOrCreate('userDisplayName', this.cached.displayName);
       AppStorage.setOrCreate('userAvatarUrl', this.cached.avatarUrl);
       AppStorage.setOrCreate('userToken', this.cached.token);
+      AppStorage.setOrCreate('userId', this.cached.userId);
     } else {
       AppStorage.setOrCreate('isLoggedIn', false);
       AppStorage.setOrCreate('userDisplayName', '');
       AppStorage.setOrCreate('userAvatarUrl', '');
       AppStorage.setOrCreate('userToken', '');
+      AppStorage.setOrCreate('userId', '');
     }
   }
 

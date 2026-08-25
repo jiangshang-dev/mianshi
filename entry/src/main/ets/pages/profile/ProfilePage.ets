@@ -21,13 +21,24 @@ export struct ProfilePage {
   }
 
   private async refreshUser(): Promise<void> {
-    const ctx = getContext(this) as common.UIAbilityContext;
+    const ctx = this.hostContext();
     await this.auth.load(ctx);
     this.auth.syncAppStorage();
   }
 
+  private hostContext(): common.UIAbilityContext {
+    const host = this.getUIContext().getHostContext();
+    if (host) {
+      return host as common.UIAbilityContext;
+    }
+    return getContext(this) as common.UIAbilityContext;
+  }
+
   private async loadResume(): Promise<void> {
-    const ctx = getContext(this) as common.UIAbilityContext;
+    if (this.uploading) {
+      return;
+    }
+    const ctx = this.hostContext();
     this.resume = await this.repo.load(ctx);
   }
 
@@ -54,17 +65,25 @@ export struct ProfilePage {
       return;
     }
     this.uploading = true;
-    const ctx = getContext(this) as common.UIAbilityContext;
-    const profile = await this.repo.pickAndSave(ctx);
-    this.uploading = false;
-    if (profile) {
-      this.resume = profile;
-      promptAction.showToast({ message: '简历已保存，可用于模拟面试' });
+    try {
+      const ctx = this.hostContext();
+      const profile = await this.repo.pickAndSave(ctx);
+      if (profile) {
+        this.resume = profile;
+        promptAction.showToast({ message: '简历已保存，正在同步到云端' });
+      } else {
+        const errMsg = this.repo.consumePickError();
+        if (errMsg.length > 0) {
+          promptAction.showToast({ message: errMsg });
+        }
+      }
+    } finally {
+      this.uploading = false;
     }
   }
 
   private async removeResume(): Promise<void> {
-    const ctx = getContext(this) as common.UIAbilityContext;
+    const ctx = this.hostContext();
     await this.repo.clear(ctx);
     this.resume = null;
     promptAction.showToast({ message: '简历已删除' });
@@ -132,7 +151,10 @@ export struct ProfilePage {
                 .fontSize(15)
                 .fontWeight(FontWeight.Medium)
                 .fontColor('#111827')
-              Text(this.resume ? '已上传，模拟面试将结合简历提问' : '上传简历，AI 面试更精准')
+              Text(this.resume ?
+                (this.resume.fileUrl.length > 0 ?
+                  '已上传到云端，模拟面试会用这一份' : '已作为全局简历，模拟面试会用这一份') :
+                '上传简历，AI 面试更精准')
                 .fontSize(12)
                 .fontColor('#9CA3AF')
             }
