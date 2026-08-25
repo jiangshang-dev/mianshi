@@ -19,6 +19,14 @@
           "abilities": ["EntryAbility"],
           "when": "inuse"
         }
+      },
+      {
+        "name": "ohos.permission.MICROPHONE",
+        "reason": "$string:microphone_permission_reason",
+        "usedScene": {
+          "abilities": ["EntryAbility"],
+          "when": "inuse"
+        }
       }
     ],
     "abilities": [

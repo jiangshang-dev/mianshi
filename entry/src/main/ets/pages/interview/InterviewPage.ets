@@ -1,3 +1,11 @@
+import { router } from '@kit.ArkUI';
+
+interface SessionNavParams {
+  role: string;
+  level: string;
+  difficulty: string;
+}
+
 @Component
 export struct InterviewPage {
   private roles: string[] = ['Java 后端', '高级 Java', 'AI 应用开发', '前端', '测试开发'];
@@ -84,7 +92,7 @@ export struct InterviewPage {
           .borderRadius(14)
 
           Column({ space: 10 }) {
-            Text('模拟面试（V1 占位）')
+            Text('模拟面试')
               .fontSize(16)
               .fontWeight(FontWeight.Bold)
               .width('100%')
@@ -92,16 +100,25 @@ export struct InterviewPage {
               .fontSize(13)
               .fontColor('#6B7280')
               .width('100%')
-            Text('后续将对接 AgentScope2：出题 / 追问 / 评分 / 报告。当前可先刷本地 MD + 远程题库。')
+            Text('支持文字聊天与 AI 语音对话，自动追问并生成面试报告。')
               .fontSize(13)
               .fontColor('#6B7280')
               .lineHeight(20)
               .width('100%')
-            Button('开始文字模拟面试')
+            Button('开始模拟面试')
               .width('100%')
               .height(44)
               .backgroundColor('#2563EB')
               .onClick(() => {
+                const navParams: SessionNavParams = {
+                  role: this.selectedRole,
+                  level: this.selectedLevel,
+                  difficulty: this.selectedDiff
+                };
+                router.pushUrl({
+                  url: 'pages/interview/InterviewSessionPage',
+                  params: navParams
+                });
               })
           }
           .width('100%')

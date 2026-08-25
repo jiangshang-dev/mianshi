@@ -3,6 +3,7 @@
     "pages/Index",
     "pages/bank/QuestionListPage",
     "pages/bank/QuestionDetailPage",
-    "pages/search/SearchPage"
+    "pages/search/SearchPage",
+    "pages/interview/InterviewSessionPage"
   ]
 }
