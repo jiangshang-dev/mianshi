@@ -14,6 +14,12 @@ interface SessionNavParams {
 
 @Component
 export struct InterviewPage {
+  @StorageLink('isLoggedIn')
+  @Watch('onLoginStateChange')
+  isLoggedIn: boolean = false;
+  @StorageLink('globalResumeFileName')
+  @Watch('onResumeMetaChange')
+  resumeFileName: string = '';
   @State private roles: string[] = InterviewRoleCatalog.names();
   @State private levels: string[] = InterviewRoleCatalog.levelNames();
   @State private difficulties: string[] = InterviewRoleCatalog.difficulties;
@@ -30,6 +36,15 @@ export struct InterviewPage {
 
   aboutToAppear(): void {
     this.bootstrap();
+  }
+
+  onLoginStateChange(): void {
+    this.loadResume();
+  }
+
+  onResumeMetaChange(): void {
+    this.resume = this.repo.getCached();
+    this.applyResumeInsight();
   }
 
   private async bootstrap(): Promise<void> {

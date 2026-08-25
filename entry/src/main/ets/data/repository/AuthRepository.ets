@@ -39,7 +39,7 @@ interface LoginApiResult {
 }
 
 interface LoginUserInfo {
-  id?: number;
+  id?: string | number;
   nickname?: string;
   avatar?: string;
 }
@@ -73,17 +73,17 @@ export class AuthRepository {
 
   syncAppStorage(): void {
     if (this.cached && this.cached.token.length > 0) {
-      AppStorage.setOrCreate('isLoggedIn', true);
+      AppStorage.setOrCreate('userId', this.cached.userId);
       AppStorage.setOrCreate('userDisplayName', this.cached.displayName);
       AppStorage.setOrCreate('userAvatarUrl', this.cached.avatarUrl);
       AppStorage.setOrCreate('userToken', this.cached.token);
-      AppStorage.setOrCreate('userId', this.cached.userId);
+      AppStorage.setOrCreate('isLoggedIn', true);
     } else {
-      AppStorage.setOrCreate('isLoggedIn', false);
+      AppStorage.setOrCreate('userId', '');
       AppStorage.setOrCreate('userDisplayName', '');
       AppStorage.setOrCreate('userAvatarUrl', '');
       AppStorage.setOrCreate('userToken', '');
-      AppStorage.setOrCreate('userId', '');
+      AppStorage.setOrCreate('isLoggedIn', false);
     }
   }
 
@@ -174,7 +174,7 @@ export class AuthRepository {
         loginType: 'huawei',
         token: parsed.result.token ?? '',
         refreshToken: parsed.result.refreshToken ?? '',
-        userId: (info !== undefined && info.id !== undefined) ? `${info.id}` : ''
+        userId: this.readUserId(info, resp.body)
       };
       await this.persist(context, profile);
       this.cached = profile;
@@ -288,6 +288,53 @@ export class AuthRepository {
     } catch (_e) {
       return { success: false, message: '服务器返回异常' };
     }
+  }
+
+  private readUserId(info: LoginUserInfo | undefined, rawBody: string): string {
+    const fromRaw = this.extractJsonNumericField(rawBody, 'id');
+    if (fromRaw.length > 0) {
+      return fromRaw;
+    }
+    if (info !== undefined && info.id !== undefined) {
+      return `${info.id}`;
+    }
+    return '';
+  }
+
+  private extractJsonNumericField(body: string, key: string): string {
+    const token = `"${key}"`;
+    const at = body.indexOf(token);
+    if (at < 0) {
+      return '';
+    }
+    let i = at + token.length;
+    while (i < body.length) {
+      const ch = body.charAt(i);
+      if (ch === ' ' || ch === ':') {
+        i++;
+        continue;
+      }
+      break;
+    }
+    if (i < body.length && body.charAt(i) === '"') {
+      i++;
+      let out = '';
+      while (i < body.length && body.charAt(i) !== '"') {
+        out += body.charAt(i);
+        i++;
+      }
+      return out;
+    }
+    let digits = '';
+    while (i < body.length) {
+      const ch = body.charAt(i);
+      if (ch < '0' || ch > '9') {
+        break;
+      }
+      digits += ch;
+      i++;
+    }
+    return digits;
   }
 
   private async persist(context: common.Context, profile: UserProfile): Promise<void> {

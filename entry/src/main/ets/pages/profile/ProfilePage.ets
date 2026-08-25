@@ -11,6 +11,9 @@ export struct ProfilePage {
   isLoggedIn: boolean = false;
   @StorageLink('userDisplayName') displayName: string = '';
   @StorageLink('userAvatarUrl') avatarUrl: string = '';
+  @StorageLink('globalResumeFileName')
+  @Watch('onResumeMetaChange')
+  resumeFileName: string = '';
   @State private resume: ResumeProfile | null = null;
   @State private uploading: boolean = false;
 
@@ -18,12 +21,20 @@ export struct ProfilePage {
   private auth: AuthRepository = AuthRepository.getInstance();
 
   aboutToAppear(): void {
-    this.refreshUser();
-    this.loadResume();
+    this.bootstrap();
   }
 
   onLoginStateChange(): void {
     this.loadResume();
+  }
+
+  onResumeMetaChange(): void {
+    this.resume = this.repo.getCached();
+  }
+
+  private async bootstrap(): Promise<void> {
+    await this.refreshUser();
+    await this.loadResume();
   }
 
   private async refreshUser(): Promise<void> {
