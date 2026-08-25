@@ -1,8 +1,10 @@
 import { Category } from '../common/models/Types';
 import { CategoryIcon } from './CategoryIcon';
+import { I18n } from '../common/i18n/I18n';
 
 @Component
 export struct CategoryCard {
+  @StorageLink('appLang') lang: string = I18n.HANS;
   @Prop category: Category = {
     id: '',
     name: '',
@@ -23,7 +25,7 @@ export struct CategoryCard {
         .fontWeight(FontWeight.Medium)
         .fontColor('#111827')
         .maxLines(1)
-      Text(`${this.category.articleCount} 道题`)
+      Text(I18n.tf('q_count', `${this.category.articleCount}`, this.lang))
         .fontSize(11)
         .fontColor('#6B7280')
     }

@@ -6,6 +6,7 @@ import { InterviewRoleCatalog } from '../../data/interview/InterviewRoleCatalog'
 import { ResumeRepository } from '../../data/repository/ResumeRepository';
 import { InterviewOptionRepository } from '../../data/repository/InterviewOptionRepository';
 import { LoginGate } from '../../common/utils/LoginGate';
+import { I18n } from '../../common/i18n/I18n';
 
 interface SessionNavParams {
   role: string;
@@ -21,6 +22,7 @@ export struct InterviewPage {
   @StorageLink('globalResumeFileName')
   @Watch('onResumeMetaChange')
   resumeFileName: string = '';
+  @StorageLink('appLang') lang: string = I18n.HANS;
   @State private roles: string[] = InterviewRoleCatalog.names();
   @State private levels: string[] = InterviewRoleCatalog.levelNames();
   @State private difficulties: string[] = InterviewRoleCatalog.difficulties;
@@ -94,20 +96,20 @@ export struct InterviewPage {
   build() {
     if (!this.isLoggedIn) {
       Column({ space: 16 }) {
-        Text('AI 面试')
+        Text(I18n.t('tab_interview', this.lang))
           .fontSize(20)
           .fontWeight(FontWeight.Bold)
           .width('100%')
         Column({ space: 12 }) {
-          Text('登录后才可使用 AI 模拟面试')
+          Text(I18n.t('interview_login_title', this.lang))
             .fontSize(15)
             .fontColor('#374151')
             .width('100%')
-          Text('登录后会保存本场问答，方便你和管理后台回看历史。')
+          Text(I18n.t('interview_login_sub', this.lang))
             .fontSize(13)
             .fontColor('#6B7280')
             .width('100%')
-          Button('去登录')
+          Button(I18n.t('go_login', this.lang))
             .width('100%')
             .height(44)
             .backgroundColor('#2563EB')
@@ -127,13 +129,13 @@ export struct InterviewPage {
     } else {
     Scroll() {
       Column({ space: 10 }) {
-        Text('AI 面试')
+        Text(I18n.t('tab_interview', this.lang))
           .fontSize(20)
           .fontWeight(FontWeight.Bold)
           .width('100%')
 
         Column({ space: 8 }) {
-            Text('选择岗位').fontSize(15).fontWeight(FontWeight.Medium).width('100%')
+            Text(I18n.t('pick_role', this.lang)).fontSize(15).fontWeight(FontWeight.Medium).width('100%')
             Flex({ wrap: FlexWrap.Wrap }) {
               ForEach(this.roles, (r: string) => {
                 Text(r)
@@ -157,7 +159,7 @@ export struct InterviewPage {
           .borderRadius(14)
 
           Column({ space: 8 }) {
-            Text('工作经验').fontSize(15).fontWeight(FontWeight.Medium).width('100%')
+            Text(I18n.t('work_exp', this.lang)).fontSize(15).fontWeight(FontWeight.Medium).width('100%')
             Flex({ wrap: FlexWrap.Wrap }) {
               ForEach(this.levels, (r: string) => {
                 Text(r)
@@ -180,7 +182,7 @@ export struct InterviewPage {
           .borderRadius(14)
 
           Column({ space: 8 }) {
-            Text('面试难度').fontSize(15).fontWeight(FontWeight.Medium).width('100%')
+            Text(I18n.t('iv_diff', this.lang)).fontSize(15).fontWeight(FontWeight.Medium).width('100%')
             Flex({ wrap: FlexWrap.Wrap }) {
               ForEach(this.difficulties, (r: string) => {
                 Text(r)
@@ -202,57 +204,57 @@ export struct InterviewPage {
           .borderRadius(14)
 
           Column({ space: 10 }) {
-            Text('模拟面试')
+            Text(I18n.t('mock_iv', this.lang))
               .fontSize(16)
               .fontWeight(FontWeight.Bold)
               .width('100%')
-            Text(`即将开始：${this.selectedRole} · ${this.selectedLevel} · ${this.selectedDiff}`)
+            Text(I18n.tf('iv_soon', `${this.selectedRole} · ${this.selectedLevel} · ${this.selectedDiff}`, this.lang))
               .fontSize(13)
               .fontColor('#6B7280')
               .width('100%')
-            Text(`面试官：${this.interviewerTitle}`)
+            Text(I18n.tf('iv_interviewer', this.interviewerTitle, this.lang))
               .fontSize(13)
               .fontColor('#2563EB')
               .width('100%')
-            Text(`考察方向：${this.modulesText}`)
+            Text(I18n.tf('iv_focus', this.modulesText, this.lang))
               .fontSize(13)
               .fontColor('#374151')
               .width('100%')
             if (this.resume) {
-              Text(`当前使用「我的」简历：${this.resume.fileName}`)
+              Text(I18n.tf('iv_resume_using', this.resume.fileName, this.lang))
                 .fontSize(13)
                 .fontColor('#2563EB')
                 .width('100%')
               if (this.recommended) {
-                Text('已根据这份简历推荐岗位、面试官和考察方向')
+                Text(I18n.t('iv_resume_ok', this.lang))
                   .fontSize(12)
                   .fontColor('#6B7280')
                   .width('100%')
               }
               if (!ResumeInsightBuilder.isParsedText(this.resume.textPreview)) {
-                Text('云端正在解析这份 PDF/Word。解析完成后面试官就能按项目点名提问。')
+                Text(I18n.t('iv_resume_parse', this.lang))
                   .fontSize(12)
                   .fontColor('#F59E0B')
                   .width('100%')
               }
             } else {
-              Text('尚未上传全局简历。模拟面试会使用「我的」页那一份，请先去上传。')
+              Text(I18n.t('iv_no_resume', this.lang))
                 .fontSize(13)
                 .fontColor('#F59E0B')
                 .width('100%')
-              Text('去「我的」上传简历')
+              Text(I18n.t('iv_go_resume', this.lang))
                 .fontSize(13)
                 .fontColor('#2563EB')
                 .onClick(() => {
                   AppStorage.setOrCreate('mainTabIndex', 4);
                 })
             }
-            Text('支持文字聊天与 AI 语音对话，自动追问并生成面试报告。')
+            Text(I18n.t('iv_support', this.lang))
               .fontSize(13)
               .fontColor('#6B7280')
               .lineHeight(20)
               .width('100%')
-            Button('开始模拟面试')
+            Button(I18n.t('iv_start', this.lang))
               .width('100%')
               .height(44)
               .backgroundColor('#2563EB')

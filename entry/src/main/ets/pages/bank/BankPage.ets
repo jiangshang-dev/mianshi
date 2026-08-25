@@ -4,9 +4,11 @@ import { Category } from '../../common/models/Types';
 import { CategoryGroupUtil } from '../../common/utils/CategoryGroupUtil';
 import { CategoryIcon } from '../../components/CategoryIcon';
 import { QuestionRepository } from '../../data/repository/QuestionRepository';
+import { I18n } from '../../common/i18n/I18n';
 
 @Component
 export struct BankPage {
+  @StorageLink('appLang') lang: string = I18n.HANS;
   @State private skills: Category[] = [];
   @State private companies: Category[] = [];
   @State private specials: Category[] = [];
@@ -62,12 +64,12 @@ export struct BankPage {
       Scroll() {
         Column({ space: 16 }) {
           Row() {
-            Text('题库')
+            Text(I18n.t('bank_title', this.lang))
               .fontSize(20)
               .fontWeight(FontWeight.Bold)
               .fontColor('#111827')
               .layoutWeight(1)
-            Text('全部分类 ›')
+            Text(I18n.t('all_cats', this.lang))
               .fontSize(13)
               .fontColor('#2563EB')
               .onClick(() => {
@@ -77,15 +79,15 @@ export struct BankPage {
           .width('100%')
 
           if (this.isEmpty()) {
-            Text('未拉到分类，请确认后端已启动且手机与电脑在同一局域网')
+            Text(I18n.t('no_cat_bank', this.lang))
               .fontSize(13)
               .fontColor('#9CA3AF')
               .margin({ top: 40 })
               .width('100%')
           } else {
-            this.groupBlock('技能', this.skills)
-            this.groupBlock('公司题库', this.companies)
-            this.groupBlock('专项', this.specials)
+            this.groupBlock('group_skill', this.skills)
+            this.groupBlock('group_company', this.companies)
+            this.groupBlock('group_special', this.specials)
           }
         }
         .padding({ left: 16, right: 16, top: 8, bottom: 24 })
@@ -100,12 +102,12 @@ export struct BankPage {
   }
 
   @Builder
-  groupBlock(title: string, list: Category[]) {
+  groupBlock(titleKey: string, list: Category[]) {
     if (list.length === 0) {
       Column().width(0).height(0)
     } else {
       Column({ space: 10 }) {
-        Text(title)
+        Text(I18n.t(titleKey, this.lang))
           .fontSize(15)
           .fontWeight(FontWeight.Medium)
           .fontColor('#374151')
@@ -119,7 +121,7 @@ export struct BankPage {
                 .fontSize(16)
                 .fontWeight(FontWeight.Medium)
                 .fontColor('#111827')
-              Text(`${cat.articleCount} 道题`)
+              Text(I18n.tf('q_count', `${cat.articleCount}`, this.lang))
                 .fontSize(12)
                 .fontColor('#6B7280')
             }

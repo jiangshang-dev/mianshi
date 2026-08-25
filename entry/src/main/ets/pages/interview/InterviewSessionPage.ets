@@ -15,6 +15,7 @@ import { AuthRepository } from '../../data/repository/AuthRepository';
 import { InterviewParsedReply, InterviewRepository } from '../../data/repository/InterviewRepository';
 import { ResumeRepository } from '../../data/repository/ResumeRepository';
 import { LoginGate } from '../../common/utils/LoginGate';
+import { I18n } from '../../common/i18n/I18n';
 
 interface SessionRouteParams {
   role?: string;
@@ -25,6 +26,7 @@ interface SessionRouteParams {
 @Entry
 @Component
 struct InterviewSessionPage {
+  @StorageLink('appLang') lang: string = I18n.HANS;
   @State private mode: InterviewChatMode = 'text';
   @State private messages: InterviewMessage[] = [];
   @State private inputText: string = '';
@@ -324,17 +326,17 @@ struct InterviewSessionPage {
     if (this.voiceMuted) {
       await this.stopVoicePlayback();
       this.voiceStatus = '已静音，面试官回复不再朗读';
-      promptAction.showToast({ message: '已关闭语音朗读' });
+      promptAction.showToast({ message: I18n.t('tts_off', this.lang) });
     } else {
       this.voiceStatus = '已开启朗读';
-      promptAction.showToast({ message: '已开启语音朗读' });
+      promptAction.showToast({ message: I18n.t('tts_on', this.lang) });
     }
   }
 
   private submitAnswer(answer: string): void {
     const text = answer.trim();
     if (text.length === 0) {
-      promptAction.showToast({ message: '请先输入或说出你的回答' });
+      promptAction.showToast({ message: I18n.t('need_answer', this.lang) });
       return;
     }
     if (this.streaming || this.showReport || !this.waitingAnswer) {
@@ -413,11 +415,11 @@ struct InterviewSessionPage {
 
   private async toggleRecording(): Promise<void> {
     if (!this.speechReady) {
-      promptAction.showToast({ message: '语音能力不可用，请切换文字模式' });
+      promptAction.showToast({ message: I18n.t('voice_unavail', this.lang) });
       return;
     }
     if (this.streaming || !this.waitingAnswer) {
-      promptAction.showToast({ message: '面试官正在回复，请稍候' });
+      promptAction.showToast({ message: I18n.t('wait_reply', this.lang) });
       return;
     }
     if (this.isSpeaking) {
@@ -435,7 +437,7 @@ struct InterviewSessionPage {
       this.isRecording = true;
       this.voiceStatus = '正在聆听，请作答…';
     } else {
-      promptAction.showToast({ message: '无法启动语音识别' });
+      promptAction.showToast({ message: I18n.t('asr_fail', this.lang) });
     }
   }
 
@@ -447,7 +449,7 @@ struct InterviewSessionPage {
           .padding({ right: 8 })
           .onClick(() => router.back())
         Column({ space: 2 }) {
-          Text('模拟面试')
+          Text(I18n.t('mock_iv', this.lang))
             .fontSize(18)
             .fontWeight(FontWeight.Bold)
           Text(this.sessionTitle)
@@ -480,19 +482,19 @@ struct InterviewSessionPage {
       .padding({ left: 16, right: 16, top: 12, bottom: 8 })
 
       Row({ space: 8 }) {
-        this.modeTab('文字聊天', 'text')
-        this.modeTab('语音对话', 'voice')
+        this.modeTab('mode_text', 'text')
+        this.modeTab('mode_voice', 'voice')
       }
       .width('100%')
       .padding({ left: 16, right: 16, bottom: 8 })
 
       if (!this.showReport) {
         Row() {
-          Text(this.streaming ? '面试官回复中…' : this.trackHint)
+          Text(this.streaming ? I18n.t('replying', this.lang) : this.trackHint)
             .fontSize(12)
             .fontColor('#9CA3AF')
           Blank()
-          Text('结束面试')
+          Text(I18n.t('end_iv', this.lang))
             .fontSize(12)
             .fontColor(this.streaming ? '#D1D5DB' : '#2563EB')
             .onClick(() => {
@@ -527,7 +529,7 @@ struct InterviewSessionPage {
       if (!this.showReport) {
         if (this.mode === 'text') {
           Row({ space: 8 }) {
-            TextInput({ placeholder: '输入你的回答…', text: this.inputText })
+            TextInput({ placeholder: I18n.t('input_ans', this.lang), text: this.inputText })
               .layoutWeight(1)
               .height(42)
               .backgroundColor(Color.White)
@@ -540,7 +542,7 @@ struct InterviewSessionPage {
               .onSubmit(() => {
                 this.submitAnswer(this.inputText);
               })
-            Button('发送')
+            Button(I18n.t('send', this.lang))
               .height(42)
               .backgroundColor(this.streaming ? '#93C5FD' : '#2563EB')
               .enabled(!this.streaming)
@@ -573,7 +575,7 @@ struct InterviewSessionPage {
                 Text(this.voiceMuted ? '🔇' : '🔊')
                   .fontSize(22)
                   .fontColor(this.voiceMuted ? '#6B7280' : '#2563EB')
-                Text(this.voiceMuted ? '已静音' : '静音')
+                Text(this.voiceMuted ? I18n.t('muted', this.lang) : I18n.t('mute', this.lang))
                   .fontSize(11)
                   .fontColor('#6B7280')
               }
@@ -602,7 +604,7 @@ struct InterviewSessionPage {
                 Text('⏹')
                   .fontSize(20)
                   .fontColor('#6B7280')
-                Text('结束')
+                Text(I18n.t('end', this.lang))
                   .fontSize(11)
                   .fontColor('#6B7280')
               }
@@ -616,7 +618,7 @@ struct InterviewSessionPage {
             .justifyContent(FlexAlign.Center)
             .width('100%')
 
-            Text(this.isRecording ? '点击结束录音' : '点击麦克风开始说话，朗读时可静音')
+            Text(this.isRecording ? I18n.t('tap_end', this.lang) : I18n.t('tap_mic', this.lang))
               .fontSize(12)
               .fontColor('#9CA3AF')
           }
@@ -624,7 +626,7 @@ struct InterviewSessionPage {
           .padding({ left: 16, right: 16, top: 8, bottom: 20 })
         }
       } else {
-        Button('返回面试中心')
+        Button(I18n.t('back_iv', this.lang))
           .width('90%')
           .height(44)
           .backgroundColor('#2563EB')
@@ -638,8 +640,8 @@ struct InterviewSessionPage {
   }
 
   @Builder
-  modeTab(label: string, value: InterviewChatMode) {
-    Text(label)
+  modeTab(labelKey: string, value: InterviewChatMode) {
+    Text(I18n.t(labelKey, this.lang))
       .fontSize(14)
       .fontColor(this.mode === value ? Color.White : '#374151')
       .backgroundColor(this.mode === value ? '#2563EB' : Color.White)
@@ -683,7 +685,7 @@ struct InterviewSessionPage {
     } else {
       Row() {
         Column({ space: 4 }) {
-          Text(msg.role === 'interviewer' ? '面试官' : '我')
+          Text(msg.role === 'interviewer' ? I18n.t('role_iv', this.lang) : I18n.t('me', this.lang))
             .fontSize(11)
             .fontColor('#9CA3AF')
             .width('100%')
@@ -712,7 +714,7 @@ struct InterviewSessionPage {
   @Builder
   reportCard(r: InterviewReport) {
     Column({ space: 10 }) {
-      Text('面试报告')
+      Text(I18n.t('iv_report', this.lang))
         .fontSize(18)
         .fontWeight(FontWeight.Bold)
         .width('100%')
@@ -722,9 +724,9 @@ struct InterviewSessionPage {
         .fontColor('#2563EB')
         .width('100%')
       Row() {
-        this.scoreItem('正确性', r.accuracy)
-        this.scoreItem('深度', r.depth)
-        this.scoreItem('表达', r.expression)
+        this.scoreItem('score_acc', r.accuracy)
+        this.scoreItem('score_depth', r.depth)
+        this.scoreItem('score_exp', r.expression)
       }
       .width('100%')
       Text(`优势：${r.advantages.join('；')}`)
@@ -747,13 +749,13 @@ struct InterviewSessionPage {
   }
 
   @Builder
-  scoreItem(label: string, value: number) {
+  scoreItem(labelKey: string, value: number) {
     Column({ space: 4 }) {
       Text(`${value}`)
         .fontSize(18)
         .fontWeight(FontWeight.Bold)
         .fontColor('#1E40AF')
-      Text(label)
+      Text(I18n.t(labelKey, this.lang))
         .fontSize(11)
         .fontColor('#6B7280')
     }

@@ -5,9 +5,11 @@ import { CategoryGroupUtil } from '../../common/utils/CategoryGroupUtil';
 import { CategoryTagSection } from '../../components/CategoryTagSection';
 import { QuestionListItem } from '../../components/QuestionListItem';
 import { QuestionRepository } from '../../data/repository/QuestionRepository';
+import { I18n } from '../../common/i18n/I18n';
 
 @Component
 export struct HomePage {
+  @StorageLink('appLang') lang: string = I18n.HANS;
   @State private skills: Category[] = [];
   @State private companies: Category[] = [];
   @State private specials: Category[] = [];
@@ -52,10 +54,10 @@ export struct HomePage {
       Column({ space: 12 }) {
         Row() {
           Column({ space: 4 }) {
-            Text('你好，面试选手')
+            Text(I18n.t('hello_candidate', this.lang))
               .fontSize(14)
               .fontColor('#E0E7FF')
-            Text($r('app.string.app_name'))
+            Text(I18n.t('app_name', this.lang))
               .fontSize(24)
               .fontWeight(FontWeight.Bold)
               .fontColor(Color.White)
@@ -73,7 +75,7 @@ export struct HomePage {
         .width('100%')
 
         Row() {
-          Text('搜面试题 / 技能 / 公司题库')
+          Text(I18n.t('search_home', this.lang))
             .fontSize(14)
             .fontColor('#94A3B8')
             .layoutWeight(1)
@@ -96,7 +98,7 @@ export struct HomePage {
       if (this.loading) {
         Column() {
           LoadingProgress().width(40).height(40).color('#2563EB')
-          Text('正在加载…').fontSize(13).fontColor('#6B7280').margin({ top: 8 })
+          Text(I18n.t('loading', this.lang)).fontSize(13).fontColor('#6B7280').margin({ top: 8 })
         }
         .width('100%')
         .layoutWeight(1)
@@ -106,12 +108,12 @@ export struct HomePage {
           Column({ space: 16 }) {
             Column({ space: 12 }) {
               Row() {
-                Text('今日学习')
+                Text(I18n.t('today_study', this.lang))
                   .fontSize(16)
                   .fontWeight(FontWeight.Bold)
                   .fontColor('#111827')
                 Blank()
-                Text('继续学习 ›')
+                Text(I18n.t('continue_study', this.lang))
                   .fontSize(13)
                   .fontColor('#2563EB')
                   .onClick(() => this.continueStudy())
@@ -119,10 +121,10 @@ export struct HomePage {
               .width('100%')
 
               Row() {
-                this.statCell(`${this.stats.questionCount}`, '道题')
-                this.statCell(`${this.stats.minutes}`, '分钟')
-                this.statCell(`${this.stats.mastered}`, '掌握')
-                this.statCell(`${this.stats.toReview}`, '待复习')
+                this.statCell(`${this.stats.questionCount}`, 'stat_q')
+                this.statCell(`${this.stats.minutes}`, 'stat_min')
+                this.statCell(`${this.stats.mastered}`, 'stat_master')
+                this.statCell(`${this.stats.toReview}`, 'stat_review')
               }
               .width('100%')
               .justifyContent(FlexAlign.SpaceBetween)
@@ -133,7 +135,7 @@ export struct HomePage {
             .borderRadius(16)
 
             if (this.skills.length === 0 && this.companies.length === 0 && this.specials.length === 0) {
-              Text('未拉到分类，请检查网络与后端地址')
+              Text(I18n.t('no_cat_home', this.lang))
                 .fontSize(13)
                 .fontColor('#9CA3AF')
                 .width('100%')
@@ -141,27 +143,27 @@ export struct HomePage {
 
             Column({ space: 16 }) {
               CategoryTagSection({
-                title: '热门技能',
+                title: I18n.t('hot_skills', this.lang),
                 items: this.skills,
                 textColor: '#9A3412',
                 chipColor: '#FFEDD5',
                 onTagClick: (cat: Category) => this.openCategory(cat)
               })
               CategoryTagSection({
-                title: '公司题库',
+                title: I18n.t('company_bank', this.lang),
                 items: this.companies,
                 textColor: '#1E40AF',
                 chipColor: '#DBEAFE',
                 onTagClick: (cat: Category) => this.openCategory(cat)
               })
               CategoryTagSection({
-                title: '专项',
+                title: I18n.t('special', this.lang),
                 items: this.specials,
                 textColor: '#166534',
                 chipColor: '#DCFCE7',
                 onTagClick: (cat: Category) => this.openCategory(cat)
               })
-              Text('全部 ›')
+              Text(I18n.t('all_more', this.lang))
                 .fontSize(13)
                 .fontColor('#2563EB')
                 .width('100%')
@@ -175,13 +177,13 @@ export struct HomePage {
             .borderRadius(16)
 
             Column({ space: 10 }) {
-              Text('热门推荐')
+              Text(I18n.t('hot_recommend', this.lang))
                 .fontSize(16)
                 .fontWeight(FontWeight.Bold)
                 .width('100%')
 
               if (this.hotList.length === 0) {
-                Text('暂无推荐题目')
+                Text(I18n.t('no_hot', this.lang))
                   .fontSize(13)
                   .fontColor('#9CA3AF')
                   .width('100%')
@@ -239,13 +241,13 @@ export struct HomePage {
   }
 
   @Builder
-  statCell(value: string, label: string) {
+  statCell(value: string, labelKey: string) {
     Column({ space: 4 }) {
       Text(value)
         .fontSize(20)
         .fontWeight(FontWeight.Bold)
         .fontColor('#1E40AF')
-      Text(label)
+      Text(I18n.t(labelKey, this.lang))
         .fontSize(12)
         .fontColor('#6B7280')
     }

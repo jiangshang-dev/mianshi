@@ -1,10 +1,12 @@
 import { router } from '@kit.ArkUI';
 import { FavoriteItem, FavoriteRepository } from '../../data/repository/FavoriteRepository';
 import { LoginGate } from '../../common/utils/LoginGate';
+import { I18n } from '../../common/i18n/I18n';
 
 @Entry
 @Component
 struct FavoritesPage {
+  @StorageLink('appLang') lang: string = I18n.HANS;
   @State private items: FavoriteItem[] = [];
   @State private loading: boolean = true;
   private repo: FavoriteRepository = FavoriteRepository.getInstance();
@@ -33,7 +35,7 @@ struct FavoritesPage {
     Column() {
       Row() {
         Text('‹').fontSize(28).padding({ right: 8 }).onClick(() => router.back())
-        Text('收藏夹').fontSize(18).fontWeight(FontWeight.Bold).layoutWeight(1)
+        Text(I18n.t('favorites', this.lang)).fontSize(18).fontWeight(FontWeight.Bold).layoutWeight(1)
       }
       .width('100%')
       .padding({ left: 16, right: 16, top: 12, bottom: 8 })
@@ -47,8 +49,8 @@ struct FavoritesPage {
         .justifyContent(FlexAlign.Center)
       } else if (!LoginGate.isLoggedIn()) {
         Column({ space: 12 }) {
-          Text('登录后查看收藏的题目').fontSize(14).fontColor('#6B7280')
-          Button('去登录')
+          Text(I18n.t('fav_login', this.lang)).fontSize(14).fontColor('#6B7280')
+          Button(I18n.t('go_login', this.lang))
             .width(140)
             .height(40)
             .backgroundColor('#2563EB')
@@ -59,7 +61,7 @@ struct FavoritesPage {
         .justifyContent(FlexAlign.Center)
       } else if (this.items.length === 0) {
         Column() {
-          Text('还没有收藏题目').fontSize(14).fontColor('#9CA3AF')
+          Text(I18n.t('fav_empty', this.lang)).fontSize(14).fontColor('#9CA3AF')
         }
         .layoutWeight(1)
         .width('100%')
@@ -70,7 +72,7 @@ struct FavoritesPage {
             ListItem() {
               Row() {
                 Column({ space: 4 }) {
-                  Text(item.questionTitle.length > 0 ? item.questionTitle : '未命名题目')
+                  Text(item.questionTitle.length > 0 ? item.questionTitle : I18n.t('unnamed_q', this.lang))
                     .fontSize(15)
                     .fontColor('#111827')
                     .maxLines(2)

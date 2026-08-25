@@ -4,10 +4,12 @@ import { Category } from '../../common/models/Types';
 import { CategoryGroupUtil } from '../../common/utils/CategoryGroupUtil';
 import { CategoryCard } from '../../components/CategoryCard';
 import { QuestionRepository } from '../../data/repository/QuestionRepository';
+import { I18n } from '../../common/i18n/I18n';
 
 @Entry
 @Component
 struct CategoryAllPage {
+  @StorageLink('appLang') lang: string = I18n.HANS;
   @State private categories: Category[] = [];
   @State private loading: boolean = true;
   @State private groupNames: string[] = [];
@@ -61,11 +63,11 @@ struct CategoryAllPage {
           .fontSize(28)
           .padding({ right: 8 })
           .onClick(() => router.back())
-        Text('全部分类')
+        Text(I18n.t('all_cats_title', this.lang))
           .fontSize(18)
           .fontWeight(FontWeight.Bold)
           .layoutWeight(1)
-        Text(`${this.categories.length} 个`)
+        Text(I18n.tf('count_unit', `${this.categories.length}`, this.lang))
           .fontSize(13)
           .fontColor('#6B7280')
       }
@@ -81,8 +83,8 @@ struct CategoryAllPage {
         .justifyContent(FlexAlign.Center)
       } else if (this.categories.length === 0) {
         Column({ space: 8 }) {
-          Text('未拉到分类').fontSize(16).fontColor('#6B7280')
-          Text('请确认后端已启动，且 App 能访问局域网地址').fontSize(13).fontColor('#9CA3AF')
+          Text(I18n.t('no_cat_short', this.lang)).fontSize(16).fontColor('#6B7280')
+          Text(I18n.t('no_cat_hint', this.lang)).fontSize(13).fontColor('#9CA3AF')
         }
         .layoutWeight(1)
         .width('100%')
@@ -92,7 +94,7 @@ struct CategoryAllPage {
           Column({ space: 16 }) {
             ForEach(this.groupNames, (group: string) => {
               Column({ space: 10 }) {
-                Text(group)
+                Text(I18n.groupName(group, this.lang))
                   .fontSize(15)
                   .fontWeight(FontWeight.Medium)
                   .fontColor('#374151')

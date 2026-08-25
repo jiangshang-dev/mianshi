@@ -5,6 +5,7 @@ import { MdContentView } from '../../components/MdContentView';
 import { QuestionRepository } from '../../data/repository/QuestionRepository';
 import { SseAbort } from '../../common/network/HttpClient';
 import { LoginGate } from '../../common/utils/LoginGate';
+import { I18n } from '../../common/i18n/I18n';
 
 interface DetailRouteParams {
   id?: string;
@@ -13,6 +14,7 @@ interface DetailRouteParams {
 @Entry
 @Component
 struct QuestionDetailPage {
+  @StorageLink('appLang') lang: string = I18n.HANS;
   @State private question: QuestionItem | null = null;
   @State private loading: boolean = true;
   @State private showAi: boolean = false;
@@ -57,7 +59,7 @@ struct QuestionDetailPage {
 
   private async sendAi(text: string): Promise<void> {
     if (!LoginGate.isLoggedIn()) {
-      LoginGate.ensure('AI 问答', () => {
+      LoginGate.ensure(I18n.t('ai_feature', this.lang), () => {
       });
       return;
     }
@@ -239,7 +241,7 @@ struct QuestionDetailPage {
   }
 
   private openAi(prompt?: string): void {
-    LoginGate.ensure('AI 问答', () => {
+    LoginGate.ensure(I18n.t('ai_feature', this.lang), () => {
       this.showAi = true;
       this.aiSheetHeight = this.defaultSheetHeight();
       if (prompt !== undefined && prompt.length > 0) {
@@ -253,14 +255,14 @@ struct QuestionDetailPage {
       return;
     }
     const q = this.question;
-    LoginGate.ensure('收藏', () => {
+    LoginGate.ensure(I18n.t('fav_feature', this.lang), () => {
       this.saveFavorite(q.id, q.title);
     });
   }
 
   private async saveFavorite(id: string, title: string): Promise<void> {
     this.favorited = await this.repo.toggleFavorite(id, title);
-    promptAction.showToast({ message: this.favorited ? '已收藏' : '已取消收藏' });
+    promptAction.showToast({ message: this.favorited ? I18n.t('fav_on', this.lang) : I18n.t('fav_off', this.lang) });
   }
 
   private onSheetPanStart(): void {
@@ -276,7 +278,7 @@ struct QuestionDetailPage {
       Column() {
         Row() {
           Text('‹').fontSize(28).padding({ right: 8 }).onClick(() => router.back())
-          Text('题目详情').fontSize(18).fontWeight(FontWeight.Bold).layoutWeight(1)
+          Text(I18n.t('detail_title', this.lang)).fontSize(18).fontWeight(FontWeight.Bold).layoutWeight(1)
           Text(this.favorited ? '★' : '☆')
             .fontSize(22)
             .fontColor(this.favorited ? '#F59E0B' : '#9CA3AF')
@@ -293,13 +295,13 @@ struct QuestionDetailPage {
           }.layoutWeight(1).width('100%').justifyContent(FlexAlign.Center)
         } else if (!this.question) {
           Column() {
-            Text('未找到题目内容').fontSize(15).fontColor('#6B7280')
+            Text(I18n.t('not_found', this.lang)).fontSize(15).fontColor('#6B7280')
           }.layoutWeight(1).width('100%').justifyContent(FlexAlign.Center)
         } else {
           Scroll() {
             Column({ space: 14 }) {
               Row({ space: 6 }) {
-                Text(this.question.source === 'local_md' ? '本地 MD' : '远程 API')
+                Text(this.question.source === 'local_md' ? I18n.t('src_local', this.lang) : I18n.t('src_remote', this.lang))
                   .fontSize(11)
                   .fontColor(this.question.source === 'local_md' ? '#047857' : '#1D4ED8')
                   .backgroundColor(this.question.source === 'local_md' ? '#D1FAE5' : '#DBEAFE')
@@ -309,7 +311,7 @@ struct QuestionDetailPage {
                   .fontSize(11).fontColor('#6B7280').backgroundColor('#F3F4F6')
                   .padding({ left: 8, right: 8, top: 3, bottom: 3 }).borderRadius(6)
                 if (this.question.hot) {
-                  Text('高频').fontSize(11).fontColor('#B45309').backgroundColor('#FEF3C7')
+                  Text(I18n.t('hot', this.lang)).fontSize(11).fontColor('#B45309').backgroundColor('#FEF3C7')
                     .padding({ left: 8, right: 8, top: 3, bottom: 3 }).borderRadius(6)
                 }
               }
@@ -322,14 +324,14 @@ struct QuestionDetailPage {
                 .fontSize(13).fontColor('#6B7280').width('100%')
 
               Column({ space: 8 }) {
-                Text('标准答案 / 正文').fontSize(15).fontWeight(FontWeight.Medium).width('100%')
+                Text(I18n.t('answer_body', this.lang)).fontSize(15).fontWeight(FontWeight.Medium).width('100%')
                 MdContentView({ content: this.question.content ?? '' })
               }
               .width('100%').padding(14).backgroundColor(Color.White).borderRadius(14)
 
               if (this.question.interviewAnswer) {
                 Column({ space: 8 }) {
-                  Text('面试推荐回答').fontSize(15).fontWeight(FontWeight.Medium).width('100%')
+                  Text(I18n.t('interview_ans', this.lang)).fontSize(15).fontWeight(FontWeight.Medium).width('100%')
                   MdContentView({ content: this.question.interviewAnswer })
                 }
                 .width('100%').padding(14).backgroundColor('#EEF2FF').borderRadius(14)
@@ -337,7 +339,7 @@ struct QuestionDetailPage {
 
               if (this.question.knowledgePoints && this.question.knowledgePoints.length > 0) {
                 Column({ space: 8 }) {
-                  Text('知识点').fontSize(15).fontWeight(FontWeight.Medium).width('100%')
+                  Text(I18n.t('knowledge', this.lang)).fontSize(15).fontWeight(FontWeight.Medium).width('100%')
                   Flex({ wrap: FlexWrap.Wrap }) {
                     ForEach(this.question.knowledgePoints, (p: string) => {
                       Text(p).fontSize(12).fontColor('#3730A3').backgroundColor('#E0E7FF')
@@ -350,9 +352,9 @@ struct QuestionDetailPage {
               }
 
               Column({ space: 8 }) {
-                Text('快捷提问 AI').fontSize(15).fontWeight(FontWeight.Medium).width('100%')
+                Text(I18n.t('quick_ai', this.lang)).fontSize(15).fontWeight(FontWeight.Medium).width('100%')
                 Flex({ wrap: FlexWrap.Wrap }) {
-                  ForEach(['看不懂', '简单解释', '举个例子', '面试怎么答', '可能追问'], (tip: string) => {
+                  ForEach(I18n.aiTips(this.lang), (tip: string) => {
                     Text(tip).fontSize(12).fontColor('#1D4ED8')
                       .padding({ left: 12, right: 12, top: 8, bottom: 8 })
                       .backgroundColor('#EFF6FF').borderRadius(16)
@@ -402,18 +404,18 @@ struct QuestionDetailPage {
                 .margin({ top: 8, bottom: 10 })
 
               Row() {
-                Text('AI 面试助手').fontSize(16).fontWeight(FontWeight.Bold).layoutWeight(1)
+                Text(I18n.t('ai_helper', this.lang)).fontSize(16).fontWeight(FontWeight.Bold).layoutWeight(1)
                 if (this.aiBusy) {
-                  Text('停止').fontSize(13).fontColor('#DC2626').margin({ right: 12 }).onClick(() => {
+                  Text(I18n.t('stop', this.lang)).fontSize(13).fontColor('#DC2626').margin({ right: 12 }).onClick(() => {
                     this.stopAi();
                   })
                 }
-                Text('收起').fontSize(13).fontColor('#2563EB').onClick(() => {
+                Text(I18n.t('collapse', this.lang)).fontSize(13).fontColor('#2563EB').onClick(() => {
                   this.showAi = false;
                 })
               }.width('100%').padding({ bottom: 8 })
 
-              Text(this.question ? `当前题目：${this.question.title}` : '')
+              Text(this.question ? I18n.tf('cur_q', this.question.title, this.lang) : '')
                 .fontSize(12).fontColor('#6B7280').maxLines(1)
                 .textOverflow({ overflow: TextOverflow.Ellipsis }).width('100%').margin({ bottom: 10 })
             }
@@ -432,7 +434,7 @@ struct QuestionDetailPage {
             )
 
             if (this.aiMessages.length === 0) {
-              Text('可以问这道题的解法、例子或面试怎么答')
+              Text(I18n.t('ai_empty', this.lang))
                 .fontSize(13)
                 .fontColor('#9CA3AF')
                 .width('100%')
@@ -443,7 +445,7 @@ struct QuestionDetailPage {
                 ForEach(this.aiMessages, (m: AiChatMessage, idx: number) => {
                   ListItem() {
                     Column() {
-                      Text(m.role === 'user' ? '我' : 'AI')
+                      Text(m.role === 'user' ? I18n.t('me', this.lang) : 'AI')
                         .fontSize(11).fontColor('#9CA3AF').width('100%')
                         .textAlign(m.role === 'user' ? TextAlign.End : TextAlign.Start)
                       if (m.role === 'user') {
@@ -455,12 +457,12 @@ struct QuestionDetailPage {
                           if (m.phase === 'thinking' || m.thinking.length > 0 || m.thinkingDone) {
                             Column({ space: 6 }) {
                               Row() {
-                                Text(m.thinkingDone ? '思考完成' : '正在思考…')
+                                Text(m.thinkingDone ? I18n.t('thought_done', this.lang) : I18n.t('thinking', this.lang))
                                   .fontSize(12)
                                   .fontWeight(FontWeight.Medium)
                                   .fontColor(m.thinkingDone ? '#059669' : '#2563EB')
                                   .layoutWeight(1)
-                                Text(m.thinkingOpen ? '收起' : '展开')
+                                Text(m.thinkingOpen ? I18n.t('collapse', this.lang) : I18n.t('expand', this.lang))
                                   .fontSize(12)
                                   .fontColor('#6B7280')
                               }
@@ -476,7 +478,7 @@ struct QuestionDetailPage {
                                   .lineHeight(18)
                                   .width('100%')
                               } else if (m.thinkingOpen) {
-                                Text('暂无思考步骤')
+                                Text(I18n.t('no_thought', this.lang))
                                   .fontSize(12)
                                   .fontColor('#9CA3AF')
                                   .width('100%')
@@ -489,7 +491,7 @@ struct QuestionDetailPage {
                           }
 
                           if (m.thinkingDone) {
-                            Text('思考完成，开始输出正文')
+                            Text(I18n.t('thought_start', this.lang))
                               .fontSize(12)
                               .fontColor('#059669')
                               .width('100%')
@@ -517,13 +519,13 @@ struct QuestionDetailPage {
             }
 
             Row({ space: 8 }) {
-              TextInput({ placeholder: '针对这道题提问…', text: this.aiInput })
+              TextInput({ placeholder: I18n.t('ai_ph', this.lang), text: this.aiInput })
                 .layoutWeight(1).height(40).backgroundColor('#F9FAFB').borderRadius(10)
                 .padding({ left: 10, right: 10 })
                 .onChange((v: string) => {
                   this.aiInput = v;
                 })
-              Button(this.aiBusy ? '停止' : '发送')
+              Button(this.aiBusy ? I18n.t('stop', this.lang) : I18n.t('send', this.lang))
                 .height(40)
                 .fontColor(this.aiBusy ? '#B91C1C' : Color.White)
                 .backgroundColor(this.aiBusy ? '#FEE2E2' : '#2563EB')

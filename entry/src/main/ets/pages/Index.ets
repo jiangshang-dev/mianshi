@@ -5,11 +5,13 @@ import { InterviewPage } from './interview/InterviewPage';
 import { StudyPage } from './study/StudyPage';
 import { ProfilePage } from './profile/ProfilePage';
 import { AuthRepository } from '../data/repository/AuthRepository';
+import { I18n } from '../common/i18n/I18n';
 
 @Entry
 @Component
 struct Index {
   @StorageLink('mainTabIndex') currentIndex: number = 0;
+  @StorageLink('appLang') lang: string = I18n.HANS;
 
   aboutToAppear(): void {
     const ctx = getContext(this) as common.UIAbilityContext;
@@ -17,10 +19,10 @@ struct Index {
   }
 
   @Builder
-  tabBuilder(title: string, targetIndex: number, icon: string) {
+  tabBuilder(titleKey: string, targetIndex: number, icon: string) {
     Column({ space: 2 }) {
       Text(icon).fontSize(20)
-      Text(title)
+      Text(I18n.t(titleKey, this.lang))
         .fontSize(11)
         .fontColor(this.currentIndex === targetIndex ? '#2563EB' : '#9CA3AF')
         .fontWeight(this.currentIndex === targetIndex ? FontWeight.Medium : FontWeight.Regular)
@@ -38,27 +40,27 @@ struct Index {
       TabContent() {
         HomePage()
       }
-      .tabBar(this.tabBuilder('首页', 0, '🏠'))
+      .tabBar(this.tabBuilder('tab_home', 0, '🏠'))
 
       TabContent() {
         BankPage()
       }
-      .tabBar(this.tabBuilder('题库', 1, '📚'))
+      .tabBar(this.tabBuilder('tab_bank', 1, '📚'))
 
       TabContent() {
         InterviewPage()
       }
-      .tabBar(this.tabBuilder('AI面试', 2, '🤖'))
+      .tabBar(this.tabBuilder('tab_interview', 2, '🤖'))
 
       TabContent() {
         StudyPage()
       }
-      .tabBar(this.tabBuilder('学习', 3, '📈'))
+      .tabBar(this.tabBuilder('tab_study', 3, '📈'))
 
       TabContent() {
         ProfilePage()
       }
-      .tabBar(this.tabBuilder('我的', 4, '👤'))
+      .tabBar(this.tabBuilder('tab_profile', 4, '👤'))
     }
     .width('100%')
     .height('100%')

@@ -1,9 +1,11 @@
 import { promptAction, router } from '@kit.ArkUI';
 import { AuthRepository } from '../../data/repository/AuthRepository';
+import { I18n } from '../../common/i18n/I18n';
 
 @Entry
 @Component
 struct LoginPage {
+  @StorageLink('appLang') lang: string = I18n.HANS;
   @State private logging: boolean = false;
   @State private agreed: boolean = false;
 
@@ -21,25 +23,25 @@ struct LoginPage {
       return;
     }
     if (!this.agreed) {
-      promptAction.showToast({ message: '请先阅读并同意用户协议和隐私政策' });
+      promptAction.showToast({ message: I18n.t('agree_first', this.lang) });
       return;
     }
     this.logging = true;
     const host = this.getUIContext().getHostContext();
     if (host === undefined) {
       this.logging = false;
-      promptAction.showToast({ message: '无法获取页面上下文' });
+      promptAction.showToast({ message: I18n.t('no_ctx', this.lang) });
       return;
     }
     const outcome = await this.auth.loginWithHuawei(host);
     this.logging = false;
     if (outcome.ok && outcome.profile) {
-      promptAction.showToast({ message: `欢迎，${outcome.profile.displayName}` });
+      promptAction.showToast({ message: I18n.tf('welcome_user', outcome.profile.displayName, this.lang) });
       router.back();
       return;
     }
     promptAction.showToast({
-      message: outcome.message.length > 0 ? outcome.message : '华为账号登录失败'
+      message: outcome.message.length > 0 ? outcome.message : I18n.t('login_fail', this.lang)
     });
   }
 
@@ -50,7 +52,7 @@ struct LoginPage {
           .fontSize(28)
           .padding({ right: 8 })
           .onClick(() => router.back())
-        Text('登录')
+        Text(I18n.t('login', this.lang))
           .fontSize(18)
           .fontWeight(FontWeight.Bold)
       }
@@ -69,16 +71,16 @@ struct LoginPage {
         .backgroundColor('#E5E7EB')
 
         Column({ space: 8 }) {
-          Text($r('app.string.login_title'))
+          Text(I18n.t('login_title', this.lang))
             .fontSize(22)
             .fontWeight(FontWeight.Bold)
-          Text('使用华为账号登录，同步学习记录与简历')
+          Text(I18n.t('login_sub', this.lang))
             .fontSize(14)
             .fontColor('#6B7280')
             .textAlign(TextAlign.Center)
         }
 
-        Button(this.logging ? '登录中…' : '华为账号登录')
+        Button(this.logging ? I18n.t('logging', this.lang) : I18n.t('login_huawei', this.lang))
           .width('100%')
           .height(46)
           .fontSize(16)
@@ -106,16 +108,16 @@ struct LoginPage {
             this.agreed = checked;
           })
         Text() {
-          Span('我已阅读并同意')
+          Span(I18n.t('agree_prefix', this.lang))
             .fontColor('#6B7280')
-          Span('用户协议')
+          Span(I18n.t('user_agreement', this.lang))
             .fontColor('#2563EB')
             .onClick(() => {
               this.openLegal('agreement');
             })
-          Span('和')
+          Span(I18n.t('and', this.lang))
             .fontColor('#6B7280')
-          Span('隐私政策')
+          Span(I18n.t('privacy', this.lang))
             .fontColor('#2563EB')
             .onClick(() => {
               this.openLegal('privacy');

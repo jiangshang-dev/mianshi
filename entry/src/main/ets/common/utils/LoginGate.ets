@@ -1,5 +1,6 @@
 import { promptAction, router } from '@kit.ArkUI';
 import { AuthRepository } from '../../data/repository/AuthRepository';
+import { I18n } from '../i18n/I18n';
 
 interface DialogResult {
   index: number;
@@ -21,11 +22,11 @@ export class LoginGate {
       return;
     }
     promptAction.showDialog({
-      title: '需要登录',
-      message: `${feature}登录后才可使用`,
+      title: I18n.t('need_login'),
+      message: I18n.tf('need_login_msg', feature),
       buttons: [
-        { text: '取消', color: '#6B7280' },
-        { text: '去登录', color: '#2563EB' }
+        { text: I18n.t('cancel'), color: '#6B7280' },
+        { text: I18n.t('go_login'), color: '#2563EB' }
       ]
     }).then((res: DialogResult) => {
       if (res.index === 1) {

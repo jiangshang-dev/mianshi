@@ -2,6 +2,7 @@ import { common } from '@kit.AbilityKit';
 import { preferences } from '@kit.ArkData';
 import { promptAction, router } from '@kit.ArkUI';
 import { AuthRepository } from '../../data/repository/AuthRepository';
+import { I18n } from '../../common/i18n/I18n';
 
 const SETTINGS_PREF = 'app_settings';
 const KEY_NOTIFY = 'notify_enabled';
@@ -13,6 +14,7 @@ struct SettingsPage {
   @StorageLink('isLoggedIn') isLoggedIn: boolean = false;
   @StorageLink('userDisplayName') displayName: string = '';
   @StorageLink('userAvatarUrl') avatarUrl: string = '';
+  @StorageLink('appLang') lang: string = I18n.HANS;
   @State private notifyOn: boolean = true;
   @State private remindOn: boolean = false;
 
@@ -49,12 +51,12 @@ struct SettingsPage {
   private async logout(): Promise<void> {
     const ctx = getContext(this) as common.UIAbilityContext;
     await this.auth.logout(ctx);
-    promptAction.showToast({ message: '已退出登录' });
+    promptAction.showToast({ message: I18n.t('logged_out', this.lang) });
     router.back();
   }
 
   private async clearCache(): Promise<void> {
-    promptAction.showToast({ message: '缓存已清除' });
+    promptAction.showToast({ message: I18n.t('cache_cleared', this.lang) });
   }
 
   build() {
@@ -64,7 +66,7 @@ struct SettingsPage {
           .fontSize(28)
           .padding({ right: 8 })
           .onClick(() => router.back())
-        Text('设置')
+        Text(I18n.t('settings', this.lang))
           .fontSize(18)
           .fontWeight(FontWeight.Bold)
       }
@@ -94,10 +96,10 @@ struct SettingsPage {
                 .backgroundColor('#CF0A2C')
               }
               Column({ space: 4 }) {
-                Text(this.displayName.length > 0 ? this.displayName : '华为用户')
+                Text(this.displayName.length > 0 ? this.displayName : I18n.t('huawei_user', this.lang))
                   .fontSize(16)
                   .fontWeight(FontWeight.Medium)
-                Text('华为账号已登录')
+                Text(I18n.t('logged_huawei', this.lang))
                   .fontSize(12)
                   .fontColor('#9CA3AF')
               }
@@ -110,15 +112,18 @@ struct SettingsPage {
           }
 
           Column() {
-            this.switchRow('消息通知', '学习与面试相关提醒', this.notifyOn, (on: boolean) => {
+            this.switchRow('notify', 'notify_sub', this.notifyOn, (on: boolean) => {
               this.notifyOn = on;
               this.saveFlag(KEY_NOTIFY, on);
             })
-            this.switchRow('每日学习提醒', '提醒你完成当天刷题', this.remindOn, (on: boolean) => {
+            this.switchRow('daily_remind', 'daily_remind_sub', this.remindOn, (on: boolean) => {
               this.remindOn = on;
               this.saveFlag(KEY_REMIND, on);
             })
-            this.actionRow('清除缓存', '清理本地临时数据', () => {
+            this.actionRow('language', '__lang__', () => {
+              router.pushUrl({ url: 'pages/profile/LanguagePage' });
+            })
+            this.actionRow('clear_cache', 'clear_cache_sub', () => {
               this.clearCache();
             })
           }
@@ -128,13 +133,13 @@ struct SettingsPage {
           .padding({ left: 16, right: 16 })
 
           Column() {
-            this.actionRow('用户协议', '', () => {
+            this.actionRow('user_agreement', '', () => {
               router.pushUrl({ url: 'pages/profile/LegalPage', params: { kind: 'agreement' } });
             })
-            this.actionRow('隐私政策', '', () => {
+            this.actionRow('privacy', '', () => {
               router.pushUrl({ url: 'pages/profile/LegalPage', params: { kind: 'privacy' } });
             })
-            this.infoRow('当前版本', 'V1.0')
+            this.infoRow('version', 'V1.0')
           }
           .width('100%')
           .backgroundColor(Color.White)
@@ -142,7 +147,7 @@ struct SettingsPage {
           .padding({ left: 16, right: 16 })
 
           if (this.isLoggedIn) {
-            Button('退出登录')
+            Button(I18n.t('logout', this.lang))
               .width('100%')
               .height(44)
               .fontSize(15)
@@ -170,11 +175,11 @@ struct SettingsPage {
   }
 
   @Builder
-  switchRow(title: string, subtitle: string, isOn: boolean, onChange: (on: boolean) => void) {
+  switchRow(titleKey: string, subtitleKey: string, isOn: boolean, onChange: (on: boolean) => void) {
     Row() {
       Column({ space: 2 }) {
-        Text(title).fontSize(15).fontColor('#111827')
-        Text(subtitle).fontSize(12).fontColor('#9CA3AF')
+        Text(I18n.t(titleKey, this.lang)).fontSize(15).fontColor('#111827')
+        Text(I18n.t(subtitleKey, this.lang)).fontSize(12).fontColor('#9CA3AF')
       }
       .alignItems(HorizontalAlign.Start)
       .layoutWeight(1)
@@ -192,12 +197,14 @@ struct SettingsPage {
   }
 
   @Builder
-  actionRow(title: string, subtitle: string, onTap: () => void) {
+  actionRow(titleKey: string, subtitleKey: string, onTap: () => void) {
     Row() {
       Column({ space: 2 }) {
-        Text(title).fontSize(15).fontColor('#111827')
-        if (subtitle.length > 0) {
-          Text(subtitle).fontSize(12).fontColor('#9CA3AF')
+        Text(I18n.t(titleKey, this.lang)).fontSize(15).fontColor('#111827')
+        if (subtitleKey === '__lang__') {
+          Text(I18n.langName(this.lang)).fontSize(12).fontColor('#9CA3AF')
+        } else if (subtitleKey.length > 0) {
+          Text(I18n.t(subtitleKey, this.lang)).fontSize(12).fontColor('#9CA3AF')
         }
       }
       .alignItems(HorizontalAlign.Start)
@@ -213,9 +220,9 @@ struct SettingsPage {
   }
 
   @Builder
-  infoRow(label: string, value: string) {
+  infoRow(labelKey: string, value: string) {
     Row() {
-      Text(label)
+      Text(I18n.t(labelKey, this.lang))
         .fontSize(15)
         .fontColor('#111827')
         .layoutWeight(1)

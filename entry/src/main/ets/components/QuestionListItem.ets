@@ -1,7 +1,9 @@
 import { QuestionItem } from '../common/models/Types';
+import { I18n } from '../common/i18n/I18n';
 
 @Component
 export struct QuestionListItem {
+  @StorageLink('appLang') lang: string = I18n.HANS;
   @Prop item: QuestionItem = {
     id: '',
     title: '',
@@ -21,14 +23,14 @@ export struct QuestionListItem {
       Column({ space: 8 }) {
         Row({ space: 6 }) {
           if (this.item.hot) {
-            Text('高频')
+            Text(I18n.t('hot', this.lang))
               .fontSize(10)
               .fontColor('#B45309')
               .backgroundColor('#FEF3C7')
               .padding({ left: 6, right: 6, top: 2, bottom: 2 })
               .borderRadius(4)
           }
-          Text(this.item.source === 'local_md' ? '本地MD' : '远程API')
+          Text(this.item.source === 'local_md' ? I18n.t('src_local', this.lang) : I18n.t('src_remote', this.lang))
             .fontSize(10)
             .fontColor(this.item.source === 'local_md' ? '#047857' : '#1D4ED8')
             .backgroundColor(this.item.source === 'local_md' ? '#D1FAE5' : '#DBEAFE')

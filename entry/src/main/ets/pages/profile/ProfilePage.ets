@@ -4,6 +4,7 @@ import { ResumeProfile } from '../../common/models/ResumeTypes';
 import { AuthRepository } from '../../data/repository/AuthRepository';
 import { ResumeRepository } from '../../data/repository/ResumeRepository';
 import { LoginGate } from '../../common/utils/LoginGate';
+import { I18n } from '../../common/i18n/I18n';
 
 @Component
 export struct ProfilePage {
@@ -15,6 +16,7 @@ export struct ProfilePage {
   @StorageLink('globalResumeFileName')
   @Watch('onResumeMetaChange')
   resumeFileName: string = '';
+  @StorageLink('appLang') lang: string = I18n.HANS;
   @State private resume: ResumeProfile | null = null;
   @State private uploading: boolean = false;
 
@@ -91,7 +93,7 @@ export struct ProfilePage {
   }
 
   private soon(name: string): void {
-    promptAction.showToast({ message: `${name}即将上线` });
+    promptAction.showToast({ message: I18n.tf('soon', name, this.lang) });
   }
 
   private async pickResume(): Promise<void> {
@@ -108,7 +110,7 @@ export struct ProfilePage {
       const profile = await this.repo.pickAndSave(ctx);
       if (profile) {
         this.resume = profile;
-        promptAction.showToast({ message: '简历已保存，正在同步到云端' });
+        promptAction.showToast({ message: I18n.t('resume_saved', this.lang) });
       } else {
         const errMsg = this.repo.consumePickError();
         if (errMsg.length > 0) {
@@ -124,13 +126,13 @@ export struct ProfilePage {
     const ctx = this.hostContext();
     await this.repo.clear(ctx);
     this.resume = null;
-    promptAction.showToast({ message: '简历已删除' });
+    promptAction.showToast({ message: I18n.t('resume_deleted', this.lang) });
   }
 
   build() {
     Scroll() {
       Column({ space: 10 }) {
-        Text('我的')
+        Text(I18n.t('tab_profile', this.lang))
           .fontSize(20)
           .fontWeight(FontWeight.Bold)
           .width('100%')
@@ -157,11 +159,11 @@ export struct ProfilePage {
 
           Column({ space: 2 }) {
             Text(this.isLoggedIn ?
-              (this.displayName.length > 0 ? this.displayName : '华为用户') : '去登录')
+              (this.displayName.length > 0 ? this.displayName : I18n.t('huawei_user', this.lang)) : I18n.t('go_login', this.lang))
               .fontSize(17)
               .fontWeight(FontWeight.Bold)
               .fontColor(this.isLoggedIn ? '#111827' : '#2563EB')
-            Text(this.isLoggedIn ? '华为账号 · 已登录' : '点击登录，同步学习数据')
+            Text(this.isLoggedIn ? I18n.t('huawei_on', this.lang) : I18n.t('tap_login', this.lang))
               .fontSize(12)
               .fontColor('#9CA3AF')
           }
@@ -185,14 +187,14 @@ export struct ProfilePage {
         Column({ space: 10 }) {
           Row() {
             Column({ space: 2 }) {
-              Text('我的简历')
+              Text(I18n.t('my_resume', this.lang))
                 .fontSize(15)
                 .fontWeight(FontWeight.Medium)
                 .fontColor('#111827')
               Text(this.resume ?
                 (this.resume.fileUrl.length > 0 ?
-                  '已上传到云端，模拟面试会用这一份' : '已作为全局简历，模拟面试会用这一份') :
-                (this.isLoggedIn ? '上传简历，AI 面试更精准' : '登录后自动同步云端简历'))
+                  I18n.t('resume_cloud', this.lang) : I18n.t('resume_local', this.lang)) :
+                (this.isLoggedIn ? I18n.t('resume_upload_tip', this.lang) : I18n.t('resume_login_sync', this.lang)))
                 .fontSize(12)
                 .fontColor('#9CA3AF')
             }
@@ -234,7 +236,7 @@ export struct ProfilePage {
                 .borderRadius(8)
 
               Row({ space: 8 }) {
-                Button(this.uploading ? '上传中…' : '更换简历')
+                Button(this.uploading ? I18n.t('uploading', this.lang) : I18n.t('replace_resume', this.lang))
                   .layoutWeight(1)
                   .height(38)
                   .fontSize(14)
@@ -243,7 +245,7 @@ export struct ProfilePage {
                   .onClick(() => {
                     this.pickResume();
                   })
-                Button('删除')
+                Button(I18n.t('delete', this.lang))
                   .layoutWeight(1)
                   .height(38)
                   .fontSize(14)
@@ -256,8 +258,8 @@ export struct ProfilePage {
               .width('100%')
             }
           } else {
-            Button(this.uploading ? '选择文件中…' :
-              (this.isLoggedIn ? '上传简历（PDF / Word / TXT）' : '登录后上传简历'))
+            Button(this.uploading ? I18n.t('picking', this.lang) :
+              (this.isLoggedIn ? I18n.t('upload_resume', this.lang) : I18n.t('upload_after_login', this.lang)))
               .width('100%')
               .height(42)
               .fontSize(14)
@@ -265,7 +267,7 @@ export struct ProfilePage {
               .onClick(() => {
                 this.pickResume();
               })
-            Text(this.isLoggedIn ? '支持 PDF、Word、TXT、Markdown' : '简历跟账号走，退出后本机不保留')
+            Text(this.isLoggedIn ? I18n.t('resume_fmt', this.lang) : I18n.t('resume_account', this.lang))
               .fontSize(11)
               .fontColor('#9CA3AF')
               .width('100%')
@@ -277,21 +279,20 @@ export struct ProfilePage {
         .borderRadius(14)
 
         Column() {
-          this.menuRow('收藏夹', '收藏的题目', () => {
-            this.openNeedLogin('收藏夹', 'pages/profile/FavoritesPage');
+          this.menuRow('favorites', 'fav_sub', () => {
+            this.openNeedLogin(I18n.t('favorites', this.lang), 'pages/profile/FavoritesPage');
           })
-          this.menuRow('AI 问答', '题目讲解对话历史', () => {
-            this.openNeedLogin('AI 问答记录', 'pages/profile/AiHistoryPage', 'chat', 'AI 问答记录');
+          this.menuRow('ai_qa', 'ai_qa_sub', () => {
+            this.openNeedLogin(I18n.t('ai_qa_title', this.lang), 'pages/profile/AiHistoryPage', 'chat',
+              I18n.t('ai_qa_title', this.lang));
           })
-          this.menuRow('面试记录', '模拟面试历史', () => {
-            this.openNeedLogin('面试记录', 'pages/profile/AiHistoryPage', 'interview', '面试记录');
+          this.menuRow('iv_logs', 'iv_logs_sub', () => {
+            this.openNeedLogin(I18n.t('iv_logs', this.lang), 'pages/profile/AiHistoryPage', 'interview',
+              I18n.t('iv_logs', this.lang));
           })
-          this.menuRow('学习记录', '刷题天数与进度', () => {
-            this.soon('学习记录');
+          this.menuRow('study_log', 'study_log_sub', () => {
+            this.soon(I18n.t('study_log', this.lang));
           })
-          // this.menuRow('错题本', '回顾答错的题目', () => {
-          //   this.soon('错题本');
-          // })
         }
         .width('100%')
         .backgroundColor(Color.White)
@@ -299,7 +300,7 @@ export struct ProfilePage {
         .padding({ left: 16, right: 16 })
 
         Column() {
-          this.menuRow('设置', '通知、缓存与退出登录', () => {
+          this.menuRow('settings', 'settings_sub', () => {
             this.goSettings();
           })
         }
@@ -319,11 +320,11 @@ export struct ProfilePage {
   }
 
   @Builder
-  menuRow(title: string, subtitle: string, onTap: () => void) {
+  menuRow(titleKey: string, subtitleKey: string, onTap: () => void) {
     Row() {
       Column({ space: 2 }) {
-        Text(title).fontSize(15).fontColor('#111827')
-        Text(subtitle).fontSize(12).fontColor('#9CA3AF').maxLines(1)
+        Text(I18n.t(titleKey, this.lang)).fontSize(15).fontColor('#111827')
+        Text(I18n.t(subtitleKey, this.lang)).fontSize(12).fontColor('#9CA3AF').maxLines(1)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
       }
       .alignItems(HorizontalAlign.Start)

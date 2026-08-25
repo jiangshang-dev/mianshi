@@ -1,8 +1,10 @@
 import { TodayStudyStats } from '../../common/models/Types';
 import { QuestionRepository } from '../../data/repository/QuestionRepository';
+import { I18n } from '../../common/i18n/I18n';
 
 @Component
 export struct StudyPage {
+  @StorageLink('appLang') lang: string = I18n.HANS;
   private repo: QuestionRepository = QuestionRepository.getInstance();
   @State private stats: TodayStudyStats = {
     questionCount: 0,
@@ -26,18 +28,18 @@ export struct StudyPage {
   build() {
     Scroll() {
       Column({ space: 10 }) {
-        Text('学习')
+        Text(I18n.t('tab_study', this.lang))
           .fontSize(20)
           .fontWeight(FontWeight.Bold)
           .width('100%')
 
         Column({ space: 10 }) {
-          Text('今日进度').fontSize(15).fontWeight(FontWeight.Medium).width('100%')
+          Text(I18n.t('today_progress', this.lang)).fontSize(15).fontWeight(FontWeight.Medium).width('100%')
           Row() {
-            this.cell(`${this.stats.questionCount}`, '已刷题')
-            this.cell(`${this.stats.minutes}`, '学习分钟')
-            this.cell(`${this.stats.mastered}`, '已掌握')
-            this.cell(`${this.stats.toReview}`, '待复习')
+            this.cell(`${this.stats.questionCount}`, 'done_q')
+            this.cell(`${this.stats.minutes}`, 'study_min')
+            this.cell(`${this.stats.mastered}`, 'done_master')
+            this.cell(`${this.stats.toReview}`, 'stat_review')
           }.width('100%')
         }
         .width('100%')
@@ -46,16 +48,16 @@ export struct StudyPage {
         .borderRadius(14)
 
         Column({ space: 8 }) {
-          Text('学习日历（占位）')
+          Text(I18n.t('cal_ph', this.lang))
             .fontSize(15)
             .fontWeight(FontWeight.Medium)
             .width('100%')
-          Text('后续可接入连续打卡与 GitHub 风格贡献图。')
+          Text(I18n.t('cal_hint', this.lang))
             .fontSize(13)
             .fontColor('#6B7280')
             .width('100%')
           Row({ space: 6 }) {
-            ForEach(['一', '二', '三', '四', '五', '六', '日'], (d: string) => {
+            ForEach(I18n.weekdays(this.lang), (d: string) => {
               Column() {
                 Text(d).fontSize(11).fontColor('#9CA3AF')
                 Column()
@@ -74,14 +76,14 @@ export struct StudyPage {
         .borderRadius(14)
 
         Column({ space: 8 }) {
-          Text('薄弱知识（占位）')
+          Text(I18n.t('weak_ph', this.lang))
             .fontSize(15)
             .fontWeight(FontWeight.Medium)
             .width('100%')
           ForEach(['Redis 集群', 'MySQL 索引失效', 'JVM G1', '分布式锁'], (t: string) => {
             Row() {
               Text(t).fontSize(14).fontColor('#111827').layoutWeight(1)
-              Text('去复习 ›').fontSize(12).fontColor('#2563EB')
+              Text(I18n.t('go_review', this.lang)).fontSize(12).fontColor('#2563EB')
             }
             .width('100%')
             .padding({ top: 10, bottom: 10 })
@@ -104,10 +106,10 @@ export struct StudyPage {
   }
 
   @Builder
-  cell(value: string, label: string) {
+  cell(value: string, labelKey: string) {
     Column({ space: 4 }) {
       Text(value).fontSize(18).fontWeight(FontWeight.Bold).fontColor('#1E40AF')
-      Text(label).fontSize(11).fontColor('#6B7280')
+      Text(I18n.t(labelKey, this.lang)).fontSize(11).fontColor('#6B7280')
     }.layoutWeight(1)
   }
 }

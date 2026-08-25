@@ -9,6 +9,7 @@
     "pages/profile/LoginPage",
     "pages/profile/SettingsPage",
     "pages/profile/LegalPage",
+    "pages/profile/LanguagePage",
     "pages/profile/FavoritesPage",
     "pages/profile/AiHistoryPage",
     "pages/profile/AiHistoryDetailPage"

@@ -1,5 +1,6 @@
 import { router } from '@kit.ArkUI';
 import { AiHistoryMessage, AiHistoryRepository } from '../../data/repository/AiHistoryRepository';
+import { I18n } from '../../common/i18n/I18n';
 
 interface DetailRouteParams {
   sessionId?: string;
@@ -9,6 +10,7 @@ interface DetailRouteParams {
 @Entry
 @Component
 struct AiHistoryDetailPage {
+  @StorageLink('appLang') lang: string = I18n.HANS;
   @State private title: string = '对话明细';
   @State private sessionId: string = '';
   @State private messages: AiHistoryMessage[] = [];
@@ -18,7 +20,7 @@ struct AiHistoryDetailPage {
   aboutToAppear(): void {
     const params = router.getParams() as DetailRouteParams;
     this.sessionId = params.sessionId ?? '';
-    this.title = params.title ?? '对话明细';
+    this.title = params.title ?? I18n.t('chat_detail', this.lang);
     this.loadData();
   }
 
@@ -56,7 +58,7 @@ struct AiHistoryDetailPage {
         .justifyContent(FlexAlign.Center)
       } else if (this.messages.length === 0) {
         Column() {
-          Text('暂无对话内容').fontSize(14).fontColor('#9CA3AF')
+          Text(I18n.t('no_chat', this.lang)).fontSize(14).fontColor('#9CA3AF')
         }
         .layoutWeight(1)
         .width('100%')
@@ -67,7 +69,7 @@ struct AiHistoryDetailPage {
             ListItem() {
               Column({ space: 6 }) {
                 Row() {
-                  Text(m.role === 'user' ? '我' : 'AI')
+                  Text(m.role === 'user' ? I18n.t('me', this.lang) : 'AI')
                     .fontSize(12)
                     .fontColor(m.role === 'user' ? '#1D4ED8' : '#059669')
                     .layoutWeight(1)

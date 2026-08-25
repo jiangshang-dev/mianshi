@@ -3,6 +3,7 @@ import { router } from '@kit.ArkUI';
 import { DataSourceType, QuestionItem, SubCategory } from '../../common/models/Types';
 import { QuestionListItem } from '../../components/QuestionListItem';
 import { QuestionRepository } from '../../data/repository/QuestionRepository';
+import { I18n } from '../../common/i18n/I18n';
 
 interface ListRouteParams {
   categoryId?: string;
@@ -13,6 +14,7 @@ interface ListRouteParams {
 @Entry
 @Component
 struct QuestionListPage {
+  @StorageLink('appLang') lang: string = I18n.HANS;
   @State private title: string = '题库';
   @State private categoryId: string = '';
   @State private source: DataSourceType = 'remote_api';
@@ -92,7 +94,7 @@ struct QuestionListPage {
       if (this.subCategories.length > 0) {
         Scroll() {
           Row({ space: 8 }) {
-            Text('全部')
+            Text(I18n.t('all', this.lang))
               .fontSize(13)
               .fontColor(this.selectedSubId.length === 0 ? Color.White : '#374151')
               .backgroundColor(this.selectedSubId.length === 0 ? '#2563EB' : Color.White)
@@ -129,8 +131,8 @@ struct QuestionListPage {
         }.layoutWeight(1).width('100%').justifyContent(FlexAlign.Center)
       } else if (this.questions.length === 0) {
         Column({ space: 8 }) {
-          Text('暂无内容').fontSize(16).fontColor('#6B7280')
-          Text(this.source === 'remote_api' ? '该分类下暂无题目，或接口请求失败' : '该分类下没有文章')
+          Text(I18n.t('empty', this.lang)).fontSize(16).fontColor('#6B7280')
+          Text(this.source === 'remote_api' ? I18n.t('empty_remote', this.lang) : I18n.t('empty_local', this.lang))
             .fontSize(13).fontColor('#9CA3AF')
         }.layoutWeight(1).width('100%').justifyContent(FlexAlign.Center)
       } else {

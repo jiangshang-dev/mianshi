@@ -1,6 +1,8 @@
 import { AbilityConstant, ConfigurationConstant, UIAbility, Want } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { window } from '@kit.ArkUI';
+import { I18n } from '../common/i18n/I18n';
+import { LangManager } from '../common/i18n/LangManager';
 
 const DOMAIN = 0x0000;
 
@@ -13,6 +15,7 @@ export default class EntryAbility extends UIAbility {
     AppStorage.setOrCreate('userId', '');
     AppStorage.setOrCreate('mainTabIndex', 0);
     AppStorage.setOrCreate('globalResumeFileName', '');
+    AppStorage.setOrCreate(I18n.KEY, I18n.HANS);
     try {
       this.context.getApplicationContext().setColorMode(ConfigurationConstant.ColorMode.COLOR_MODE_NOT_SET);
     } catch (err) {
@@ -29,6 +32,19 @@ export default class EntryAbility extends UIAbility {
     // Main window is created, set main page for this ability
     hilog.info(DOMAIN, 'testTag', '%{public}s', 'Ability onWindowStageCreate');
 
+    LangManager.load(this.context).then(() => {
+      this.loadIndex(windowStage);
+    }).catch(() => {
+      this.loadIndex(windowStage);
+    });
+  }
+
+  onWindowStageDestroy(): void {
+    // Main window is destroyed, release UI related resources
+    hilog.info(DOMAIN, 'testTag', '%{public}s', 'Ability onWindowStageDestroy');
+  }
+
+  private loadIndex(windowStage: window.WindowStage): void {
     windowStage.loadContent('pages/Index', (err) => {
       if (err.code) {
         hilog.error(DOMAIN, 'testTag', 'Failed to load the content. Cause: %{public}s', JSON.stringify(err));
@@ -36,11 +52,6 @@ export default class EntryAbility extends UIAbility {
       }
       hilog.info(DOMAIN, 'testTag', 'Succeeded in loading the content.');
     });
-  }
-
-  onWindowStageDestroy(): void {
-    // Main window is destroyed, release UI related resources
-    hilog.info(DOMAIN, 'testTag', '%{public}s', 'Ability onWindowStageDestroy');
   }
 
   onForeground(): void {

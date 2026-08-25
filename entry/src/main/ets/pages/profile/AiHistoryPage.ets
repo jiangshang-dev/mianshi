@@ -1,6 +1,7 @@
 import { router } from '@kit.ArkUI';
 import { AiHistoryRepository, AiHistorySession } from '../../data/repository/AiHistoryRepository';
 import { LoginGate } from '../../common/utils/LoginGate';
+import { I18n } from '../../common/i18n/I18n';
 
 interface HistoryRouteParams {
   scene?: string;
@@ -10,6 +11,7 @@ interface HistoryRouteParams {
 @Entry
 @Component
 struct AiHistoryPage {
+  @StorageLink('appLang') lang: string = I18n.HANS;
   @State private title: string = 'AI 记录';
   @State private scene: string = 'chat';
   @State private items: AiHistorySession[] = [];
@@ -19,7 +21,7 @@ struct AiHistoryPage {
   aboutToAppear(): void {
     const params = router.getParams() as HistoryRouteParams;
     this.scene = params.scene ?? 'chat';
-    this.title = params.title ?? (this.scene === 'interview' ? '面试记录' : 'AI 问答记录');
+    this.title = params.title ?? (this.scene === 'interview' ? I18n.t('iv_logs', this.lang) : I18n.t('ai_qa_title', this.lang));
     this.loadData();
   }
 
@@ -56,8 +58,8 @@ struct AiHistoryPage {
         .justifyContent(FlexAlign.Center)
       } else if (!LoginGate.isLoggedIn()) {
         Column({ space: 12 }) {
-          Text('登录后查看历史记录').fontSize(14).fontColor('#6B7280')
-          Button('去登录')
+          Text(I18n.t('hist_login', this.lang)).fontSize(14).fontColor('#6B7280')
+          Button(I18n.t('go_login', this.lang))
             .width(140)
             .height(40)
             .backgroundColor('#2563EB')
@@ -68,7 +70,7 @@ struct AiHistoryPage {
         .justifyContent(FlexAlign.Center)
       } else if (this.items.length === 0) {
         Column() {
-          Text(this.scene === 'interview' ? '还没有模拟面试记录' : '还没有 AI 问答记录')
+          Text(this.scene === 'interview' ? I18n.t('hist_empty_iv', this.lang) : I18n.t('hist_empty_ai', this.lang))
             .fontSize(14)
             .fontColor('#9CA3AF')
         }
@@ -81,7 +83,7 @@ struct AiHistoryPage {
             ListItem() {
               Row() {
                 Column({ space: 4 }) {
-                  Text(item.questionTitle.length > 0 ? item.questionTitle : '未命名会话')
+                  Text(item.questionTitle.length > 0 ? item.questionTitle : I18n.t('unnamed_session', this.lang))
                     .fontSize(15)
                     .fontColor('#111827')
                     .maxLines(2)

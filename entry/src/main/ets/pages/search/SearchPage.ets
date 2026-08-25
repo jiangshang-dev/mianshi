@@ -3,10 +3,12 @@ import { router } from '@kit.ArkUI';
 import { QuestionItem } from '../../common/models/Types';
 import { QuestionListItem } from '../../components/QuestionListItem';
 import { QuestionRepository } from '../../data/repository/QuestionRepository';
+import { I18n } from '../../common/i18n/I18n';
 
 @Entry
 @Component
 struct SearchPage {
+  @StorageLink('appLang') lang: string = I18n.HANS;
   @State private keyword: string = '';
   @State private results: QuestionItem[] = [];
   @State private searching: boolean = false;
@@ -34,7 +36,7 @@ struct SearchPage {
         Text('‹')
           .fontSize(28)
           .onClick(() => router.back())
-        TextInput({ placeholder: '搜题目 / 知识点 / 分类', text: this.keyword })
+        TextInput({ placeholder: I18n.t('search_ph', this.lang), text: this.keyword })
           .layoutWeight(1)
           .height(40)
           .backgroundColor(Color.White)
@@ -46,7 +48,7 @@ struct SearchPage {
           .onSubmit(() => {
             this.doSearch();
           })
-        Text('搜索')
+        Text(I18n.t('search', this.lang))
           .fontSize(14)
           .fontColor('#2563EB')
           .onClick(() => {
