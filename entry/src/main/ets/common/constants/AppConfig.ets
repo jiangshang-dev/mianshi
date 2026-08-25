@@ -8,5 +8,6 @@ export class AppConfig {
   static readonly PREFER_REMOTE_API: boolean = true;
   static readonly REMOTE_USE_MOCK_FALLBACK: boolean = false;
   static readonly REQUEST_TIMEOUT_MS: number = 8000;
+  static readonly LOGIN_TIMEOUT_MS: number = 30000;
   static readonly AI_STREAM_TIMEOUT_MS: number = 60000;
 }

@@ -1,6 +1,20 @@
 {
   "app": {
-    "signingConfigs": [],
+    "signingConfigs": [
+      {
+        "name": "default",
+        "type": "HarmonyOS",
+        "material": {
+          "certpath": "/Users/xiaobai/.ohos/config/default_mianshi_r3k1zoLJnuysMGna8myk1Hp1ZPmk5AoogGJN12UObK4=.cer",
+          "keyAlias": "debugKey",
+          "keyPassword": "0000001BED1E152B17705BCE34FF8594D1BCF9BC29B9D8611BDCB38E9CB15BD8B2BBA0116968C9379DBC36",
+          "profile": "/Users/xiaobai/.ohos/config/default_mianshi_r3k1zoLJnuysMGna8myk1Hp1ZPmk5AoogGJN12UObK4=.p7b",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "/Users/xiaobai/.ohos/config/default_mianshi_r3k1zoLJnuysMGna8myk1Hp1ZPmk5AoogGJN12UObK4=.p12",
+          "storePassword": "0000001BF91D07F31D8BBFBF27E0D954BA380CEE50C59A46EBEF4BF94A55EF1B212EC17F748AAB164D37EE"
+        }
+      }
+    ],
     "products": [
       {
         "name": "default",

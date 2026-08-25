@@ -1,4 +1,3 @@
-import { common } from '@kit.AbilityKit';
 import { promptAction, router } from '@kit.ArkUI';
 import { AuthRepository } from '../../data/repository/AuthRepository';
 
@@ -14,16 +13,21 @@ struct LoginPage {
       return;
     }
     this.logging = true;
-    const ctx = getContext(this) as common.UIAbilityContext;
-    const profile = await this.auth.loginWithHuawei(ctx);
+    const host = this.getUIContext().getHostContext();
+    if (host === undefined) {
+      this.logging = false;
+      promptAction.showToast({ message: '无法获取页面上下文' });
+      return;
+    }
+    const outcome = await this.auth.loginWithHuawei(host);
     this.logging = false;
-    if (profile) {
-      promptAction.showToast({ message: `欢迎，${profile.displayName}` });
+    if (outcome.ok && outcome.profile) {
+      promptAction.showToast({ message: `欢迎，${outcome.profile.displayName}` });
       router.back();
       return;
     }
     promptAction.showToast({
-      message: '华为账号登录失败，请确认已登录华为账号并完成应用配置'
+      message: outcome.message.length > 0 ? outcome.message : '华为账号登录失败'
     });
   }
 
@@ -67,6 +71,7 @@ struct LoginPage {
           .height(46)
           .fontSize(16)
           .backgroundColor('#CF0A2C')
+          .enabled(!this.logging)
           .onClick(() => {
             this.doLogin();
           })

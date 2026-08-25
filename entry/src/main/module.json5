@@ -13,6 +13,10 @@
     "pages": "$profile:main_pages",
     "metadata": [
       {
+        "name": "client_id",
+        "value": "6917614613964067859"
+      },
+      {
         "name": "network_security_config",
         "resource": "$profile:network_config"
       },

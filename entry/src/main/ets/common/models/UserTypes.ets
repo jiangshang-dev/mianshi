@@ -5,4 +5,13 @@ export interface UserProfile {
   displayName: string;
   avatarUrl: string;
   loginType: string;
+  token: string;
+  refreshToken: string;
+  userId: string;
+}
+
+export interface LoginOutcome {
+  ok: boolean;
+  profile: UserProfile | null;
+  message: string;
 }

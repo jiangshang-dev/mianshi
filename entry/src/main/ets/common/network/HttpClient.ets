@@ -42,7 +42,47 @@ export class SseAbort {
   }
 }
 
+interface HttpJsonHeader {
+  'Content-Type': string;
+  'Accept': string;
+  'Authorization': string;
+}
+
+interface HttpSseHeader {
+  'Content-Type': string;
+  'Accept': string;
+  'Cache-Control': string;
+  'Authorization': string;
+}
+
 export class HttpClient {
+  private static authValue(): string {
+    const token = AppStorage.get('userToken') as string;
+    if (token !== undefined && token.length > 0) {
+      return `Bearer ${token}`;
+    }
+    return '';
+  }
+
+  private static jsonHeaders(): HttpJsonHeader {
+    const header: HttpJsonHeader = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': HttpClient.authValue()
+    };
+    return header;
+  }
+
+  private static sseHeaders(): HttpSseHeader {
+    const header: HttpSseHeader = {
+      'Content-Type': 'application/json',
+      'Accept': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Authorization': HttpClient.authValue()
+    };
+    return header;
+  }
+
   static async get(path: string, query?: string): Promise<HttpResult> {
     let url = path.startsWith('http') ? path : `${AppConfig.REMOTE_API_BASE}${path}`;
     if (query !== undefined && query.length > 0) {
@@ -55,7 +95,7 @@ export class HttpClient {
         connectTimeout: AppConfig.REQUEST_TIMEOUT_MS,
         readTimeout: AppConfig.REQUEST_TIMEOUT_MS,
         expectDataType: http.HttpDataType.STRING,
-        header: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
+        header: HttpClient.jsonHeaders()
       });
       const body = typeof resp.result === 'string' ? resp.result : JSON.stringify(resp.result);
       return {
@@ -72,16 +112,17 @@ export class HttpClient {
     }
   }
 
-  static async postJson(path: string, body: string): Promise<HttpResult> {
+  static async postJson(path: string, body: string, timeoutMs?: number): Promise<HttpResult> {
     const url = path.startsWith('http') ? path : `${AppConfig.REMOTE_API_BASE}${path}`;
+    const timeout = timeoutMs !== undefined ? timeoutMs : AppConfig.REQUEST_TIMEOUT_MS;
     const client = http.createHttp();
     try {
       const resp = await client.request(url, {
         method: http.RequestMethod.POST,
-        connectTimeout: AppConfig.REQUEST_TIMEOUT_MS,
-        readTimeout: AppConfig.REQUEST_TIMEOUT_MS,
+        connectTimeout: timeout,
+        readTimeout: timeout,
         expectDataType: http.HttpDataType.STRING,
-        header: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        header: HttpClient.jsonHeaders(),
         extraData: body
       });
       const respBody = typeof resp.result === 'string' ? resp.result : JSON.stringify(resp.result);
@@ -153,11 +194,7 @@ export class HttpClient {
           method: http.RequestMethod.POST,
           connectTimeout: AppConfig.REQUEST_TIMEOUT_MS,
           readTimeout: AppConfig.AI_STREAM_TIMEOUT_MS,
-          header: {
-            'Content-Type': 'application/json',
-            'Accept': 'text/event-stream',
-            'Cache-Control': 'no-cache'
-          },
+          header: HttpClient.sseHeaders(),
           extraData: body
         }).then((code: number) => {
           if (code < 200 || code >= 300) {
