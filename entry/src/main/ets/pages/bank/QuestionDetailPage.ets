@@ -19,7 +19,10 @@ struct QuestionDetailPage {
   @State private aiMessages: AiChatMessage[] = [];
   @State private aiBusy: boolean = false;
   @State private favorited: boolean = false;
+  @State private pageHeight: number = 0;
+  @State private aiSheetHeight: number = 480;
   private questionId: string = '';
+  private dragStartHeight: number = 480;
   private repo: QuestionRepository = QuestionRepository.getInstance();
   private aiAbort: SseAbort | null = null;
 
@@ -192,6 +195,54 @@ struct QuestionDetailPage {
     }
   }
 
+  private minSheetHeight(): number {
+    return 168;
+  }
+
+  private maxSheetHeight(): number {
+    if (this.pageHeight <= 0) {
+      return 720;
+    }
+    return Math.max(this.minSheetHeight(), this.pageHeight - 8);
+  }
+
+  private defaultSheetHeight(): number {
+    const maxH = this.maxSheetHeight();
+    const minH = this.minSheetHeight();
+    if (this.pageHeight <= 0) {
+      return 480;
+    }
+    return Math.round(Math.min(maxH, Math.max(minH, this.pageHeight * 0.62)));
+  }
+
+  private clampSheetHeight(h: number): number {
+    const minH = this.minSheetHeight();
+    const maxH = this.maxSheetHeight();
+    if (h < minH) {
+      return minH;
+    }
+    if (h > maxH) {
+      return maxH;
+    }
+    return h;
+  }
+
+  private openAi(prompt?: string): void {
+    this.showAi = true;
+    this.aiSheetHeight = this.defaultSheetHeight();
+    if (prompt !== undefined && prompt.length > 0) {
+      this.sendAi(prompt);
+    }
+  }
+
+  private onSheetPanStart(): void {
+    this.dragStartHeight = this.aiSheetHeight;
+  }
+
+  private onSheetPanUpdate(event: GestureEvent): void {
+    this.aiSheetHeight = this.clampSheetHeight(this.dragStartHeight - event.offsetY);
+  }
+
   build() {
     Stack({ alignContent: Alignment.BottomEnd }) {
       Column() {
@@ -282,8 +333,7 @@ struct QuestionDetailPage {
                       .backgroundColor('#EFF6FF').borderRadius(16)
                       .margin({ right: 8, bottom: 8 })
                       .onClick(() => {
-                        this.showAi = true;
-                        this.sendAi(tip);
+                        this.openAi(tip);
                       })
                   }, (tip: string) => tip)
                 }
@@ -303,41 +353,65 @@ struct QuestionDetailPage {
         .linearGradient({ angle: 135, colors: [['#4F46E5', 0], ['#2563EB', 1]] })
         .margin({ right: 20, bottom: 28 })
         .onClick(() => {
-          this.showAi = true;
+          this.openAi();
         })
       }
 
       if (this.showAi) {
-        Column() {
+        Stack({ alignContent: Alignment.Bottom }) {
           Column()
             .width('100%')
-            .layoutWeight(1)
+            .height('100%')
+            .backgroundColor('#00000055')
             .onClick(() => {
               this.showAi = false;
             })
 
           Column() {
-            Row() {
-              Text('AI 面试助手').fontSize(16).fontWeight(FontWeight.Bold).layoutWeight(1)
-              if (this.aiBusy) {
-                Text('停止').fontSize(13).fontColor('#DC2626').margin({ right: 12 }).onClick(() => {
-                  this.stopAi();
-                })
-              }
-              Text('收起').fontSize(13).fontColor('#2563EB').onClick(() => {
-                this.showAi = false;
-              })
-            }.width('100%').padding({ bottom: 8 })
+            Column() {
+              Column()
+                .width(40)
+                .height(4)
+                .borderRadius(2)
+                .backgroundColor('#D1D5DB')
+                .margin({ top: 8, bottom: 10 })
 
-            Text(this.question ? `当前题目：${this.question.title}` : '')
-              .fontSize(12).fontColor('#6B7280').maxLines(1)
-              .textOverflow({ overflow: TextOverflow.Ellipsis }).width('100%').margin({ bottom: 10 })
+              Row() {
+                Text('AI 面试助手').fontSize(16).fontWeight(FontWeight.Bold).layoutWeight(1)
+                if (this.aiBusy) {
+                  Text('停止').fontSize(13).fontColor('#DC2626').margin({ right: 12 }).onClick(() => {
+                    this.stopAi();
+                  })
+                }
+                Text('收起').fontSize(13).fontColor('#2563EB').onClick(() => {
+                  this.showAi = false;
+                })
+              }.width('100%').padding({ bottom: 8 })
+
+              Text(this.question ? `当前题目：${this.question.title}` : '')
+                .fontSize(12).fontColor('#6B7280').maxLines(1)
+                .textOverflow({ overflow: TextOverflow.Ellipsis }).width('100%').margin({ bottom: 10 })
+            }
+            .width('100%')
+            .gesture(
+              PanGesture({ fingers: 1, direction: PanDirection.Vertical, distance: 2 })
+                .onActionStart(() => {
+                  this.onSheetPanStart();
+                })
+                .onActionUpdate((event: GestureEvent) => {
+                  this.onSheetPanUpdate(event);
+                })
+                .onActionEnd((event: GestureEvent) => {
+                  this.onSheetPanUpdate(event);
+                })
+            )
 
             if (this.aiMessages.length === 0) {
               Text('可以问这道题的解法、例子或面试怎么答')
                 .fontSize(13)
                 .fontColor('#9CA3AF')
                 .width('100%')
+                .layoutWeight(1)
                 .padding({ top: 4, bottom: 8 })
             } else {
               List({ space: 8 }) {
@@ -413,7 +487,7 @@ struct QuestionDetailPage {
                   `m-${idx}-${m.phase}-${m.thinkingDone}-${m.thinkingOpen}-${m.thinking.length}-${m.content.length}`)
               }
               .width('100%')
-              .constraintSize({ maxHeight: 220 })
+              .layoutWeight(1)
               .scrollBar(BarState.Auto)
             }
 
@@ -437,14 +511,27 @@ struct QuestionDetailPage {
                 })
             }.width('100%').padding({ top: 8 })
           }
-          .width('100%').padding(16).backgroundColor(Color.White)
+          .width('100%')
+          .height(this.aiSheetHeight)
+          .padding({ left: 16, right: 16, bottom: 16 })
+          .backgroundColor(Color.White)
           .borderRadius({ topLeft: 18, topRight: 18 })
+          .clip(true)
         }
         .width('100%')
         .height('100%')
-        .backgroundColor('#00000055')
       }
     }
     .width('100%').height('100%')
+    .onAreaChange((_old: Area, area: Area) => {
+      const h = area.height as number;
+      if (h > 0 && Math.abs(h - this.pageHeight) > 1) {
+        const first = this.pageHeight <= 0;
+        this.pageHeight = h;
+        if (this.showAi) {
+          this.aiSheetHeight = first ? this.defaultSheetHeight() : this.clampSheetHeight(this.aiSheetHeight);
+        }
+      }
+    })
   }
 }
