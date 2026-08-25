@@ -189,6 +189,8 @@ export class I18n {
     I18n.put('ai_feature', 'AI 问答', 'AI 問答', 'AI Q&A');
     I18n.put('search', '搜索', '搜尋', 'Search');
     I18n.put('search_ph', '搜题目 / 知识点 / 分类', '搜題目 / 知識點 / 分類', 'Search questions / topics');
+    I18n.put('search_idle', '输入关键词，搜索题目、知识点或分类', '輸入關鍵詞，搜尋題目、知識點或分類', 'Type a keyword to search questions and topics');
+    I18n.put('search_empty', '没有找到相关题目', '沒有找到相關題目', 'No matching questions');
     I18n.put('need_login', '需要登录', '需要登入', 'Sign in required');
     I18n.put('need_login_msg', '{0}登录后才可使用', '{0}登入後才可使用', 'Sign in to use {0}');
     I18n.put('cancel', '取消', '取消', 'Cancel');
@@ -270,9 +272,18 @@ export class I18n {
     I18n.put('done_q', '已刷题', '已刷題', 'Done');
     I18n.put('study_min', '学习分钟', '學習分鐘', 'Minutes');
     I18n.put('done_master', '已掌握', '已掌握', 'Mastered');
-    I18n.put('cal_ph', '学习日历（占位）', '學習日曆（佔位）', 'Study calendar (placeholder)');
-    I18n.put('cal_hint', '后续可接入连续打卡与 GitHub 风格贡献图。', '後續可接入連續打卡與 GitHub 風格貢獻圖。', 'Streaks and a contribution graph can be added later.');
-    I18n.put('weak_ph', '薄弱知识（占位）', '薄弱知識（佔位）', 'Weak topics (placeholder)');
+    I18n.put('cal_title', '学习日历', '學習日曆', 'Study calendar');
+    I18n.put('cal_streak', '已连续打卡 {0} 天', '已連續打卡 {0} 天', '{0}-day streak');
+    I18n.put('cal_none', '进入题目详情后计入已刷题，并完成今日打卡',
+      '進入題目詳情後計入已刷題，並完成今日打卡',
+      'Open a question’s detail to count it and check in today');
+    I18n.put('cal_today_ok', '今天已打卡', '今天已打卡', 'Checked in today');
+    I18n.put('weak_title', '薄弱知识', '薄弱知識', 'Weak topics');
+    I18n.put('weak_empty', '刷题后会在这里列出掌握度较低的知识点', '刷題後會在這裡列出掌握度較低的知識點', 'Topics you have not mastered will show up here');
+    I18n.put('weak_guest', '登录后根据刷题记录生成薄弱知识点', '登入後根據刷題記錄生成薄弱知識點', 'Sign in to see weak topics from your practice');
+    I18n.put('study_guest_sub', '登录后同步刷题进度、打卡与薄弱知识。',
+      '登入後同步刷題進度、打卡與薄弱知識。',
+      'Sign in to sync progress, check-ins, and weak topics.');
     I18n.put('go_review', '去复习 ›', '去複習 ›', 'Review ›');
     I18n.put('week_1', '一', '一', 'M');
     I18n.put('week_2', '二', '二', 'T');
