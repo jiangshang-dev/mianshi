@@ -493,11 +493,18 @@ struct InterviewSessionPage {
         Row() {
           Text(this.streaming ? I18n.t('replying', this.lang) : this.trackHint)
             .fontSize(12)
-            .fontColor('#9CA3AF')
-          Blank()
+            .fontColor('#6B7280')
+            .layoutWeight(1)
+            .maxLines(1)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+            .margin({ right: 12 })
           Text(I18n.t('end_iv', this.lang))
             .fontSize(12)
-            .fontColor(this.streaming ? '#D1D5DB' : '#2563EB')
+            .fontWeight(FontWeight.Medium)
+            .fontColor(this.streaming ? '#9CA3AF' : '#DC2626')
+            .padding({ left: 12, right: 12, top: 6, bottom: 6 })
+            .backgroundColor(this.streaming ? '#F3F4F6' : '#FEF2F2')
+            .borderRadius(8)
             .onClick(() => {
               if (!this.streaming) {
                 this.endInterview();
@@ -505,7 +512,8 @@ struct InterviewSessionPage {
             })
         }
         .width('100%')
-        .padding({ left: 16, right: 16, bottom: 4 })
+        .alignItems(VerticalAlign.Center)
+        .padding({ left: 16, right: 16, top: 2, bottom: 8 })
       }
 
       List({ space: 12, scroller: this.scroller }) {

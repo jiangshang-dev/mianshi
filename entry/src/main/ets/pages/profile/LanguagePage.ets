@@ -26,7 +26,7 @@ struct LanguagePage {
           .layoutWeight(1)
       }
       .width('100%')
-      .padding({ left: 16, right: 16, top: 12, bottom: 8 })
+      .padding({ top: 12, bottom: 8 })
 
       Column() {
         this.langRow(I18n.HANS)
@@ -34,13 +34,12 @@ struct LanguagePage {
         this.langRow(I18n.EN)
       }
       .width('100%')
-      .margin({ left: 16, right: 16, top: 8 })
       .backgroundColor(Color.White)
       .borderRadius(14)
-      .padding({ left: 16, right: 16 })
     }
     .width('100%')
     .height('100%')
+    .padding({ left: 16, right: 16 })
     .alignItems(HorizontalAlign.Start)
     .backgroundColor('#F3F4F6')
   }
@@ -53,11 +52,14 @@ struct LanguagePage {
         .fontColor(this.lang === code ? '#2563EB' : '#111827')
         .layoutWeight(1)
       if (this.lang === code) {
-        Text('✓').fontSize(16).fontColor('#2563EB')
+        Text('✓')
+          .fontSize(16)
+          .fontColor('#2563EB')
+          .padding({ left: 8 })
       }
     }
     .width('100%')
-    .padding({ top: 16, bottom: 16 })
+    .padding({ left: 16, right: 16, top: 16, bottom: 16 })
     .border({ width: { bottom: code === I18n.EN ? 0 : 0.5 }, color: '#F3F4F6' })
     .onClick(() => {
       this.applyLang(code);
