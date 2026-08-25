@@ -14,6 +14,7 @@ import { ResumeInsightBuilder } from '../../data/interview/ResumeInsight';
 import { AuthRepository } from '../../data/repository/AuthRepository';
 import { InterviewParsedReply, InterviewRepository } from '../../data/repository/InterviewRepository';
 import { ResumeRepository } from '../../data/repository/ResumeRepository';
+import { LoginGate } from '../../common/utils/LoginGate';
 
 interface SessionRouteParams {
   role?: string;
@@ -60,6 +61,11 @@ struct InterviewSessionPage {
   }
 
   private async bootstrap(): Promise<void> {
+    if (!LoginGate.isLoggedIn()) {
+      router.back();
+      LoginGate.goLogin();
+      return;
+    }
     const params = router.getParams() as SessionRouteParams;
     const ctx = getContext(this) as common.UIAbilityContext;
     const resume = await ResumeRepository.getInstance().load(ctx);

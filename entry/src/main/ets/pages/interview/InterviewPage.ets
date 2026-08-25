@@ -5,6 +5,7 @@ import { ResumeInsight, ResumeInsightBuilder } from '../../data/interview/Resume
 import { InterviewRoleCatalog } from '../../data/interview/InterviewRoleCatalog';
 import { ResumeRepository } from '../../data/repository/ResumeRepository';
 import { InterviewOptionRepository } from '../../data/repository/InterviewOptionRepository';
+import { LoginGate } from '../../common/utils/LoginGate';
 
 interface SessionNavParams {
   role: string;
@@ -91,6 +92,39 @@ export struct InterviewPage {
   }
 
   build() {
+    if (!this.isLoggedIn) {
+      Column({ space: 16 }) {
+        Text('AI 面试')
+          .fontSize(20)
+          .fontWeight(FontWeight.Bold)
+          .width('100%')
+        Column({ space: 12 }) {
+          Text('登录后才可使用 AI 模拟面试')
+            .fontSize(15)
+            .fontColor('#374151')
+            .width('100%')
+          Text('登录后会保存本场问答，方便你和管理后台回看历史。')
+            .fontSize(13)
+            .fontColor('#6B7280')
+            .width('100%')
+          Button('去登录')
+            .width('100%')
+            .height(44)
+            .backgroundColor('#2563EB')
+            .onClick(() => {
+              LoginGate.goLogin();
+            })
+        }
+        .width('100%')
+        .padding(16)
+        .backgroundColor(Color.White)
+        .borderRadius(14)
+      }
+      .padding({ left: 16, right: 16, top: 8 })
+      .width('100%')
+      .height('100%')
+      .backgroundColor('#F3F4F6')
+    } else {
     Scroll() {
       Column({ space: 10 }) {
         Text('AI 面试')
@@ -223,6 +257,10 @@ export struct InterviewPage {
               .height(44)
               .backgroundColor('#2563EB')
               .onClick(async () => {
+                if (!LoginGate.isLoggedIn()) {
+                  LoginGate.goLogin();
+                  return;
+                }
                 const ctx = getContext(this) as common.UIAbilityContext;
                 this.resume = await this.repo.load(ctx);
                 this.refreshTrack();
@@ -253,5 +291,6 @@ export struct InterviewPage {
     .onAppear(() => {
       this.bootstrap();
     })
+    }
   }
 }

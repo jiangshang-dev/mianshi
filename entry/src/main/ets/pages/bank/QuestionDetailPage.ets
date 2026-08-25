@@ -4,6 +4,7 @@ import { AiChatMessage, AiStreamSnapshot, QuestionItem } from '../../common/mode
 import { MdContentView } from '../../components/MdContentView';
 import { QuestionRepository } from '../../data/repository/QuestionRepository';
 import { SseAbort } from '../../common/network/HttpClient';
+import { LoginGate } from '../../common/utils/LoginGate';
 
 interface DetailRouteParams {
   id?: string;
@@ -25,6 +26,7 @@ struct QuestionDetailPage {
   private dragStartHeight: number = 480;
   private repo: QuestionRepository = QuestionRepository.getInstance();
   private aiAbort: SseAbort | null = null;
+  private aiSessionId: string = '';
 
   aboutToAppear(): void {
     const params = router.getParams() as DetailRouteParams;
@@ -40,8 +42,9 @@ struct QuestionDetailPage {
     this.loading = true;
     try {
       const ctx = getContext(this) as common.UIAbilityContext;
+      await this.repo.syncFavorites();
       this.question = await this.repo.getDetail(ctx, this.questionId);
-      this.favorited = this.question?.favorited ?? false;
+      this.favorited = this.question !== null && this.question.favorited;
       if (this.question) {
         this.repo.recordQuestionView(this.question.id);
       }
@@ -53,6 +56,11 @@ struct QuestionDetailPage {
   }
 
   private async sendAi(text: string): Promise<void> {
+    if (!LoginGate.isLoggedIn()) {
+      LoginGate.ensure('AI 问答', () => {
+      });
+      return;
+    }
     if (!this.question || text.trim().length === 0 || this.aiBusy) {
       return;
     }
@@ -82,9 +90,12 @@ struct QuestionDetailPage {
     try {
       const reply = await this.repo.askAiStream(this.question, userText, (snap: AiStreamSnapshot) => {
         if (!abort.stopped) {
+          if (snap.sessionId.length > 0) {
+            this.aiSessionId = snap.sessionId;
+          }
           this.applyStream(snap);
         }
-      }, abort);
+      }, abort, this.aiSessionId);
       if (abort.stopped) {
         return;
       }
@@ -228,11 +239,28 @@ struct QuestionDetailPage {
   }
 
   private openAi(prompt?: string): void {
-    this.showAi = true;
-    this.aiSheetHeight = this.defaultSheetHeight();
-    if (prompt !== undefined && prompt.length > 0) {
-      this.sendAi(prompt);
+    LoginGate.ensure('AI 问答', () => {
+      this.showAi = true;
+      this.aiSheetHeight = this.defaultSheetHeight();
+      if (prompt !== undefined && prompt.length > 0) {
+        this.sendAi(prompt);
+      }
+    });
+  }
+
+  private toggleStar(): void {
+    if (!this.question) {
+      return;
     }
+    const q = this.question;
+    LoginGate.ensure('收藏', () => {
+      this.saveFavorite(q.id, q.title);
+    });
+  }
+
+  private async saveFavorite(id: string, title: string): Promise<void> {
+    this.favorited = await this.repo.toggleFavorite(id, title);
+    promptAction.showToast({ message: this.favorited ? '已收藏' : '已取消收藏' });
   }
 
   private onSheetPanStart(): void {
@@ -253,10 +281,7 @@ struct QuestionDetailPage {
             .fontSize(22)
             .fontColor(this.favorited ? '#F59E0B' : '#9CA3AF')
             .onClick(() => {
-              if (this.question) {
-                this.favorited = this.repo.toggleFavorite(this.question.id);
-                promptAction.showToast({ message: this.favorited ? '已收藏' : '已取消收藏' });
-              }
+              this.toggleStar();
             })
         }
         .width('100%')

@@ -31,6 +31,8 @@ interface AiChatRequest {
   questionId: string;
   title: string;
   message: string;
+  userId?: string;
+  sessionId?: string;
 }
 
 interface AiChatData {
@@ -247,11 +249,14 @@ export class RemoteApiDataSource {
   }
 
   async askAiStream(questionId: string, title: string, userMessage: string,
-    onUpdate: (snap: AiStreamSnapshot) => void, abort?: SseAbort): Promise<string> {
+    onUpdate: (snap: AiStreamSnapshot) => void, abort?: SseAbort, sessionId?: string): Promise<string> {
+    const uid = AppStorage.get('userId') as string;
     const req: AiChatRequest = {
       questionId: questionId,
       title: title,
-      message: userMessage
+      message: userMessage,
+      userId: uid !== undefined ? uid : '',
+      sessionId: sessionId !== undefined ? sessionId : ''
     };
     const resp = await HttpClient.postSse('/api/ai/chat', JSON.stringify(req), onUpdate, abort);
     if (abort?.stopped) {
@@ -266,10 +271,12 @@ export class RemoteApiDataSource {
   }
 
   async askAi(questionId: string, title: string, userMessage: string): Promise<string> {
+    const uid = AppStorage.get('userId') as string;
     const req: AiChatRequest = {
       questionId: questionId,
       title: title,
-      message: userMessage
+      message: userMessage,
+      userId: uid !== undefined ? uid : ''
     };
     const resp = await HttpClient.postJson('/api/ai/chat', JSON.stringify(req));
     if (resp.ok) {

@@ -3,6 +3,7 @@ import { AppConfig } from '../../common/constants/AppConfig';
 import {
   ArticleSummary,
   Category,
+  CatalogStats,
   DocCatalog,
   QuestionItem,
   TodayStudyStats,
@@ -10,6 +11,7 @@ import {
 } from '../../common/models/Types';
 import { LocalMdDataSource } from './LocalMdDataSource';
 import { RemoteApiDataSource } from './RemoteApiDataSource';
+import { FavoriteRepository } from './FavoriteRepository';
 import { SseAbort } from '../../common/network/HttpClient';
 
 /** 统一题库仓库：按 source 路由本地 MD / 远程 API */
@@ -17,7 +19,7 @@ export class QuestionRepository {
   private static instance: QuestionRepository | null = null;
   private local: LocalMdDataSource = new LocalMdDataSource();
   private remote: RemoteApiDataSource = new RemoteApiDataSource();
-  private favorites: Set<string> = new Set();
+  private favRepo: FavoriteRepository = FavoriteRepository.getInstance();
 
   static getInstance(): QuestionRepository {
     if (!QuestionRepository.instance) {
@@ -28,15 +30,21 @@ export class QuestionRepository {
 
   async init(context: common.UIAbilityContext): Promise<DocCatalog> {
     if (AppConfig.PREFER_REMOTE_API) {
-      return {
+      const emptyStats: CatalogStats = {
+        localArticleCount: 0,
+        localCategoryCount: 0,
+        remoteCategoryCount: 0
+      };
+      const emptyCatalog: DocCatalog = {
         version: 'remote',
         generatedAt: '',
         localSource: '',
         remoteApiBase: AppConfig.REMOTE_API_BASE,
         categories: [],
         articles: [],
-        stats: { localArticleCount: 0, localCategoryCount: 0, remoteCategoryCount: 0 }
+        stats: emptyStats
       };
+      return emptyCatalog;
     }
     return await this.local.loadCatalog(context);
   }
@@ -152,21 +160,20 @@ export class QuestionRepository {
   }
 
   async askAiStream(question: QuestionItem, message: string, onUpdate: (snap: AiStreamSnapshot) => void,
-    abort?: SseAbort): Promise<string> {
-    return await this.remote.askAiStream(question.id, question.title, message, onUpdate, abort);
+    abort?: SseAbort, sessionId?: string): Promise<string> {
+    return await this.remote.askAiStream(question.id, question.title, message, onUpdate, abort, sessionId);
   }
 
   async askAi(question: QuestionItem, message: string): Promise<string> {
     return await this.remote.askAi(question.id, question.title, message);
   }
 
-  toggleFavorite(id: string): boolean {
-    if (this.favorites.has(id)) {
-      this.favorites.delete(id);
-      return false;
-    }
-    this.favorites.add(id);
-    return true;
+  async syncFavorites(): Promise<void> {
+    await this.favRepo.sync();
+  }
+
+  async toggleFavorite(id: string, title: string): Promise<boolean> {
+    return await this.favRepo.toggle(id, title);
   }
 
   async getTodayStudyStats(): Promise<TodayStudyStats> {
@@ -220,7 +227,7 @@ export class QuestionRepository {
       interviewAnswer: q.interviewAnswer,
       knowledgePoints: q.knowledgePoints,
       mastery: q.mastery,
-      favorited: this.favorites.has(q.id)
+      favorited: this.favRepo.has(q.id)
     };
   }
 }

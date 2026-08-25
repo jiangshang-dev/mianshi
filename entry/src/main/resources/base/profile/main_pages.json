@@ -8,6 +8,9 @@
     "pages/interview/InterviewSessionPage",
     "pages/profile/LoginPage",
     "pages/profile/SettingsPage",
-    "pages/profile/LegalPage"
+    "pages/profile/LegalPage",
+    "pages/profile/FavoritesPage",
+    "pages/profile/AiHistoryPage",
+    "pages/profile/AiHistoryDetailPage"
   ]
 }

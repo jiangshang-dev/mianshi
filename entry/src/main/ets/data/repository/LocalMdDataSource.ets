@@ -62,7 +62,7 @@ export class LocalMdDataSource {
     article: ArticleSummary): Promise<QuestionItem> {
     const raw = await this.readMarkdown(context, article.path);
     const parsed = MdParser.parse(raw);
-    return {
+    const item: QuestionItem = {
       id: article.id,
       title: article.title.length > 0 ? article.title : parsed.frontMatter.title,
       categoryId: article.categoryId,
@@ -76,6 +76,7 @@ export class LocalMdDataSource {
       mastery: 0,
       favorited: false
     };
+    return item;
   }
 
   async loadInlineQuestions(context: common.UIAbilityContext,
@@ -89,7 +90,7 @@ export class LocalMdDataSource {
       if (sec.level !== 3 || sec.title.length < 4 || sec.content.length < 20) {
         continue;
       }
-      result.push({
+      const q: QuestionItem = {
         id: `${article.id}#${i}`,
         title: sec.title,
         categoryId: article.categoryId,
@@ -102,7 +103,8 @@ export class LocalMdDataSource {
         content: sec.content,
         mastery: 0,
         favorited: false
-      });
+      };
+      result.push(q);
     }
     return result;
   }

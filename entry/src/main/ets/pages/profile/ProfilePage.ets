@@ -3,6 +3,7 @@ import { promptAction, router } from '@kit.ArkUI';
 import { ResumeProfile } from '../../common/models/ResumeTypes';
 import { AuthRepository } from '../../data/repository/AuthRepository';
 import { ResumeRepository } from '../../data/repository/ResumeRepository';
+import { LoginGate } from '../../common/utils/LoginGate';
 
 @Component
 export struct ProfilePage {
@@ -65,6 +66,22 @@ export struct ProfilePage {
 
   private goSettings(): void {
     router.pushUrl({ url: 'pages/profile/SettingsPage' });
+  }
+
+  private openNeedLogin(feature: string, url: string, scene?: string, pageTitle?: string): void {
+    LoginGate.ensure(feature, () => {
+      if (scene !== undefined && pageTitle !== undefined) {
+        router.pushUrl({
+          url: url,
+          params: {
+            'scene': scene,
+            'title': pageTitle
+          }
+        });
+      } else {
+        router.pushUrl({ url: url });
+      }
+    });
   }
 
   private onProfileCardClick(): void {
@@ -261,16 +278,19 @@ export struct ProfilePage {
 
         Column() {
           this.menuRow('收藏夹', '收藏的题目', () => {
-            this.soon('收藏夹');
+            this.openNeedLogin('收藏夹', 'pages/profile/FavoritesPage');
+          })
+          this.menuRow('AI 问答', '题目讲解对话历史', () => {
+            this.openNeedLogin('AI 问答记录', 'pages/profile/AiHistoryPage', 'chat', 'AI 问答记录');
+          })
+          this.menuRow('面试记录', '模拟面试历史', () => {
+            this.openNeedLogin('面试记录', 'pages/profile/AiHistoryPage', 'interview', '面试记录');
           })
           this.menuRow('学习记录', '刷题天数与进度', () => {
             this.soon('学习记录');
           })
           this.menuRow('错题本', '回顾答错的题目', () => {
             this.soon('错题本');
-          })
-          this.menuRow('面试记录', '模拟面试历史', () => {
-            this.soon('面试记录');
           })
         }
         .width('100%')
