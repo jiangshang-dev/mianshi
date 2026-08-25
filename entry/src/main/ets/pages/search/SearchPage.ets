@@ -5,6 +5,10 @@ import { QuestionListItem } from '../../components/QuestionListItem';
 import { QuestionRepository } from '../../data/repository/QuestionRepository';
 import { I18n } from '../../common/i18n/I18n';
 
+interface SearchRouteParams {
+  keyword?: string;
+}
+
 @Entry
 @Component
 struct SearchPage {
@@ -12,19 +16,32 @@ struct SearchPage {
   @State private keyword: string = '';
   @State private results: QuestionItem[] = [];
   @State private searching: boolean = false;
+  @State private searched: boolean = false;
   private repo: QuestionRepository = QuestionRepository.getInstance();
+
+  aboutToAppear(): void {
+    const params = router.getParams() as SearchRouteParams;
+    const kw = params !== undefined && params.keyword !== undefined ? params.keyword : '';
+    if (kw.length > 0) {
+      this.keyword = kw;
+      this.doSearch();
+    }
+  }
 
   private async doSearch(): Promise<void> {
     if (this.keyword.trim().length === 0) {
       this.results = [];
+      this.searched = false;
       return;
     }
     this.searching = true;
     try {
       const ctx = getContext(this) as common.UIAbilityContext;
       this.results = await this.repo.search(ctx, this.keyword.trim());
+      this.searched = true;
     } catch (_e) {
       this.results = [];
+      this.searched = true;
     } finally {
       this.searching = false;
     }
@@ -62,6 +79,17 @@ struct SearchPage {
         Column() {
           LoadingProgress().width(36).height(36)
         }.layoutWeight(1).width('100%').justifyContent(FlexAlign.Center)
+      } else if (this.results.length === 0) {
+        Column() {
+          Text(this.searched ? I18n.t('search_empty', this.lang) : I18n.t('search_idle', this.lang))
+            .fontSize(14)
+            .fontColor('#9CA3AF')
+            .textAlign(TextAlign.Center)
+        }
+        .layoutWeight(1)
+        .width('100%')
+        .padding({ left: 32, right: 32 })
+        .justifyContent(FlexAlign.Center)
       } else {
         List({ space: 10 }) {
           ForEach(this.results, (item: QuestionItem) => {
