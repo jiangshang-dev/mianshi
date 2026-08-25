@@ -94,39 +94,6 @@ export struct InterviewPage {
   }
 
   build() {
-    if (!this.isLoggedIn) {
-      Column({ space: 16 }) {
-        Text(I18n.t('tab_interview', this.lang))
-          .fontSize(20)
-          .fontWeight(FontWeight.Bold)
-          .width('100%')
-        Column({ space: 12 }) {
-          Text(I18n.t('interview_login_title', this.lang))
-            .fontSize(15)
-            .fontColor('#374151')
-            .width('100%')
-          Text(I18n.t('interview_login_sub', this.lang))
-            .fontSize(13)
-            .fontColor('#6B7280')
-            .width('100%')
-          Button(I18n.t('go_login', this.lang))
-            .width('100%')
-            .height(44)
-            .backgroundColor('#2563EB')
-            .onClick(() => {
-              LoginGate.goLogin();
-            })
-        }
-        .width('100%')
-        .padding(16)
-        .backgroundColor(Color.White)
-        .borderRadius(14)
-      }
-      .padding({ left: 16, right: 16, top: 8 })
-      .width('100%')
-      .height('100%')
-      .backgroundColor('#F3F4F6')
-    } else {
     Scroll() {
       Column({ space: 10 }) {
         Text(I18n.t('tab_interview', this.lang))
@@ -220,7 +187,12 @@ export struct InterviewPage {
               .fontSize(13)
               .fontColor('#374151')
               .width('100%')
-            if (this.resume) {
+            if (!this.isLoggedIn) {
+              Text(I18n.t('iv_guest_resume', this.lang))
+                .fontSize(13)
+                .fontColor('#6B7280')
+                .width('100%')
+            } else if (this.resume) {
               Text(I18n.tf('iv_resume_using', this.resume.fileName, this.lang))
                 .fontSize(13)
                 .fontColor('#2563EB')
@@ -254,7 +226,27 @@ export struct InterviewPage {
               .fontColor('#6B7280')
               .lineHeight(20)
               .width('100%')
-            Button(I18n.t('iv_start', this.lang))
+            if (!this.isLoggedIn) {
+              Row({ space: 8 }) {
+                Text(I18n.t('iv_guest_badge', this.lang))
+                  .fontSize(11)
+                  .fontColor('#B45309')
+                  .padding({ left: 8, right: 8, top: 3, bottom: 3 })
+                  .backgroundColor('#FEF3C7')
+                  .borderRadius(6)
+                Text(I18n.t('iv_guest_cta_sub', this.lang))
+                  .fontSize(12)
+                  .fontColor('#6B7280')
+                  .layoutWeight(1)
+                  .maxLines(2)
+              }
+              .width('100%')
+              .alignItems(VerticalAlign.Center)
+              .padding({ left: 10, right: 10, top: 8, bottom: 8 })
+              .backgroundColor('#FFFBEB')
+              .borderRadius(10)
+            }
+            Button(this.isLoggedIn ? I18n.t('iv_start', this.lang) : I18n.t('iv_start_login', this.lang))
               .width('100%')
               .height(44)
               .backgroundColor('#2563EB')
@@ -293,6 +285,5 @@ export struct InterviewPage {
     .onAppear(() => {
       this.bootstrap();
     })
-    }
   }
 }

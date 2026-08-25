@@ -210,6 +210,14 @@ export class I18n {
     I18n.put('interview_login_sub', '登录后会保存本场问答，方便你和管理后台回看历史。',
       '登入後會保存本場問答，方便你和管理後台回看歷史。',
       'Signed-in sessions are saved for you and the admin console.');
+    I18n.put('iv_guest_badge', '未登录', '未登入', 'Not signed in');
+    I18n.put('iv_guest_cta_sub', '登录后开始面试，本场问答会保存到面试记录。',
+      '登入後開始面試，本場問答會保存到面試記錄。',
+      'Sign in to start. This session will be saved to interview history.');
+    I18n.put('iv_guest_resume', '登录后将使用「我的」简历，面试官会按项目针对性提问。',
+      '登入後將使用「我的」履歷，面試官會按專案針對性提問。',
+      'After sign-in, the interviewer uses the resume on the Me tab.');
+    I18n.put('iv_start_login', '登录后开始面试', '登入後開始面試', 'Sign in to start');
     I18n.put('pick_role', '选择岗位', '選擇崗位', 'Role');
     I18n.put('work_exp', '工作经验', '工作經驗', 'Experience');
     I18n.put('iv_diff', '面试难度', '面試難度', 'Difficulty');
