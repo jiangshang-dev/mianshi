@@ -244,6 +244,10 @@ export class I18n {
     I18n.put('tap_mic', '点击麦克风开始说话，朗读时可静音', '點擊麥克風開始說話，朗讀時可靜音', 'Tap the mic to speak. Mute while TTS plays.');
     I18n.put('back_iv', '返回面试中心', '返回面試中心', 'Back to interview');
     I18n.put('iv_report', '面试报告', '面試報告', 'Report');
+    I18n.put('total_score', '综合得分 {0}', '綜合得分 {0}', 'Overall {0}');
+    I18n.put('adv_label', '优势：{0}', '優勢：{0}', 'Strengths: {0}');
+    I18n.put('prob_label', '待提升：{0}', '待提升：{0}', 'To improve: {0}');
+    I18n.put('sugg_label', '建议：{0}', '建議：{0}', 'Suggestions: {0}');
     I18n.put('score_acc', '正确性', '正確性', 'Accuracy');
     I18n.put('score_depth', '深度', '深度', 'Depth');
     I18n.put('score_exp', '表达', '表達', 'Delivery');

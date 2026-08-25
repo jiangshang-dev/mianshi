@@ -15,6 +15,7 @@ import { AuthRepository } from '../../data/repository/AuthRepository';
 import { InterviewParsedReply, InterviewRepository } from '../../data/repository/InterviewRepository';
 import { ResumeRepository } from '../../data/repository/ResumeRepository';
 import { LoginGate } from '../../common/utils/LoginGate';
+import { InterviewReportCard } from '../../components/InterviewReportCard';
 import { I18n } from '../../common/i18n/I18n';
 
 interface SessionRouteParams {
@@ -516,7 +517,7 @@ struct InterviewSessionPage {
 
         if (this.showReport && this.report) {
           ListItem() {
-            this.reportCard(this.report)
+            InterviewReportCard({ report: this.report })
           }
         }
       }
@@ -709,57 +710,6 @@ struct InterviewSessionPage {
       .width('100%')
       .justifyContent(msg.role === 'candidate' ? FlexAlign.End : FlexAlign.Start)
     }
-  }
-
-  @Builder
-  reportCard(r: InterviewReport) {
-    Column({ space: 10 }) {
-      Text(I18n.t('iv_report', this.lang))
-        .fontSize(18)
-        .fontWeight(FontWeight.Bold)
-        .width('100%')
-      Text(`综合得分 ${r.score}`)
-        .fontSize(28)
-        .fontWeight(FontWeight.Bold)
-        .fontColor('#2563EB')
-        .width('100%')
-      Row() {
-        this.scoreItem('score_acc', r.accuracy)
-        this.scoreItem('score_depth', r.depth)
-        this.scoreItem('score_exp', r.expression)
-      }
-      .width('100%')
-      Text(`优势：${r.advantages.join('；')}`)
-        .fontSize(13)
-        .fontColor('#374151')
-        .width('100%')
-      Text(`待提升：${r.problems.join('；')}`)
-        .fontSize(13)
-        .fontColor('#374151')
-        .width('100%')
-      Text(`建议：${r.suggestions.join('；')}`)
-        .fontSize(13)
-        .fontColor('#6B7280')
-        .width('100%')
-    }
-    .width('100%')
-    .padding(16)
-    .backgroundColor(Color.White)
-    .borderRadius(14)
-  }
-
-  @Builder
-  scoreItem(labelKey: string, value: number) {
-    Column({ space: 4 }) {
-      Text(`${value}`)
-        .fontSize(18)
-        .fontWeight(FontWeight.Bold)
-        .fontColor('#1E40AF')
-      Text(I18n.t(labelKey, this.lang))
-        .fontSize(11)
-        .fontColor('#6B7280')
-    }
-    .layoutWeight(1)
   }
 
   private makeMsg(role: 'interviewer' | 'candidate' | 'system', content: string): InterviewMessage {

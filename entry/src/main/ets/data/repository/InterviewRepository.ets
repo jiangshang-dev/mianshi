@@ -33,10 +33,10 @@ interface InterviewApiBody {
 }
 
 interface InterviewReportDto {
-  score?: number;
-  accuracy?: number;
-  depth?: number;
-  expression?: number;
+  score?: number | string;
+  accuracy?: number | string;
+  depth?: number | string;
+  expression?: number | string;
   advantages?: string[] | string;
   problems?: string[] | string;
   suggestions?: string[] | string;
@@ -147,22 +147,49 @@ export class InterviewRepository {
     return value;
   }
 
+  private static asScore(value: number | string | undefined, fallback: number): number {
+    if (typeof value === 'number') {
+      return value;
+    }
+    if (typeof value === 'string' && value.length > 0) {
+      const n = Number(value);
+      if (n === n) {
+        return n;
+      }
+    }
+    return fallback;
+  }
+
   private static toReport(raw: string): InterviewReport | null {
-    const text = raw.trim();
+    let text = raw.trim();
     if (text.length === 0) {
       return null;
+    }
+    if (text.indexOf('```') === 0) {
+      const firstNl = text.indexOf('\n');
+      if (firstNl > 0) {
+        text = text.substring(firstNl + 1);
+      }
+      const fence = text.lastIndexOf('```');
+      if (fence >= 0) {
+        text = text.substring(0, fence);
+      }
+      text = text.trim();
     }
     try {
       const dto = JSON.parse(text) as InterviewReportDto;
       if (dto.score === undefined) {
         return null;
       }
-      const score = dto.score as number;
+      const score = InterviewRepository.asScore(dto.score, -1);
+      if (score < 0) {
+        return null;
+      }
       return {
         score: score,
-        accuracy: dto.accuracy !== undefined ? dto.accuracy : score,
-        depth: dto.depth !== undefined ? dto.depth : score,
-        expression: dto.expression !== undefined ? dto.expression : score,
+        accuracy: InterviewRepository.asScore(dto.accuracy, score),
+        depth: InterviewRepository.asScore(dto.depth, score),
+        expression: InterviewRepository.asScore(dto.expression, score),
         advantages: InterviewRepository.asLines(dto.advantages),
         problems: InterviewRepository.asLines(dto.problems),
         suggestions: InterviewRepository.asLines(dto.suggestions)
