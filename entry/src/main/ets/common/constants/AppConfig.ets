@@ -2,7 +2,7 @@ export class AppConfig {
   static readonly APP_NAME: string = '码上 Offer';
   static readonly CATALOG_RAW_PATH: string = 'DocCatalog.json';
   static readonly DOCS_RAW_PREFIX: string = 'docs/';
-  static readonly REMOTE_API_BASE: string = 'http://192.168.3.4:8080/jeecg-boot';
+  static readonly REMOTE_API_BASE: string = 'http://192.168.1.170:8080/jeecg-boot';
   static readonly REMOTE_RESUME_UPLOAD_PATH: string = '/api/resume/upload';
   /** 分类 / 题库 / 热门 / 搜索走后端 API，不再回落本地 MD 或 Mock */
   static readonly PREFER_REMOTE_API: boolean = true;

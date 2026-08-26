@@ -146,7 +146,8 @@ export class AuthRepository {
         unionId: payload.unionID ?? '',
         nickname: payload.nickName ?? '华为用户',
         avatar: payload.avatarUri ?? '',
-        state: `${Date.now()}`
+        state: `${Date.now()}`,
+        clientSource: 'harmony'
       });
       const resp = await HttpClient.postJson('/user/auth/huaweiLogin', body, AppConfig.LOGIN_TIMEOUT_MS);
       if (resp.code === -1) {
