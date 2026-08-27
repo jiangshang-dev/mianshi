@@ -94,83 +94,83 @@ struct SettingsPage {
 
       Scroll() {
         Column({ space: 12 }) {
-          if (this.isLoggedIn) {
-            Row({ space: 12 }) {
-              if (this.avatarUrl.length > 0) {
-                Image(this.avatarUrl)
-                  .width(48)
-                  .height(48)
-                  .borderRadius(24)
-                  .objectFit(ImageFit.Cover)
-              } else {
-                Column() {
-                  Text('华')
-                    .fontSize(18)
-                    .fontColor($r('app.color.text_on_color'))
-                }
-                .width(48)
-                .height(48)
-                .borderRadius(24)
-                .justifyContent(FlexAlign.Center)
-                .backgroundColor('#CF0A2C')
-              }
-              Column({ space: 4 }) {
-                Text(this.displayName.length > 0 ? this.displayName : I18n.t('huawei_user', this.lang))
-                  .fontSize(16)
-                  .fontWeight(FontWeight.Medium)
-                  .fontColor($r('app.color.text_primary'))
-                Text(I18n.t('logged_huawei', this.lang))
-                  .fontSize(12)
-                  .fontColor($r('app.color.text_muted'))
-              }
-              .alignItems(HorizontalAlign.Start)
-            }
-            .width('100%')
-            .padding(14)
-            .backgroundColor($r('app.color.card_bg'))
-            .borderRadius(14)
-          }
+          // if (this.isLoggedIn) {
+            // Row({ space: 12 }) {
+              // if (this.avatarUrl.length > 0) {
+              //   Image(this.avatarUrl)
+              //     .width(48)
+              //     .height(48)
+              //     .borderRadius(24)
+              //     .objectFit(ImageFit.Cover)
+              // } else {
+              //   Column() {
+              //     Text('华')
+              //       .fontSize(18)
+              //       .fontColor($r('app.color.text_on_color'))
+              //   }
+              //   .width(48)
+              //   .height(48)
+              //   .borderRadius(24)
+              //   .justifyContent(FlexAlign.Center)
+              //   .backgroundColor('#CF0A2C')
+              // }
+              // Column({ space: 4 }) {
+              //   Text(this.displayName.length > 0 ? this.displayName : I18n.t('huawei_user', this.lang))
+              //     .fontSize(16)
+              //     .fontWeight(FontWeight.Medium)
+              //     .fontColor($r('app.color.text_primary'))
+              //   Text(I18n.t('logged_huawei', this.lang))
+              //     .fontSize(12)
+              //     .fontColor($r('app.color.text_muted'))
+              // }
+              // .alignItems(HorizontalAlign.Start)
+            // }
+            // .width('100%')
+            // .padding(14)
+            // .backgroundColor($r('app.color.card_bg'))
+            // .borderRadius(14)
+          // }
 
           Column() {
-            Row() {
-              Column({ space: 2 }) {
-                Text(I18n.t('notify', this.lang)).fontSize(15).fontColor($r('app.color.text_primary'))
-                Text(I18n.t('notify_sub', this.lang)).fontSize(12).fontColor($r('app.color.text_muted'))
-              }
-              .alignItems(HorizontalAlign.Start)
-              .layoutWeight(1)
-              Toggle({ type: ToggleType.Switch, isOn: this.notifyOn })
-                .selectedColor('#2563EB')
-                .width(40)
-                .height(24)
-                .onChange((on: boolean) => {
-                  this.notifyOn = on;
-                  this.saveFlag(SettingsFlags.notifyKey(), on);
-                })
-            }
-            .width('100%')
-            .padding({ top: 14, bottom: 14 })
-            .border({ width: { bottom: 0.5 }, color: $r('app.color.divider') })
+            // Row() {
+              // Column({ space: 2 }) {
+              //   Text(I18n.t('notify', this.lang)).fontSize(15).fontColor($r('app.color.text_primary'))
+              //   Text(I18n.t('notify_sub', this.lang)).fontSize(12).fontColor($r('app.color.text_muted'))
+              // }
+              // .alignItems(HorizontalAlign.Start)
+              // .layoutWeight(1)
+              // Toggle({ type: ToggleType.Switch, isOn: this.notifyOn })
+              //   .selectedColor('#2563EB')
+              //   .width(40)
+              //   .height(24)
+              //   .onChange((on: boolean) => {
+              //     this.notifyOn = on;
+              //     this.saveFlag(SettingsFlags.notifyKey(), on);
+              //   })
+            // }
+            // .width('100%')
+            // .padding({ top: 14, bottom: 14 })
+            // .border({ width: { bottom: 0.5 }, color: $r('app.color.divider') })
 
-            Row() {
-              Column({ space: 2 }) {
-                Text(I18n.t('daily_remind', this.lang)).fontSize(15).fontColor($r('app.color.text_primary'))
-                Text(I18n.t('daily_remind_sub', this.lang)).fontSize(12).fontColor($r('app.color.text_muted'))
-              }
-              .alignItems(HorizontalAlign.Start)
-              .layoutWeight(1)
-              Toggle({ type: ToggleType.Switch, isOn: this.remindOn })
-                .selectedColor('#2563EB')
-                .width(40)
-                .height(24)
-                .onChange((on: boolean) => {
-                  this.remindOn = on;
-                  this.saveFlag(SettingsFlags.remindKey(), on);
-                })
-            }
-            .width('100%')
-            .padding({ top: 14, bottom: 14 })
-            .border({ width: { bottom: 0.5 }, color: $r('app.color.divider') })
+            // Row() {
+            //   Column({ space: 2 }) {
+            //     Text(I18n.t('daily_remind', this.lang)).fontSize(15).fontColor($r('app.color.text_primary'))
+            //     Text(I18n.t('daily_remind_sub', this.lang)).fontSize(12).fontColor($r('app.color.text_muted'))
+            //   }
+            //   .alignItems(HorizontalAlign.Start)
+            //   .layoutWeight(1)
+            //   Toggle({ type: ToggleType.Switch, isOn: this.remindOn })
+            //     .selectedColor('#2563EB')
+            //     .width(40)
+            //     .height(24)
+            //     .onChange((on: boolean) => {
+            //       this.remindOn = on;
+            //       this.saveFlag(SettingsFlags.remindKey(), on);
+            //     })
+            // }
+            // .width('100%')
+            // .padding({ top: 14, bottom: 14 })
+            // .border({ width: { bottom: 0.5 }, color: $r('app.color.divider') })
             this.actionRow('language', '__lang__', () => {
               router.pushUrl({ url: 'pages/profile/LanguagePage' });
             })
