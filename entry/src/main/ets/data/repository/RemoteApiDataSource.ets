@@ -45,6 +45,47 @@ interface AiChatResponse {
   data?: AiChatData;
 }
 
+export interface InboxItem {
+  id: string;
+  title: string;
+  content: string;
+  read: boolean;
+  createTime: string;
+}
+
+interface FeedbackSubmitRequest {
+  feedbackType: string;
+  content: string;
+  contact: string;
+}
+
+interface InboxReadRequest {
+  userId: string;
+  id: string;
+}
+
+interface InboxReadAllRequest {
+  userId: string;
+}
+
+interface RemoteOkResponse {
+  success?: boolean;
+  code?: number;
+  message?: string;
+}
+
+interface InboxListResponse {
+  code: number;
+  result?: InboxItem[];
+  data?: InboxItem[];
+}
+
+interface InboxUnreadResponse {
+  code: number;
+  result?: number;
+  data?: number;
+}
+
 interface RemoteSubCategoryDto {
   id: string;
   name: string;
@@ -574,6 +615,67 @@ export class RemoteApiDataSource {
         '@EnableAutoConfiguration + 条件注解 + starter 自动配置。',
         '核心是条件注解决定是否装配。', categoryId)
     ];
+  }
+
+  static async submitFeedback(feedbackType: string, content: string, contact: string): Promise<boolean> {
+    const payload: FeedbackSubmitRequest = {
+      feedbackType: feedbackType,
+      content: content,
+      contact: contact
+    };
+    const resp = await HttpClient.postJson('/user/feedback/submit', JSON.stringify(payload));
+    if (!resp.ok) {
+      return false;
+    }
+    try {
+      const parsed = JSON.parse(resp.body) as RemoteOkResponse;
+      return parsed.success === true || parsed.code === 200;
+    } catch (_e) {
+      return false;
+    }
+  }
+
+  static async inboxList(userId: string): Promise<InboxItem[]> {
+    const resp = await HttpClient.get('/api/inbox/list', `userId=${encodeURIComponent(userId)}`);
+    if (!resp.ok) {
+      return [];
+    }
+    try {
+      const parsed = JSON.parse(resp.body) as InboxListResponse;
+      const rows = parsed.result !== undefined ? parsed.result : parsed.data;
+      return rows !== undefined ? rows : [];
+    } catch (_e) {
+      return [];
+    }
+  }
+
+  static async inboxUnread(userId: string): Promise<number> {
+    const resp = await HttpClient.get('/api/inbox/unreadCount', `userId=${encodeURIComponent(userId)}`);
+    if (!resp.ok) {
+      return 0;
+    }
+    try {
+      const parsed = JSON.parse(resp.body) as InboxUnreadResponse;
+      const n = parsed.result !== undefined ? parsed.result : parsed.data;
+      return typeof n === 'number' ? n : 0;
+    } catch (_e) {
+      return 0;
+    }
+  }
+
+  static async inboxRead(userId: string, id: string): Promise<void> {
+    const body: InboxReadRequest = {
+      userId: userId,
+      id: id
+    };
+    await HttpClient.postJson('/api/inbox/read', JSON.stringify(body));
+  }
+
+  static async inboxReadAll(userId: string): Promise<void> {
+    const body: InboxReadAllRequest = {
+      userId: userId
+    };
+    await HttpClient.postJson('/api/inbox/readAll', JSON.stringify(body));
   }
 
   private mockQ(id: string, title: string, categoryName: string, tags: string[],

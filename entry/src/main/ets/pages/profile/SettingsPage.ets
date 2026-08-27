@@ -2,6 +2,8 @@ import { common } from '@kit.AbilityKit';
 import { preferences } from '@kit.ArkData';
 import { promptAction, router } from '@kit.ArkUI';
 import { AuthRepository } from '../../data/repository/AuthRepository';
+import { RemoteApiDataSource } from '../../data/repository/RemoteApiDataSource';
+import { LoginGate } from '../../common/utils/LoginGate';
 import { I18n } from '../../common/i18n/I18n';
 
 const SETTINGS_PREF = 'app_settings';
@@ -17,12 +19,18 @@ struct SettingsPage {
   @StorageLink('appLang') lang: string = I18n.HANS;
   @State private notifyOn: boolean = true;
   @State private remindOn: boolean = false;
+  @State private unreadCount: number = 0;
 
   private auth: AuthRepository = AuthRepository.getInstance();
 
   aboutToAppear(): void {
     this.refreshUser();
     this.loadSettings();
+    this.loadUnread();
+  }
+
+  onPageShow(): void {
+    this.loadUnread();
   }
 
   private async refreshUser(): Promise<void> {
@@ -53,6 +61,30 @@ struct SettingsPage {
     await this.auth.logout(ctx);
     promptAction.showToast({ message: I18n.t('logged_out', this.lang) });
     router.back();
+  }
+
+  private async loadUnread(): Promise<void> {
+    if (!this.isLoggedIn) {
+      this.unreadCount = 0;
+      return;
+    }
+    const uid = LoginGate.currentUserId();
+    if (uid.length === 0) {
+      return;
+    }
+    this.unreadCount = await RemoteApiDataSource.inboxUnread(uid);
+  }
+
+  private goFeedback(): void {
+    LoginGate.ensure(I18n.t('feedback', this.lang), () => {
+      router.pushUrl({ url: 'pages/profile/FeedbackPage' });
+    });
+  }
+
+  private goInbox(): void {
+    LoginGate.ensure(I18n.t('inbox', this.lang), () => {
+      router.pushUrl({ url: 'pages/profile/InboxPage' });
+    });
   }
 
   private async clearCache(): Promise<void> {
@@ -125,6 +157,12 @@ struct SettingsPage {
             })
             this.actionRow('clear_cache', 'clear_cache_sub', () => {
               this.clearCache();
+            })
+            this.actionRow('feedback', 'feedback_sub', () => {
+              this.goFeedback();
+            })
+            this.actionRow('inbox', this.unreadCount > 0 ? '__inbox__' : 'inbox_sub', () => {
+              this.goInbox();
             })
           }
           .width('100%')
@@ -203,6 +241,8 @@ struct SettingsPage {
         Text(I18n.t(titleKey, this.lang)).fontSize(15).fontColor('#111827')
         if (subtitleKey === '__lang__') {
           Text(I18n.langName(this.lang)).fontSize(12).fontColor('#9CA3AF')
+        } else if (subtitleKey === '__inbox__') {
+          Text(I18n.tf('inbox_unread', `${this.unreadCount}`, this.lang)).fontSize(12).fontColor('#2563EB')
         } else if (subtitleKey.length > 0) {
           Text(I18n.t(subtitleKey, this.lang)).fontSize(12).fontColor('#9CA3AF')
         }

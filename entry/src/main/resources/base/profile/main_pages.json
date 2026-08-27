@@ -12,6 +12,9 @@
     "pages/profile/LanguagePage",
     "pages/profile/FavoritesPage",
     "pages/profile/AiHistoryPage",
-    "pages/profile/AiHistoryDetailPage"
+    "pages/profile/AiHistoryDetailPage",
+    "pages/profile/FeedbackPage",
+    "pages/profile/InboxPage",
+    "pages/profile/InboxDetailPage"
   ]
 }
