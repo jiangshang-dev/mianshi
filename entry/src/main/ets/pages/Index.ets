@@ -23,7 +23,7 @@ struct Index {
       Text(icon).fontSize(20)
       Text(I18n.t(titleKey, this.lang))
         .fontSize(11)
-        .fontColor(this.currentIndex === targetIndex ? '#2563EB' : '#9CA3AF')
+        .fontColor(this.currentIndex === targetIndex ? $r('app.color.accent') : $r('app.color.tab_inactive'))
         .fontWeight(this.currentIndex === targetIndex ? FontWeight.Medium : FontWeight.Regular)
     }
     .width('100%')
@@ -64,6 +64,7 @@ struct Index {
     .width('100%')
     .height('100%')
     .barHeight(58)
+    .barBackgroundColor($r('app.color.card_bg'))
     .onChange((index: number) => {
       this.currentIndex = index;
     })

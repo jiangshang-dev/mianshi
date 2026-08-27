@@ -23,15 +23,15 @@ export struct CategoryCard {
       Text(this.category.name)
         .fontSize(14)
         .fontWeight(FontWeight.Medium)
-        .fontColor('#111827')
+        .fontColor($r('app.color.text_primary'))
         .maxLines(1)
       Text(I18n.tf('q_count', `${this.category.articleCount}`, this.lang))
         .fontSize(11)
-        .fontColor('#6B7280')
+        .fontColor($r('app.color.text_muted'))
     }
     .width('100%')
     .padding({ top: 16, bottom: 16 })
-    .backgroundColor(Color.White)
+    .backgroundColor($r('app.color.card_bg'))
     .borderRadius(14)
     .onClick(() => this.onCardClick(this.category))
   }

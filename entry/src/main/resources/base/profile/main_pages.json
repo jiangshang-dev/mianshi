@@ -10,6 +10,7 @@
     "pages/profile/SettingsPage",
     "pages/profile/LegalPage",
     "pages/profile/LanguagePage",
+    "pages/profile/ThemePage",
     "pages/profile/FavoritesPage",
     "pages/profile/AiHistoryPage",
     "pages/profile/AiHistoryDetailPage",

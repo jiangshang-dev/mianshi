@@ -18,7 +18,7 @@ export struct CategoryTagSection {
         Text(this.title)
           .fontSize(16)
           .fontWeight(FontWeight.Bold)
-          .fontColor('#111827')
+          .fontColor($r('app.color.text_primary'))
           .width('100%')
         Flex({ wrap: FlexWrap.Wrap }) {
           ForEach(this.items, (c: Category) => {

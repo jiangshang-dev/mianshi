@@ -135,6 +135,7 @@ export struct ProfilePage {
         Text(I18n.t('tab_profile', this.lang))
           .fontSize(20)
           .fontWeight(FontWeight.Bold)
+          .fontColor($r('app.color.text_primary'))
           .width('100%')
 
         Row({ space: 12 }) {
@@ -148,7 +149,7 @@ export struct ProfilePage {
             Column() {
               Text(this.isLoggedIn ? '华' : '👤')
                 .fontSize(this.isLoggedIn ? 18 : 22)
-                .fontColor(this.isLoggedIn ? Color.White : '#9CA3AF')
+                .fontColor(this.isLoggedIn ? $r('app.color.text_on_color') : $r('app.color.text_muted'))
             }
             .width(48)
             .height(48)
@@ -162,10 +163,10 @@ export struct ProfilePage {
               (this.displayName.length > 0 ? this.displayName : I18n.t('huawei_user', this.lang)) : I18n.t('go_login', this.lang))
               .fontSize(17)
               .fontWeight(FontWeight.Bold)
-              .fontColor(this.isLoggedIn ? '#111827' : '#2563EB')
+              .fontColor(this.isLoggedIn ? $r('app.color.text_primary') : $r('app.color.accent'))
             Text(this.isLoggedIn ? I18n.t('huawei_on', this.lang) : I18n.t('tap_login', this.lang))
               .fontSize(12)
-              .fontColor('#9CA3AF')
+              .fontColor($r('app.color.text_muted'))
           }
           .alignItems(HorizontalAlign.Start)
           .layoutWeight(1)
@@ -173,12 +174,12 @@ export struct ProfilePage {
           if (!this.isLoggedIn) {
             Text('›')
               .fontSize(18)
-              .fontColor('#D1D5DB')
+              .fontColor($r('app.color.chevron'))
           }
         }
         .width('100%')
         .padding(12)
-        .backgroundColor(Color.White)
+        .backgroundColor($r('app.color.card_bg'))
         .borderRadius(14)
         .onClick(() => {
           this.onProfileCardClick();
@@ -190,13 +191,13 @@ export struct ProfilePage {
               Text(I18n.t('my_resume', this.lang))
                 .fontSize(15)
                 .fontWeight(FontWeight.Medium)
-                .fontColor('#111827')
+                .fontColor($r('app.color.text_primary'))
               Text(this.resume ?
                 (this.resume.fileUrl.length > 0 ?
                   I18n.t('resume_cloud', this.lang) : I18n.t('resume_local', this.lang)) :
                 (this.isLoggedIn ? I18n.t('resume_upload_tip', this.lang) : I18n.t('resume_login_sync', this.lang)))
                 .fontSize(12)
-                .fontColor('#9CA3AF')
+                .fontColor($r('app.color.text_muted'))
             }
             .alignItems(HorizontalAlign.Start)
             .layoutWeight(1)
@@ -211,13 +212,13 @@ export struct ProfilePage {
                 Column({ space: 2 }) {
                   Text(this.resume.fileName)
                     .fontSize(14)
-                    .fontColor('#111827')
+                    .fontColor($r('app.color.text_primary'))
                     .maxLines(1)
                     .textOverflow({ overflow: TextOverflow.Ellipsis })
                   Text(`${this.repo.formatFileSize(this.resume.fileSize)} · ` +
                     `${this.repo.formatUploadTime(this.resume.uploadedAt)}`)
                     .fontSize(12)
-                    .fontColor('#9CA3AF')
+                    .fontColor($r('app.color.text_muted'))
                 }
                 .alignItems(HorizontalAlign.Start)
                 .layoutWeight(1)
@@ -226,13 +227,13 @@ export struct ProfilePage {
 
               Text(this.resume.textPreview)
                 .fontSize(12)
-                .fontColor('#6B7280')
+                .fontColor($r('app.color.text_muted'))
                 .lineHeight(18)
                 .maxLines(3)
                 .textOverflow({ overflow: TextOverflow.Ellipsis })
                 .width('100%')
                 .padding(10)
-                .backgroundColor('#F9FAFB')
+                .backgroundColor($r('app.color.preview_bg'))
                 .borderRadius(8)
 
               Row({ space: 8 }) {
@@ -241,7 +242,7 @@ export struct ProfilePage {
                   .height(38)
                   .fontSize(14)
                   .backgroundColor('#EFF6FF')
-                  .fontColor('#2563EB')
+                  .fontColor($r('app.color.accent'))
                   .onClick(() => {
                     this.pickResume();
                   })
@@ -269,13 +270,13 @@ export struct ProfilePage {
               })
             Text(this.isLoggedIn ? I18n.t('resume_fmt', this.lang) : I18n.t('resume_account', this.lang))
               .fontSize(11)
-              .fontColor('#9CA3AF')
+              .fontColor($r('app.color.text_muted'))
               .width('100%')
           }
         }
         .width('100%')
         .padding(14)
-        .backgroundColor(Color.White)
+        .backgroundColor($r('app.color.card_bg'))
         .borderRadius(14)
 
         Column() {
@@ -295,7 +296,7 @@ export struct ProfilePage {
           // })
         }
         .width('100%')
-        .backgroundColor(Color.White)
+        .backgroundColor($r('app.color.card_bg'))
         .borderRadius(14)
         .padding({ left: 16, right: 16 })
 
@@ -305,7 +306,7 @@ export struct ProfilePage {
           })
         }
         .width('100%')
-        .backgroundColor(Color.White)
+        .backgroundColor($r('app.color.card_bg'))
         .borderRadius(14)
         .padding({ left: 16, right: 16 })
       }
@@ -314,7 +315,7 @@ export struct ProfilePage {
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#F3F4F6')
+    .backgroundColor($r('app.color.page_bg'))
     .scrollBar(BarState.Off)
     .align(Alignment.Top)
   }
@@ -323,17 +324,17 @@ export struct ProfilePage {
   menuRow(titleKey: string, subtitleKey: string, onTap: () => void) {
     Row() {
       Column({ space: 2 }) {
-        Text(I18n.t(titleKey, this.lang)).fontSize(15).fontColor('#111827')
-        Text(I18n.t(subtitleKey, this.lang)).fontSize(12).fontColor('#9CA3AF').maxLines(1)
+        Text(I18n.t(titleKey, this.lang)).fontSize(15).fontColor($r('app.color.text_primary'))
+        Text(I18n.t(subtitleKey, this.lang)).fontSize(12).fontColor($r('app.color.text_muted')).maxLines(1)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
       }
       .alignItems(HorizontalAlign.Start)
       .layoutWeight(1)
-      Text('›').fontSize(18).fontColor('#D1D5DB')
+      Text('›').fontSize(18).fontColor($r('app.color.chevron'))
     }
     .width('100%')
     .padding({ top: 14, bottom: 14 })
-    .border({ width: { bottom: 0.5 }, color: '#F3F4F6' })
+    .border({ width: { bottom: 0.5 }, color: $r('app.color.divider') })
     .onClick(() => {
       onTap();
     })

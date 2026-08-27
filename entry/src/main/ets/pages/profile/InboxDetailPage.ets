@@ -35,8 +35,8 @@ struct InboxDetailPage {
   build() {
     Column() {
       Row() {
-        Text('‹').fontSize(28).padding({ right: 8 }).onClick(() => router.back())
-        Text(I18n.t('inbox', this.lang)).fontSize(18).fontWeight(FontWeight.Bold)
+        Text('‹').fontSize(28).fontColor($r('app.color.text_primary')).padding({ right: 8 }).onClick(() => router.back())
+        Text(I18n.t('inbox', this.lang)).fontSize(18).fontWeight(FontWeight.Bold).fontColor($r('app.color.text_primary'))
       }
       .width('100%')
       .padding({ left: 16, right: 16, top: 12, bottom: 8 })
@@ -46,14 +46,14 @@ struct InboxDetailPage {
           Text(this.title)
             .fontSize(18)
             .fontWeight(FontWeight.Bold)
-            .fontColor('#111827')
+            .fontColor($r('app.color.text_primary'))
             .width('100%')
           if (this.time.length > 0) {
-            Text(this.time).fontSize(12).fontColor('#9CA3AF').width('100%')
+            Text(this.time).fontSize(12).fontColor($r('app.color.text_muted')).width('100%')
           }
           Text(this.content)
             .fontSize(15)
-            .fontColor('#374151')
+            .fontColor($r('app.color.chip_idle_text'))
             .lineHeight(24)
             .width('100%')
         }
@@ -67,6 +67,6 @@ struct InboxDetailPage {
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#F3F4F6')
+    .backgroundColor($r('app.color.page_bg'))
   }
 }

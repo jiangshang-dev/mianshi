@@ -1,16 +1,17 @@
 import { common } from '@kit.AbilityKit';
 import { router } from '@kit.ArkUI';
 import { I18n } from '../../common/i18n/I18n';
-import { LangManager } from '../../common/i18n/LangManager';
+import { ThemeManager } from '../../common/theme/ThemeManager';
 
 @Entry
 @Component
-struct LanguagePage {
+struct ThemePage {
   @StorageLink('appLang') lang: string = I18n.HANS;
+  @StorageLink('appTheme') theme: string = ThemeManager.SYSTEM;
 
-  private applyLang(code: string): void {
+  private applyTheme(mode: string): void {
     const ctx = getContext(this) as common.UIAbilityContext;
-    LangManager.setLang(ctx, code);
+    ThemeManager.setMode(ctx, mode);
   }
 
   build() {
@@ -21,7 +22,7 @@ struct LanguagePage {
           .fontColor($r('app.color.text_primary'))
           .padding({ right: 8 })
           .onClick(() => router.back())
-        Text(I18n.t('language', this.lang))
+        Text(I18n.t('theme', this.lang))
           .fontSize(18)
           .fontWeight(FontWeight.Bold)
           .fontColor($r('app.color.text_primary'))
@@ -31,9 +32,9 @@ struct LanguagePage {
       .padding({ top: 12, bottom: 8 })
 
       Column() {
-        this.langRow(I18n.HANS)
-        this.langRow(I18n.HANT)
-        this.langRow(I18n.EN)
+        this.themeRow(ThemeManager.SYSTEM, false)
+        this.themeRow(ThemeManager.LIGHT, false)
+        this.themeRow(ThemeManager.DARK, true)
       }
       .width('100%')
       .backgroundColor($r('app.color.card_bg'))
@@ -47,13 +48,13 @@ struct LanguagePage {
   }
 
   @Builder
-  langRow(code: string) {
+  themeRow(mode: string, last: boolean) {
     Row() {
-      Text(I18n.langName(code))
+      Text(I18n.t(ThemeManager.labelKey(mode), this.lang))
         .fontSize(15)
-        .fontColor(this.lang === code ? $r('app.color.accent') : $r('app.color.text_primary'))
+        .fontColor(this.theme === mode ? $r('app.color.accent') : $r('app.color.text_primary'))
         .layoutWeight(1)
-      if (this.lang === code) {
+      if (this.theme === mode) {
         Text('✓')
           .fontSize(16)
           .fontColor($r('app.color.accent'))
@@ -62,9 +63,9 @@ struct LanguagePage {
     }
     .width('100%')
     .padding({ left: 16, right: 16, top: 16, bottom: 16 })
-    .border({ width: { bottom: code === I18n.EN ? 0 : 0.5 }, color: $r('app.color.divider') })
+    .border({ width: { bottom: last ? 0 : 0.5 }, color: $r('app.color.divider') })
     .onClick(() => {
-      this.applyLang(code);
+      this.applyTheme(mode);
     })
   }
 }

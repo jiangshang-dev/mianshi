@@ -50,11 +50,13 @@ struct LoginPage {
       Row() {
         Text('‹')
           .fontSize(28)
+          .fontColor($r('app.color.text_primary'))
           .padding({ right: 8 })
           .onClick(() => router.back())
         Text(I18n.t('login', this.lang))
           .fontSize(18)
           .fontWeight(FontWeight.Bold)
+          .fontColor($r('app.color.text_primary'))
       }
       .width('100%')
       .padding({ left: 16, right: 16, top: 12, bottom: 8 })
@@ -74,9 +76,10 @@ struct LoginPage {
           Text(I18n.t('login_title', this.lang))
             .fontSize(22)
             .fontWeight(FontWeight.Bold)
+            .fontColor($r('app.color.text_primary'))
           Text(I18n.t('login_sub', this.lang))
             .fontSize(14)
-            .fontColor('#6B7280')
+            .fontColor($r('app.color.text_muted'))
             .textAlign(TextAlign.Center)
         }
 
@@ -109,16 +112,16 @@ struct LoginPage {
           })
         Text() {
           Span(I18n.t('agree_prefix', this.lang))
-            .fontColor('#6B7280')
+            .fontColor($r('app.color.text_muted'))
           Span(I18n.t('user_agreement', this.lang))
-            .fontColor('#2563EB')
+            .fontColor($r('app.color.accent'))
             .onClick(() => {
               this.openLegal('agreement');
             })
           Span(I18n.t('and', this.lang))
-            .fontColor('#6B7280')
+            .fontColor($r('app.color.text_muted'))
           Span(I18n.t('privacy', this.lang))
-            .fontColor('#2563EB')
+            .fontColor($r('app.color.accent'))
             .onClick(() => {
               this.openLegal('privacy');
             })
@@ -133,6 +136,6 @@ struct LoginPage {
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#F3F4F6')
+    .backgroundColor($r('app.color.page_bg'))
   }
 }

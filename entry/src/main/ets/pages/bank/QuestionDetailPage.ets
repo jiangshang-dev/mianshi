@@ -5,7 +5,9 @@ import { MdContentView } from '../../components/MdContentView';
 import { QuestionRepository } from '../../data/repository/QuestionRepository';
 import { SseAbort } from '../../common/network/HttpClient';
 import { LoginGate } from '../../common/utils/LoginGate';
+import { AiNotice } from '../../common/utils/AiNotice';
 import { I18n } from '../../common/i18n/I18n';
+import { AiGenMark, AiDisclaimerBar } from '../../components/AiGenMark';
 
 interface DetailRouteParams {
   id?: string;
@@ -242,11 +244,14 @@ struct QuestionDetailPage {
 
   private openAi(prompt?: string): void {
     LoginGate.ensure(I18n.t('ai_feature', this.lang), () => {
-      this.showAi = true;
-      this.aiSheetHeight = this.defaultSheetHeight();
-      if (prompt !== undefined && prompt.length > 0) {
-        this.sendAi(prompt);
-      }
+      const ctx = getContext(this) as common.UIAbilityContext;
+      AiNotice.ensure(ctx, () => {
+        this.showAi = true;
+        this.aiSheetHeight = this.defaultSheetHeight();
+        if (prompt !== undefined && prompt.length > 0) {
+          this.sendAi(prompt);
+        }
+      });
     });
   }
 
@@ -277,11 +282,11 @@ struct QuestionDetailPage {
     Stack({ alignContent: Alignment.BottomEnd }) {
       Column() {
         Row() {
-          Text('‹').fontSize(28).padding({ right: 8 }).onClick(() => router.back())
-          Text(I18n.t('detail_title', this.lang)).fontSize(18).fontWeight(FontWeight.Bold).layoutWeight(1)
+          Text('‹').fontSize(28).fontColor($r('app.color.text_primary')).padding({ right: 8 }).onClick(() => router.back())
+          Text(I18n.t('detail_title', this.lang)).fontSize(18).fontWeight(FontWeight.Bold).fontColor($r('app.color.text_primary')).layoutWeight(1)
           Text(this.favorited ? '★' : '☆')
             .fontSize(22)
-            .fontColor(this.favorited ? '#F59E0B' : '#9CA3AF')
+            .fontColor(this.favorited ? '#F59E0B' : $r('app.color.chevron'))
             .onClick(() => {
               this.toggleStar();
             })
@@ -295,7 +300,7 @@ struct QuestionDetailPage {
           }.layoutWeight(1).width('100%').justifyContent(FlexAlign.Center)
         } else if (!this.question) {
           Column() {
-            Text(I18n.t('not_found', this.lang)).fontSize(15).fontColor('#6B7280')
+            Text(I18n.t('not_found', this.lang)).fontSize(15).fontColor($r('app.color.text_muted'))
           }.layoutWeight(1).width('100%').justifyContent(FlexAlign.Center)
         } else {
           Scroll() {
@@ -308,7 +313,7 @@ struct QuestionDetailPage {
                 //   .padding({ left: 8, right: 8, top: 3, bottom: 3 })
                 //   .borderRadius(6)
                 Text(this.question.difficulty)
-                  .fontSize(11).fontColor('#6B7280').backgroundColor('#F3F4F6')
+                  .fontSize(11).fontColor($r('app.color.text_muted')).backgroundColor($r('app.color.page_bg'))
                   .padding({ left: 8, right: 8, top: 3, bottom: 3 }).borderRadius(6)
                 if (this.question.hot) {
                   Text(I18n.t('hot', this.lang)).fontSize(11).fontColor('#B45309').backgroundColor('#FEF3C7')
@@ -317,29 +322,29 @@ struct QuestionDetailPage {
               }
 
               Text(this.question.title)
-                .fontSize(22).fontWeight(FontWeight.Bold).fontColor('#111827').width('100%')
+                .fontSize(22).fontWeight(FontWeight.Bold).fontColor($r('app.color.text_primary')).width('100%')
 
               Text(`${this.question.categoryName}${this.question.tags.length > 0 ?
                 ' · ' + this.question.tags.join(' / ') : ''}`)
-                .fontSize(13).fontColor('#6B7280').width('100%')
+                .fontSize(13).fontColor($r('app.color.text_muted')).width('100%')
 
               Column({ space: 8 }) {
-                Text(I18n.t('answer_body', this.lang)).fontSize(15).fontWeight(FontWeight.Medium).width('100%')
+                Text(I18n.t('answer_body', this.lang)).fontSize(15).fontWeight(FontWeight.Medium).fontColor($r('app.color.text_primary')).width('100%')
                 MdContentView({ content: this.question.content ?? '' })
               }
-              .width('100%').padding(14).backgroundColor(Color.White).borderRadius(14)
+              .width('100%').padding(14).backgroundColor($r('app.color.card_bg')).borderRadius(14)
 
               if (this.question.interviewAnswer) {
                 Column({ space: 8 }) {
-                  Text(I18n.t('interview_ans', this.lang)).fontSize(15).fontWeight(FontWeight.Medium).width('100%')
+                  Text(I18n.t('interview_ans', this.lang)).fontSize(15).fontWeight(FontWeight.Medium).fontColor($r('app.color.text_primary')).width('100%')
                   MdContentView({ content: this.question.interviewAnswer })
                 }
-                .width('100%').padding(14).backgroundColor('#EEF2FF').borderRadius(14)
+                .width('100%').padding(14).backgroundColor($r('app.color.card_bg')).borderRadius(14)
               }
 
               if (this.question.knowledgePoints && this.question.knowledgePoints.length > 0) {
                 Column({ space: 8 }) {
-                  Text(I18n.t('knowledge', this.lang)).fontSize(15).fontWeight(FontWeight.Medium).width('100%')
+                  Text(I18n.t('knowledge', this.lang)).fontSize(15).fontWeight(FontWeight.Medium).fontColor($r('app.color.text_primary')).width('100%')
                   Flex({ wrap: FlexWrap.Wrap }) {
                     ForEach(this.question.knowledgePoints, (p: string) => {
                       Text(p).fontSize(12).fontColor('#3730A3').backgroundColor('#E0E7FF')
@@ -348,11 +353,11 @@ struct QuestionDetailPage {
                     }, (p: string) => p)
                   }.width('100%')
                 }
-                .width('100%').padding(14).backgroundColor(Color.White).borderRadius(14)
+                .width('100%').padding(14).backgroundColor($r('app.color.card_bg')).borderRadius(14)
               }
 
               Column({ space: 8 }) {
-                Text(I18n.t('quick_ai', this.lang)).fontSize(15).fontWeight(FontWeight.Medium).width('100%')
+                Text(I18n.t('quick_ai', this.lang)).fontSize(15).fontWeight(FontWeight.Medium).fontColor($r('app.color.text_primary')).width('100%')
                 Flex({ wrap: FlexWrap.Wrap }) {
                   ForEach(I18n.aiTips(this.lang), (tip: string) => {
                     Text(tip).fontSize(12).fontColor('#1D4ED8')
@@ -370,11 +375,11 @@ struct QuestionDetailPage {
           }.layoutWeight(1).scrollBar(BarState.Off).align(Alignment.Top)
         }
       }
-      .width('100%').height('100%').backgroundColor('#F3F4F6')
+      .width('100%').height('100%').backgroundColor($r('app.color.page_bg'))
 
       if (!this.showAi) {
         Column() {
-          Text('AI').fontSize(16).fontWeight(FontWeight.Bold).fontColor(Color.White)
+          Text('AI').fontSize(16).fontWeight(FontWeight.Bold).fontColor($r('app.color.text_on_color'))
         }
         .width(56).height(56).borderRadius(28).justifyContent(FlexAlign.Center)
         .linearGradient({ angle: 135, colors: [['#4F46E5', 0], ['#2563EB', 1]] })
@@ -403,21 +408,24 @@ struct QuestionDetailPage {
                 .backgroundColor('#D1D5DB')
                 .margin({ top: 8, bottom: 10 })
 
-              Row() {
-                Text(I18n.t('ai_helper', this.lang)).fontSize(16).fontWeight(FontWeight.Bold).layoutWeight(1)
+              Row({ space: 8 }) {
+                Text(I18n.t('ai_helper', this.lang)).fontSize(16).fontWeight(FontWeight.Bold).fontColor($r('app.color.text_primary')).layoutWeight(1)
+                AiGenMark()
                 if (this.aiBusy) {
                   Text(I18n.t('stop', this.lang)).fontSize(13).fontColor('#DC2626').margin({ right: 12 }).onClick(() => {
                     this.stopAi();
                   })
                 }
-                Text(I18n.t('collapse', this.lang)).fontSize(13).fontColor('#2563EB').onClick(() => {
+                Text(I18n.t('collapse', this.lang)).fontSize(13).fontColor($r('app.color.accent')).onClick(() => {
                   this.showAi = false;
                 })
               }.width('100%').padding({ bottom: 8 })
 
               Text(this.question ? I18n.tf('cur_q', this.question.title, this.lang) : '')
-                .fontSize(12).fontColor('#6B7280').maxLines(1)
-                .textOverflow({ overflow: TextOverflow.Ellipsis }).width('100%').margin({ bottom: 10 })
+                .fontSize(12).fontColor($r('app.color.text_muted')).maxLines(1)
+                .textOverflow({ overflow: TextOverflow.Ellipsis }).width('100%').margin({ bottom: 6 })
+              AiDisclaimerBar({ shortText: false })
+                .margin({ bottom: 10 })
             }
             .width('100%')
             .gesture(
@@ -436,7 +444,7 @@ struct QuestionDetailPage {
             if (this.aiMessages.length === 0) {
               Text(I18n.t('ai_empty', this.lang))
                 .fontSize(13)
-                .fontColor('#9CA3AF')
+                .fontColor($r('app.color.text_muted'))
                 .width('100%')
                 .layoutWeight(1)
                 .padding({ top: 4, bottom: 8 })
@@ -445,12 +453,18 @@ struct QuestionDetailPage {
                 ForEach(this.aiMessages, (m: AiChatMessage, idx: number) => {
                   ListItem() {
                     Column() {
-                      Text(m.role === 'user' ? I18n.t('me', this.lang) : 'AI')
-                        .fontSize(11).fontColor('#9CA3AF').width('100%')
-                        .textAlign(m.role === 'user' ? TextAlign.End : TextAlign.Start)
+                      Row({ space: 6 }) {
+                        Text(m.role === 'user' ? I18n.t('me', this.lang) : 'AI')
+                          .fontSize(11).fontColor($r('app.color.text_muted'))
+                        if (m.role !== 'user') {
+                          AiGenMark()
+                        }
+                      }
+                      .width('100%')
+                      .justifyContent(m.role === 'user' ? FlexAlign.End : FlexAlign.Start)
                       if (m.role === 'user') {
-                        Text(m.content).fontSize(14).fontColor('#111827').padding(10)
-                          .backgroundColor('#DBEAFE')
+                        Text(m.content).fontSize(14).fontColor($r('app.color.text_primary')).padding(10)
+                          .backgroundColor($r('app.color.bubble_mine_bg'))
                           .borderRadius(10)
                       } else {
                         Column({ space: 8 }) {
@@ -464,7 +478,7 @@ struct QuestionDetailPage {
                                   .layoutWeight(1)
                                 Text(m.thinkingOpen ? I18n.t('collapse', this.lang) : I18n.t('expand', this.lang))
                                   .fontSize(12)
-                                  .fontColor('#6B7280')
+                                  .fontColor($r('app.color.text_muted'))
                               }
                               .width('100%')
                               .onClick(() => {
@@ -474,19 +488,19 @@ struct QuestionDetailPage {
                               if (m.thinkingOpen && m.thinking.length > 0) {
                                 Text(m.thinking)
                                   .fontSize(12)
-                                  .fontColor('#6B7280')
+                                  .fontColor($r('app.color.text_muted'))
                                   .lineHeight(18)
                                   .width('100%')
                               } else if (m.thinkingOpen) {
                                 Text(I18n.t('no_thought', this.lang))
                                   .fontSize(12)
-                                  .fontColor('#9CA3AF')
+                                  .fontColor($r('app.color.text_muted'))
                                   .width('100%')
                               }
                             }
                             .width('100%')
                             .padding(8)
-                            .backgroundColor('#EEF2FF')
+                            .backgroundColor($r('app.color.preview_bg'))
                             .borderRadius(8)
                           }
 
@@ -502,7 +516,7 @@ struct QuestionDetailPage {
                           }
                         }
                         .padding(10)
-                        .backgroundColor('#F3F4F6')
+                        .backgroundColor($r('app.color.page_bg'))
                         .borderRadius(10)
                         .width('100%')
                       }
@@ -518,16 +532,20 @@ struct QuestionDetailPage {
               .scrollBar(BarState.Auto)
             }
 
+            AiDisclaimerBar({ shortText: true })
+              .margin({ top: 4 })
             Row({ space: 8 }) {
               TextInput({ placeholder: I18n.t('ai_ph', this.lang), text: this.aiInput })
-                .layoutWeight(1).height(40).backgroundColor('#F9FAFB').borderRadius(10)
+                .layoutWeight(1).height(40).backgroundColor($r('app.color.input_bg'))
+                .fontColor($r('app.color.text_primary')).placeholderColor($r('app.color.text_muted'))
+                .borderRadius(10)
                 .padding({ left: 10, right: 10 })
                 .onChange((v: string) => {
                   this.aiInput = v;
                 })
               Button(this.aiBusy ? I18n.t('stop', this.lang) : I18n.t('send', this.lang))
                 .height(40)
-                .fontColor(this.aiBusy ? '#B91C1C' : Color.White)
+                .fontColor(this.aiBusy ? '#B91C1C' : $r('app.color.text_on_color'))
                 .backgroundColor(this.aiBusy ? '#FEE2E2' : '#2563EB')
                 .onClick(() => {
                   if (this.aiBusy) {
@@ -541,7 +559,7 @@ struct QuestionDetailPage {
           .width('100%')
           .height(this.aiSheetHeight)
           .padding({ left: 16, right: 16, bottom: 16 })
-          .backgroundColor(Color.White)
+          .backgroundColor($r('app.color.card_bg'))
           .borderRadius({ topLeft: 18, topRight: 18 })
           .clip(true)
         }

@@ -53,6 +53,23 @@ export class I18n {
     return group;
   }
 
+  static sectionTitle(name: string, title: string, lang?: string): string {
+    const n = name.trim();
+    const t = title.trim();
+    if (n === '技能' || n === '技术方向' || t === '热门技能' || t === '熱門技能' || t === '技能' || t === '技术方向' ||
+      t === 'Popular skills' || t === 'Skills') {
+      return I18n.t('hot_skills', lang);
+    }
+    if (n === '公司' || n === '大厂真题' || t === '公司题库' || t === '公司題庫' || t === '公司' ||
+      t === 'Company questions' || t === 'Companies') {
+      return I18n.t('company_bank', lang);
+    }
+    if (n === '专项' || n === '高频精选' || t === '专项' || t === '專項' || t === '高频精选' || t === 'Specials') {
+      return I18n.t('special', lang);
+    }
+    return t.length > 0 ? t : n;
+  }
+
   static weekdays(lang?: string): string[] {
     return [
       I18n.t('week_1', lang),
@@ -79,7 +96,8 @@ export class I18n {
     return [
       I18n.t('ag_0', lang), I18n.t('ag_1', lang), I18n.t('ag_2', lang), I18n.t('ag_3', lang),
       I18n.t('ag_4', lang), I18n.t('ag_5', lang), I18n.t('ag_6', lang), I18n.t('ag_7', lang),
-      I18n.t('ag_8', lang), I18n.t('ag_9', lang), I18n.t('ag_10', lang), I18n.t('ag_11', lang)
+      I18n.t('ag_8', lang), I18n.t('ag_9', lang), I18n.t('ag_10', lang), I18n.t('ag_11', lang),
+      I18n.t('ag_12', lang), I18n.t('ag_13', lang)
     ];
   }
 
@@ -87,7 +105,7 @@ export class I18n {
     return [
       I18n.t('pr_0', lang), I18n.t('pr_1', lang), I18n.t('pr_2', lang), I18n.t('pr_3', lang),
       I18n.t('pr_4', lang), I18n.t('pr_5', lang), I18n.t('pr_6', lang), I18n.t('pr_7', lang),
-      I18n.t('pr_8', lang), I18n.t('pr_9', lang)
+      I18n.t('pr_8', lang), I18n.t('pr_9', lang), I18n.t('pr_10', lang), I18n.t('pr_11', lang)
     ];
   }
 
@@ -324,6 +342,11 @@ export class I18n {
     I18n.put('clear_cache_sub', '清理本地临时数据', '清理本地暫存資料', 'Remove local temporary files');
     I18n.put('language', '语言', '語言', 'Language');
     I18n.put('language_sub', '简体中文 / 正体中文 / English', '簡體中文 / 正體中文 / English', 'Simplified / Traditional / English');
+    I18n.put('theme', '主题色', '主題色', 'Theme');
+    I18n.put('theme_sub', '跟随系统、亮色或暗色', '跟隨系統、亮色或暗色', 'System, light, or dark');
+    I18n.put('theme_system', '跟随系统', '跟隨系統', 'Follow system');
+    I18n.put('theme_light', '亮色', '亮色', 'Light');
+    I18n.put('theme_dark', '暗色', '暗色', 'Dark');
     I18n.put('pick_lang', '选择语言', '選擇語言', 'Choose language');
     I18n.put('version', '当前版本', '目前版本', 'Version');
     I18n.put('logout', '退出登录', '登出', 'Sign out');
@@ -384,6 +407,11 @@ export class I18n {
     I18n.put('ag_11', '6. 协议更新\n我们可能更新本协议。更新后继续使用，即视为你接受修订后的内容。',
       '6. 協議更新\n我們可能更新本協議。更新後繼續使用，即視為你接受修訂後的內容。',
       '6. Updates\nWe may update these terms. Continued use means you accept the revised terms.');
+    I18n.put('ag_12', '7. 人工智能生成内容', '7. 人工智慧生成內容', '7. AI-generated content');
+    I18n.put('ag_13',
+      '本应用的「AI 问答」与「AI 模拟面试」会调用大模型生成文本。生成内容将显著标注「AI生成」，仅供学习参考，可能不准确或过时，不构成录用、法律或专业建议。请自行核实关键信息，不得用于违法违规、侵权或考试作弊。本应用不提供将生成内容导出为独立文件的功能。使用上述功能即表示你已知悉并同意本说明。',
+      '本應用的「AI 問答」與「AI 模擬面試」會呼叫大模型生成文本。生成內容將顯著標註「AI生成」，僅供學習參考，可能不準確或過時，不構成錄用、法律或專業建議。請自行核實關鍵資訊，不得用於違法違規、侵權或考試作弊。本應用不提供將生成內容匯出為獨立檔案的功能。使用上述功能即表示你已知悉並同意本說明。',
+      'AI Q&A and mock interviews call a large model to generate text. Output is clearly labeled “AI generated”, is for study only, may be inaccurate, and is not hiring, legal, or professional advice. Verify key facts. Do not use it for illegal, infringing, or cheating purposes. This app does not export generated content as standalone files. Using these features means you understand and agree.');
     I18n.put('pr_0', '码上 Offer 重视你的个人信息保护。请结合《用户协议》阅读本政策。',
       '碼上 Offer 重視你的個人資訊保護。請結合《使用者協議》閱讀本政策。',
       'CodeOffer takes privacy seriously. Please read this with the Terms.');
@@ -406,5 +434,22 @@ export class I18n {
     I18n.put('pr_9', '5. 政策更新\n本政策更新后，我们会在应用内提示。你继续使用即表示知晓相关变更。',
       '5. 政策更新\n本政策更新後，我們會在應用內提示。你繼續使用即表示知曉相關變更。',
       '5. Updates\nWe will notify you in the app when this policy changes. Continued use means you acknowledge the change.');
+    I18n.put('pr_10', '6. 人工智能处理', '6. 人工智慧處理', '6. AI processing');
+    I18n.put('pr_11',
+      '使用 AI 问答或模拟面试时，题目内容、你的提问及简历摘要可能被发送至大模型服务以生成回答。我们仅将相关信息用于提供该功能，并按法律法规要求进行内容安全处理。',
+      '使用 AI 問答或模擬面試時，題目內容、你的提問及履歷摘要可能被傳送至大模型服務以生成回答。我們僅將相關資訊用於提供該功能，並按法律法規要求進行內容安全處理。',
+      'When you use AI Q&A or mock interviews, the question, your prompts, and a resume summary may be sent to a large-model service. We use this only to provide the feature and apply required content-safety checks.');
+    I18n.put('ai_gen_badge', 'AI生成', 'AI生成', 'AI generated');
+    I18n.put('ai_disclaimer',
+      '以下内容由人工智能生成，仅供学习参考，可能不准确，不构成专业建议或录用承诺。请自行核实，勿用于违法违规用途。',
+      '以下內容由人工智慧生成，僅供學習參考，可能不準確，不構成專業建議或錄用承諾。請自行核實，勿用於違法違規用途。',
+      'The following is AI generated, for study only, and may be inaccurate. It is not professional or hiring advice. Verify it yourself and do not use it unlawfully.');
+    I18n.put('ai_disclaimer_short', '内容由 AI 生成，仅供参考', '內容由 AI 生成，僅供參考', 'AI generated. For reference only.');
+    I18n.put('ai_notice_title', '人工智能生成内容说明', '人工智慧生成內容說明', 'AI-generated content');
+    I18n.put('ai_notice_msg',
+      '「AI 问答」和「AI 模拟面试」将使用人工智能生成文本，并在内容旁标注「AI生成」。生成结果仅供学习参考，可能存在错误，不构成录用或专业建议。请勿用于违法违规、侵权或考试作弊。继续即表示你已阅读并同意《用户协议》中的人工智能条款。',
+      '「AI 問答」和「AI 模擬面試」將使用人工智慧生成文本，並在內容旁標註「AI生成」。生成結果僅供學習參考，可能存在錯誤，不構成錄用或專業建議。請勿用於違法違規、侵權或考試作弊。繼續即表示你已閱讀並同意《使用者協議》中的人工智慧條款。',
+      'AI Q&A and mock interviews generate text with AI and label it “AI generated”. Results are for study only, may be wrong, and are not hiring or professional advice. Do not use them unlawfully. Continue means you agree to the AI terms in the User Agreement.');
+    I18n.put('ai_notice_ok', '同意并继续', '同意並繼續', 'Agree and continue');
   }
 }

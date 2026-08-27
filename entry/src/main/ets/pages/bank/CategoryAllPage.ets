@@ -54,15 +54,17 @@ struct CategoryAllPage {
       Row() {
         Text('‹')
           .fontSize(28)
+          .fontColor($r('app.color.text_primary'))
           .padding({ right: 8 })
           .onClick(() => router.back())
         Text(I18n.t('all_cats_title', this.lang))
           .fontSize(18)
           .fontWeight(FontWeight.Bold)
+          .fontColor($r('app.color.text_primary'))
           .layoutWeight(1)
         Text(I18n.tf('count_unit', `${this.categoryCount()}`, this.lang))
           .fontSize(13)
-          .fontColor('#6B7280')
+          .fontColor($r('app.color.text_muted'))
       }
       .width('100%')
       .padding({ left: 16, right: 16, top: 12, bottom: 8 })
@@ -76,8 +78,8 @@ struct CategoryAllPage {
         .justifyContent(FlexAlign.Center)
       } else if (this.groups.length === 0) {
         Column({ space: 8 }) {
-          Text(I18n.t('no_cat_short', this.lang)).fontSize(16).fontColor('#6B7280')
-          Text(I18n.t('no_cat_hint', this.lang)).fontSize(13).fontColor('#9CA3AF')
+          Text(I18n.t('no_cat_short', this.lang)).fontSize(16).fontColor($r('app.color.text_muted'))
+          Text(I18n.t('no_cat_hint', this.lang)).fontSize(13).fontColor($r('app.color.text_muted'))
         }
         .layoutWeight(1)
         .width('100%')
@@ -87,10 +89,10 @@ struct CategoryAllPage {
           Column({ space: 16 }) {
             ForEach(this.groups, (g: CategoryGroupSection) => {
               Column({ space: 10 }) {
-                Text(g.title)
+                Text(I18n.sectionTitle(g.name, g.title, this.lang))
                   .fontSize(15)
                   .fontWeight(FontWeight.Medium)
-                  .fontColor('#374151')
+                  .fontColor($r('app.color.text_secondary'))
                   .width('100%')
 
                 Grid() {
@@ -123,6 +125,6 @@ struct CategoryAllPage {
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#F3F4F6')
+    .backgroundColor($r('app.color.page_bg'))
   }
 }

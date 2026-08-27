@@ -17,6 +17,7 @@ import { ResumeRepository } from '../../data/repository/ResumeRepository';
 import { LoginGate } from '../../common/utils/LoginGate';
 import { InterviewReportCard } from '../../components/InterviewReportCard';
 import { I18n } from '../../common/i18n/I18n';
+import { AiGenMark, AiDisclaimerBar } from '../../components/AiGenMark';
 
 interface SessionRouteParams {
   role?: string;
@@ -447,15 +448,17 @@ struct InterviewSessionPage {
       Row() {
         Text('‹')
           .fontSize(28)
+          .fontColor($r('app.color.text_primary'))
           .padding({ right: 8 })
           .onClick(() => router.back())
         Column({ space: 2 }) {
           Text(I18n.t('mock_iv', this.lang))
             .fontSize(18)
             .fontWeight(FontWeight.Bold)
+            .fontColor($r('app.color.text_primary'))
           Text(this.sessionTitle)
             .fontSize(12)
-            .fontColor('#6B7280')
+            .fontColor($r('app.color.text_muted'))
         }
         .alignItems(HorizontalAlign.Start)
         .layoutWeight(1)
@@ -464,7 +467,7 @@ struct InterviewSessionPage {
           Text(this.voiceMuted ? '🔇' : '🔊')
             .fontSize(18)
             .padding({ left: 8, right: 8, top: 6, bottom: 6 })
-            .backgroundColor(this.voiceMuted ? '#F3F4F6' : '#EFF6FF')
+            .backgroundColor(this.voiceMuted ? $r('app.color.chip_idle_bg') : $r('app.color.bubble_mine_bg'))
             .borderRadius(10)
             .onClick(() => {
               this.toggleMute();
@@ -473,7 +476,7 @@ struct InterviewSessionPage {
 
         Text(this.formatTime(this.elapsedSeconds))
           .fontSize(13)
-          .fontColor('#2563EB')
+          .fontColor($r('app.color.accent'))
           .padding({ left: 10, right: 10, top: 4, bottom: 4 })
           .backgroundColor('#EFF6FF')
           .borderRadius(10)
@@ -481,6 +484,9 @@ struct InterviewSessionPage {
       }
       .width('100%')
       .padding({ left: 16, right: 16, top: 12, bottom: 8 })
+
+      AiDisclaimerBar({ shortText: true })
+        .padding({ left: 16, right: 16, bottom: 6 })
 
       //  todo 语音Tab
       // Row({ space: 8 }) {
@@ -494,7 +500,7 @@ struct InterviewSessionPage {
         Row() {
           Text(this.streaming ? I18n.t('replying', this.lang) : this.trackHint)
             .fontSize(12)
-            .fontColor('#6B7280')
+            .fontColor($r('app.color.text_muted'))
             .layoutWeight(1)
             .maxLines(1)
             .textOverflow({ overflow: TextOverflow.Ellipsis })
@@ -502,9 +508,9 @@ struct InterviewSessionPage {
           Text(I18n.t('end_iv', this.lang))
             .fontSize(12)
             .fontWeight(FontWeight.Medium)
-            .fontColor(this.streaming ? '#9CA3AF' : '#DC2626')
+            .fontColor(this.streaming ? $r('app.color.text_muted') : '#DC2626')
             .padding({ left: 12, right: 12, top: 6, bottom: 6 })
-            .backgroundColor(this.streaming ? '#F3F4F6' : '#FEF2F2')
+            .backgroundColor(this.streaming ? $r('app.color.chip_idle_bg') : '#FEF2F2')
             .borderRadius(8)
             .onClick(() => {
               if (!this.streaming) {
@@ -542,7 +548,7 @@ struct InterviewSessionPage {
             TextInput({ placeholder: I18n.t('input_ans', this.lang), text: this.inputText })
               .layoutWeight(1)
               .height(42)
-              .backgroundColor(Color.White)
+              .backgroundColor($r('app.color.card_bg'))
               .borderRadius(12)
               .padding({ left: 12, right: 12 })
               .enabled(!this.streaming)
@@ -566,17 +572,17 @@ struct InterviewSessionPage {
           Column({ space: 12 }) {
             Text(this.voiceStatus)
               .fontSize(13)
-              .fontColor('#6B7280')
+              .fontColor($r('app.color.text_muted'))
               .width('100%')
               .textAlign(TextAlign.Center)
 
             if (this.voiceTranscript.length > 0) {
               Text(this.voiceTranscript)
                 .fontSize(14)
-                .fontColor('#111827')
+                .fontColor($r('app.color.text_primary'))
                 .width('100%')
                 .padding(12)
-                .backgroundColor(Color.White)
+                .backgroundColor($r('app.color.card_bg'))
                 .borderRadius(12)
             }
 
@@ -587,7 +593,7 @@ struct InterviewSessionPage {
                   .fontColor(this.voiceMuted ? '#6B7280' : '#2563EB')
                 Text(this.voiceMuted ? I18n.t('muted', this.lang) : I18n.t('mute', this.lang))
                   .fontSize(11)
-                  .fontColor('#6B7280')
+                  .fontColor($r('app.color.text_muted'))
               }
               .width(64)
               .height(72)
@@ -599,7 +605,7 @@ struct InterviewSessionPage {
               Column() {
                 Text(this.isRecording ? '■' : '🎙')
                   .fontSize(this.isRecording ? 22 : 28)
-                  .fontColor(Color.White)
+                  .fontColor($r('app.color.text_on_color'))
               }
               .width(72)
               .height(72)
@@ -613,10 +619,10 @@ struct InterviewSessionPage {
               Column({ space: 6 }) {
                 Text('⏹')
                   .fontSize(20)
-                  .fontColor('#6B7280')
+                  .fontColor($r('app.color.text_muted'))
                 Text(I18n.t('end', this.lang))
                   .fontSize(11)
-                  .fontColor('#6B7280')
+                  .fontColor($r('app.color.text_muted'))
               }
               .width(64)
               .height(72)
@@ -630,7 +636,7 @@ struct InterviewSessionPage {
 
             Text(this.isRecording ? I18n.t('tap_end', this.lang) : I18n.t('tap_mic', this.lang))
               .fontSize(12)
-              .fontColor('#9CA3AF')
+              .fontColor($r('app.color.text_muted'))
           }
           .width('100%')
           .padding({ left: 16, right: 16, top: 8, bottom: 20 })
@@ -646,15 +652,15 @@ struct InterviewSessionPage {
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#F3F4F6')
+    .backgroundColor($r('app.color.page_bg'))
   }
 
   @Builder
   modeTab(labelKey: string, value: InterviewChatMode) {
     Text(I18n.t(labelKey, this.lang))
       .fontSize(14)
-      .fontColor(this.mode === value ? Color.White : '#374151')
-      .backgroundColor(this.mode === value ? '#2563EB' : Color.White)
+      .fontColor(this.mode === value ? $r('app.color.text_on_color') : $r('app.color.chip_idle_text'))
+      .backgroundColor(this.mode === value ? $r('app.color.accent') : $r('app.color.card_bg'))
       .padding({ left: 16, right: 16, top: 10, bottom: 10 })
       .borderRadius(20)
       .layoutWeight(1)
@@ -688,24 +694,29 @@ struct InterviewSessionPage {
     if (msg.role === 'system') {
       Text(msg.content)
         .fontSize(12)
-        .fontColor('#9CA3AF')
+        .fontColor($r('app.color.text_muted'))
         .width('100%')
         .textAlign(TextAlign.Center)
         .padding({ top: 4, bottom: 4 })
     } else {
       Row() {
         Column({ space: 4 }) {
-          Text(msg.role === 'interviewer' ? I18n.t('role_iv', this.lang) : I18n.t('me', this.lang))
-            .fontSize(11)
-            .fontColor('#9CA3AF')
-            .width('100%')
-            .textAlign(msg.role === 'candidate' ? TextAlign.End : TextAlign.Start)
+          Row({ space: 6 }) {
+            Text(msg.role === 'interviewer' ? I18n.t('role_iv', this.lang) : I18n.t('me', this.lang))
+              .fontSize(11)
+              .fontColor($r('app.color.text_muted'))
+            if (msg.role === 'interviewer') {
+              AiGenMark()
+            }
+          }
+          .width('100%')
+          .justifyContent(msg.role === 'candidate' ? FlexAlign.End : FlexAlign.Start)
           Text(msg.content)
             .fontSize(14)
-            .fontColor('#111827')
+            .fontColor($r('app.color.text_primary'))
             .lineHeight(22)
             .padding(12)
-            .backgroundColor(msg.role === 'candidate' ? '#DBEAFE' : Color.White)
+            .backgroundColor(msg.role === 'candidate' ? $r('app.color.bubble_mine_bg') : $r('app.color.card_bg'))
             .borderRadius(12)
             .constraintSize({ maxWidth: '82%' })
           Text(msg.time)

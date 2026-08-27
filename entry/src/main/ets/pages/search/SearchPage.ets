@@ -39,11 +39,14 @@ struct SearchPage {
       Row({ space: 8 }) {
         Text('‹')
           .fontSize(28)
+          .fontColor($r('app.color.text_primary'))
           .onClick(() => router.back())
         TextInput({ placeholder: I18n.t('search_ph', this.lang), text: this.keyword })
           .layoutWeight(1)
           .height(40)
-          .backgroundColor(Color.White)
+          .backgroundColor($r('app.color.input_bg'))
+          .fontColor($r('app.color.text_primary'))
+          .placeholderColor($r('app.color.text_muted'))
           .borderRadius(10)
           .padding({ left: 10, right: 10 })
           .onChange((v: string) => {
@@ -54,7 +57,7 @@ struct SearchPage {
           })
         Text(I18n.t('search', this.lang))
           .fontSize(14)
-          .fontColor('#2563EB')
+          .fontColor($r('app.color.accent'))
           .onClick(() => {
             this.doSearch();
           })
@@ -70,7 +73,7 @@ struct SearchPage {
         Column() {
           Text(this.searched ? I18n.t('search_empty', this.lang) : I18n.t('search_idle', this.lang))
             .fontSize(14)
-            .fontColor('#9CA3AF')
+            .fontColor($r('app.color.text_muted'))
             .textAlign(TextAlign.Center)
         }
         .layoutWeight(1)
@@ -101,6 +104,6 @@ struct SearchPage {
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#F3F4F6')
+    .backgroundColor($r('app.color.page_bg'))
   }
 }

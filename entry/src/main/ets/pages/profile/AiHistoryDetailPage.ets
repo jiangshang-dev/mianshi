@@ -1,6 +1,7 @@
 import { router } from '@kit.ArkUI';
 import { I18n } from '../../common/i18n/I18n';
 import { InterviewReportCard } from '../../components/InterviewReportCard';
+import { AiGenMark } from '../../components/AiGenMark';
 import { AiHistoryMessage, AiHistoryRepository } from '../../data/repository/AiHistoryRepository';
 import { InterviewRepository } from '../../data/repository/InterviewRepository';
 
@@ -111,10 +112,11 @@ struct AiHistoryDetailPage {
   build() {
     Column() {
       Row() {
-        Text('‹').fontSize(28).padding({ right: 8 }).onClick(() => router.back())
+        Text('‹').fontSize(28).fontColor($r('app.color.text_primary')).padding({ right: 8 }).onClick(() => router.back())
         Text(this.title)
           .fontSize(18)
           .fontWeight(FontWeight.Bold)
+          .fontColor($r('app.color.text_primary'))
           .layoutWeight(1)
           .maxLines(1)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
@@ -131,7 +133,7 @@ struct AiHistoryDetailPage {
         .justifyContent(FlexAlign.Center)
       } else if (this.messages.length === 0) {
         Column() {
-          Text(I18n.t('no_chat', this.lang)).fontSize(14).fontColor('#9CA3AF')
+          Text(I18n.t('no_chat', this.lang)).fontSize(14).fontColor($r('app.color.text_muted'))
         }
         .layoutWeight(1)
         .width('100%')
@@ -152,7 +154,7 @@ struct AiHistoryDetailPage {
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#F3F4F6')
+    .backgroundColor($r('app.color.page_bg'))
   }
 
   @Builder
@@ -161,24 +163,29 @@ struct AiHistoryDetailPage {
       if (m.content.length > 0) {
         Column({ space: 6 }) {
           Row() {
-            Text(m.role === 'user' ? I18n.t('me', this.lang) : 'AI')
-              .fontSize(12)
-              .fontColor(m.role === 'user' ? '#1D4ED8' : '#059669')
-              .layoutWeight(1)
+            Row({ space: 6 }) {
+              Text(m.role === 'user' ? I18n.t('me', this.lang) : 'AI')
+                .fontSize(12)
+                .fontColor(m.role === 'user' ? '#1D4ED8' : '#059669')
+              if (m.role !== 'user') {
+                AiGenMark()
+              }
+            }
+            .layoutWeight(1)
             Text(m.createTime)
               .fontSize(11)
-              .fontColor('#9CA3AF')
+              .fontColor($r('app.color.text_muted'))
           }
           .width('100%')
           Text(m.content)
             .fontSize(14)
-            .fontColor('#111827')
+            .fontColor($r('app.color.text_primary'))
             .lineHeight(22)
             .width('100%')
         }
         .width('100%')
         .padding(14)
-        .backgroundColor(m.role === 'user' ? '#EFF6FF' : Color.White)
+        .backgroundColor(m.role === 'user' ? $r('app.color.bubble_mine_bg') : $r('app.color.card_bg'))
         .borderRadius(12)
         .alignItems(HorizontalAlign.Start)
       }

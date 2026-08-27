@@ -6,7 +6,9 @@ import { InterviewRoleCatalog } from '../../data/interview/InterviewRoleCatalog'
 import { ResumeRepository } from '../../data/repository/ResumeRepository';
 import { InterviewOptionRepository } from '../../data/repository/InterviewOptionRepository';
 import { LoginGate } from '../../common/utils/LoginGate';
+import { AiNotice } from '../../common/utils/AiNotice';
 import { I18n } from '../../common/i18n/I18n';
+import { AiDisclaimerBar, AiGenMark } from '../../components/AiGenMark';
 
 interface SessionNavParams {
   role: string;
@@ -93,22 +95,38 @@ export struct InterviewPage {
     this.modulesText = ResumeInsightBuilder.modulesOf(this.resume, this.selectedRole).join('、');
   }
 
+  private async launchSession(): Promise<void> {
+    const ctx = getContext(this) as common.UIAbilityContext;
+    this.resume = await this.repo.load(ctx);
+    this.refreshTrack();
+    const navParams: SessionNavParams = {
+      role: this.selectedRole,
+      level: this.selectedLevel,
+      difficulty: this.selectedDiff
+    };
+    router.pushUrl({
+      url: 'pages/interview/InterviewSessionPage',
+      params: navParams
+    });
+  }
+
   build() {
     Scroll() {
       Column({ space: 10 }) {
         Text(I18n.t('tab_interview', this.lang))
           .fontSize(20)
           .fontWeight(FontWeight.Bold)
+          .fontColor($r('app.color.text_primary'))
           .width('100%')
 
         Column({ space: 8 }) {
-            Text(I18n.t('pick_role', this.lang)).fontSize(15).fontWeight(FontWeight.Medium).width('100%')
+            Text(I18n.t('pick_role', this.lang)).fontSize(15).fontWeight(FontWeight.Medium).fontColor($r('app.color.text_primary')).width('100%')
             Flex({ wrap: FlexWrap.Wrap }) {
               ForEach(this.roles, (r: string) => {
                 Text(r)
                   .fontSize(13)
-                  .fontColor(this.selectedRole === r ? Color.White : '#374151')
-                  .backgroundColor(this.selectedRole === r ? '#2563EB' : Color.White)
+                  .fontColor(this.selectedRole === r ? $r('app.color.text_on_color') : $r('app.color.chip_idle_text'))
+                  .backgroundColor(this.selectedRole === r ? $r('app.color.accent') : $r('app.color.chip_idle_bg'))
                   .padding({ left: 12, right: 12, top: 8, bottom: 8 })
                   .borderRadius(16)
                   .margin({ right: 8, bottom: 8 })
@@ -122,17 +140,17 @@ export struct InterviewPage {
           }
           .width('100%')
           .padding(14)
-          .backgroundColor(Color.White)
+          .backgroundColor($r('app.color.card_bg'))
           .borderRadius(14)
 
           Column({ space: 8 }) {
-            Text(I18n.t('work_exp', this.lang)).fontSize(15).fontWeight(FontWeight.Medium).width('100%')
+            Text(I18n.t('work_exp', this.lang)).fontSize(15).fontWeight(FontWeight.Medium).fontColor($r('app.color.text_primary')).width('100%')
             Flex({ wrap: FlexWrap.Wrap }) {
               ForEach(this.levels, (r: string) => {
                 Text(r)
                   .fontSize(13)
-                  .fontColor(this.selectedLevel === r ? Color.White : '#374151')
-                  .backgroundColor(this.selectedLevel === r ? '#2563EB' : Color.White)
+                  .fontColor(this.selectedLevel === r ? $r('app.color.text_on_color') : $r('app.color.chip_idle_text'))
+                  .backgroundColor(this.selectedLevel === r ? $r('app.color.accent') : $r('app.color.chip_idle_bg'))
                   .padding({ left: 12, right: 12, top: 8, bottom: 8 })
                   .borderRadius(16)
                   .margin({ right: 8, bottom: 8 })
@@ -145,17 +163,17 @@ export struct InterviewPage {
           }
           .width('100%')
           .padding(14)
-          .backgroundColor(Color.White)
+          .backgroundColor($r('app.color.card_bg'))
           .borderRadius(14)
 
           Column({ space: 8 }) {
-            Text(I18n.t('iv_diff', this.lang)).fontSize(15).fontWeight(FontWeight.Medium).width('100%')
+            Text(I18n.t('iv_diff', this.lang)).fontSize(15).fontWeight(FontWeight.Medium).fontColor($r('app.color.text_primary')).width('100%')
             Flex({ wrap: FlexWrap.Wrap }) {
               ForEach(this.difficulties, (r: string) => {
                 Text(r)
                   .fontSize(13)
-                  .fontColor(this.selectedDiff === r ? Color.White : '#374151')
-                  .backgroundColor(this.selectedDiff === r ? '#2563EB' : Color.White)
+                  .fontColor(this.selectedDiff === r ? $r('app.color.text_on_color') : $r('app.color.chip_idle_text'))
+                  .backgroundColor(this.selectedDiff === r ? $r('app.color.accent') : $r('app.color.chip_idle_bg'))
                   .padding({ left: 12, right: 12, top: 8, bottom: 8 })
                   .borderRadius(16)
                   .margin({ right: 8, bottom: 8 })
@@ -167,40 +185,41 @@ export struct InterviewPage {
           }
           .width('100%')
           .padding(14)
-          .backgroundColor(Color.White)
+          .backgroundColor($r('app.color.card_bg'))
           .borderRadius(14)
 
           Column({ space: 10 }) {
             Text(I18n.t('mock_iv', this.lang))
               .fontSize(16)
               .fontWeight(FontWeight.Bold)
+              .fontColor($r('app.color.text_primary'))
               .width('100%')
             Text(I18n.tf('iv_soon', `${this.selectedRole} · ${this.selectedLevel} · ${this.selectedDiff}`, this.lang))
               .fontSize(13)
-              .fontColor('#6B7280')
+              .fontColor($r('app.color.text_muted'))
               .width('100%')
             Text(I18n.tf('iv_interviewer', this.interviewerTitle, this.lang))
               .fontSize(13)
-              .fontColor('#2563EB')
+              .fontColor($r('app.color.accent'))
               .width('100%')
             Text(I18n.tf('iv_focus', this.modulesText, this.lang))
               .fontSize(13)
-              .fontColor('#374151')
+              .fontColor($r('app.color.text_secondary'))
               .width('100%')
             if (!this.isLoggedIn) {
               Text(I18n.t('iv_guest_resume', this.lang))
                 .fontSize(13)
-                .fontColor('#6B7280')
+                .fontColor($r('app.color.text_muted'))
                 .width('100%')
             } else if (this.resume) {
               Text(I18n.tf('iv_resume_using', this.resume.fileName, this.lang))
                 .fontSize(13)
-                .fontColor('#2563EB')
+                .fontColor($r('app.color.accent'))
                 .width('100%')
               if (this.recommended) {
                 Text(I18n.t('iv_resume_ok', this.lang))
                   .fontSize(12)
-                  .fontColor('#6B7280')
+                  .fontColor($r('app.color.text_muted'))
                   .width('100%')
               }
               if (!ResumeInsightBuilder.isParsedText(this.resume.textPreview)) {
@@ -216,16 +235,26 @@ export struct InterviewPage {
                 .width('100%')
               Text(I18n.t('iv_go_resume', this.lang))
                 .fontSize(13)
-                .fontColor('#2563EB')
+                .fontColor($r('app.color.accent'))
                 .onClick(() => {
                   AppStorage.setOrCreate('mainTabIndex', 3);
                 })
             }
             Text(I18n.t('iv_support', this.lang))
               .fontSize(13)
-              .fontColor('#6B7280')
+              .fontColor($r('app.color.text_muted'))
               .lineHeight(20)
               .width('100%')
+            Row({ space: 6 }) {
+              AiGenMark()
+              Text(I18n.t('ai_disclaimer_short', this.lang))
+                .fontSize(12)
+                .fontColor($r('app.color.text_muted'))
+                .layoutWeight(1)
+            }
+            .width('100%')
+            .alignItems(VerticalAlign.Center)
+            AiDisclaimerBar()
             if (!this.isLoggedIn) {
               Row({ space: 8 }) {
                 Text(I18n.t('iv_guest_badge', this.lang))
@@ -236,7 +265,7 @@ export struct InterviewPage {
                   .borderRadius(6)
                 Text(I18n.t('iv_guest_cta_sub', this.lang))
                   .fontSize(12)
-                  .fontColor('#6B7280')
+                  .fontColor($r('app.color.text_muted'))
                   .layoutWeight(1)
                   .maxLines(2)
               }
@@ -256,22 +285,14 @@ export struct InterviewPage {
                   return;
                 }
                 const ctx = getContext(this) as common.UIAbilityContext;
-                this.resume = await this.repo.load(ctx);
-                this.refreshTrack();
-                const navParams: SessionNavParams = {
-                  role: this.selectedRole,
-                  level: this.selectedLevel,
-                  difficulty: this.selectedDiff
-                };
-                router.pushUrl({
-                  url: 'pages/interview/InterviewSessionPage',
-                  params: navParams
+                AiNotice.ensure(ctx, () => {
+                  this.launchSession();
                 });
               })
           }
           .width('100%')
           .padding(16)
-          .backgroundColor(Color.White)
+          .backgroundColor($r('app.color.card_bg'))
           .borderRadius(14)
         }
         .padding({ left: 16, right: 16, top: 8, bottom: 24 })
@@ -279,7 +300,7 @@ export struct InterviewPage {
       }
     .width('100%')
     .height('100%')
-    .backgroundColor('#F3F4F6')
+    .backgroundColor($r('app.color.page_bg'))
     .scrollBar(BarState.Off)
     .align(Alignment.Top)
     .onAppear(() => {

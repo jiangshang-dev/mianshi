@@ -38,24 +38,24 @@ export struct QuestionListItem {
           //   .borderRadius(4)
           Text(this.item.difficulty)
             .fontSize(10)
-            .fontColor('#6B7280')
+            .fontColor($r('app.color.text_muted'))
         }
 
         Text(this.item.title)
           .fontSize(16)
           .fontWeight(FontWeight.Medium)
-          .fontColor('#111827')
+          .fontColor($r('app.color.text_primary'))
           .maxLines(2)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
 
         Row({ space: 8 }) {
           Text(this.item.categoryName)
             .fontSize(12)
-            .fontColor('#6B7280')
+            .fontColor($r('app.color.text_muted'))
           if (this.item.tags.length > 0) {
             Text(this.item.tags.slice(0, 2).join(' · '))
               .fontSize(12)
-              .fontColor('#9CA3AF')
+              .fontColor($r('app.color.text_muted'))
               .layoutWeight(1)
               .maxLines(1)
               .textOverflow({ overflow: TextOverflow.Ellipsis })
@@ -67,11 +67,11 @@ export struct QuestionListItem {
 
       Text('›')
         .fontSize(22)
-        .fontColor('#D1D5DB')
+        .fontColor($r('app.color.chevron'))
     }
     .width('100%')
     .padding(14)
-    .backgroundColor(Color.White)
+    .backgroundColor($r('app.color.card_bg'))
     .borderRadius(12)
     .onClick(() => this.onItemClick(this.item))
   }

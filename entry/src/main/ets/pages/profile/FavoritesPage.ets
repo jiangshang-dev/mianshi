@@ -34,8 +34,8 @@ struct FavoritesPage {
   build() {
     Column() {
       Row() {
-        Text('‹').fontSize(28).padding({ right: 8 }).onClick(() => router.back())
-        Text(I18n.t('favorites', this.lang)).fontSize(18).fontWeight(FontWeight.Bold).layoutWeight(1)
+        Text('‹').fontSize(28).fontColor($r('app.color.text_primary')).padding({ right: 8 }).onClick(() => router.back())
+        Text(I18n.t('favorites', this.lang)).fontSize(18).fontWeight(FontWeight.Bold).fontColor($r('app.color.text_primary')).layoutWeight(1)
       }
       .width('100%')
       .padding({ left: 16, right: 16, top: 12, bottom: 8 })
@@ -49,7 +49,7 @@ struct FavoritesPage {
         .justifyContent(FlexAlign.Center)
       } else if (!LoginGate.isLoggedIn()) {
         Column({ space: 12 }) {
-          Text(I18n.t('fav_login', this.lang)).fontSize(14).fontColor('#6B7280')
+          Text(I18n.t('fav_login', this.lang)).fontSize(14).fontColor($r('app.color.text_muted'))
           Button(I18n.t('go_login', this.lang))
             .width(140)
             .height(40)
@@ -61,7 +61,7 @@ struct FavoritesPage {
         .justifyContent(FlexAlign.Center)
       } else if (this.items.length === 0) {
         Column() {
-          Text(I18n.t('fav_empty', this.lang)).fontSize(14).fontColor('#9CA3AF')
+          Text(I18n.t('fav_empty', this.lang)).fontSize(14).fontColor($r('app.color.text_muted'))
         }
         .layoutWeight(1)
         .width('100%')
@@ -74,13 +74,13 @@ struct FavoritesPage {
                 Column({ space: 4 }) {
                   Text(item.questionTitle.length > 0 ? item.questionTitle : I18n.t('unnamed_q', this.lang))
                     .fontSize(15)
-                    .fontColor('#111827')
+                    .fontColor($r('app.color.text_primary'))
                     .maxLines(2)
                     .textOverflow({ overflow: TextOverflow.Ellipsis })
                     .width('100%')
                   Text(item.createTime)
                     .fontSize(12)
-                    .fontColor('#9CA3AF')
+                    .fontColor($r('app.color.text_muted'))
                 }
                 .alignItems(HorizontalAlign.Start)
                 .layoutWeight(1)
@@ -88,7 +88,7 @@ struct FavoritesPage {
               }
               .width('100%')
               .padding(14)
-              .backgroundColor(Color.White)
+              .backgroundColor($r('app.color.card_bg'))
               .borderRadius(12)
               .onClick(() => {
                 router.pushUrl({
@@ -107,6 +107,6 @@ struct FavoritesPage {
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#F3F4F6')
+    .backgroundColor($r('app.color.page_bg'))
   }
 }

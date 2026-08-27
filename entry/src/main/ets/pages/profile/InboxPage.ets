@@ -62,12 +62,12 @@ struct InboxPage {
   build() {
     Column() {
       Row() {
-        Text('‹').fontSize(28).padding({ right: 8 }).onClick(() => router.back())
-        Text(I18n.t('inbox', this.lang)).fontSize(18).fontWeight(FontWeight.Bold).layoutWeight(1)
+        Text('‹').fontSize(28).fontColor($r('app.color.text_primary')).padding({ right: 8 }).onClick(() => router.back())
+        Text(I18n.t('inbox', this.lang)).fontSize(18).fontWeight(FontWeight.Bold).fontColor($r('app.color.text_primary')).layoutWeight(1)
         if (this.hasUnread()) {
           Text(I18n.t('inbox_all_read', this.lang))
             .fontSize(13)
-            .fontColor('#2563EB')
+            .fontColor($r('app.color.accent'))
             .onClick(() => {
               this.markAll();
             })
@@ -85,7 +85,7 @@ struct InboxPage {
         .justifyContent(FlexAlign.Center)
       } else if (!LoginGate.isLoggedIn()) {
         Column({ space: 12 }) {
-          Text(I18n.t('inbox_login', this.lang)).fontSize(14).fontColor('#6B7280')
+          Text(I18n.t('inbox_login', this.lang)).fontSize(14).fontColor($r('app.color.text_muted'))
           Button(I18n.t('go_login', this.lang))
             .width(140)
             .height(40)
@@ -97,7 +97,7 @@ struct InboxPage {
         .justifyContent(FlexAlign.Center)
       } else if (this.items.length === 0) {
         Column() {
-          Text(I18n.t('inbox_empty', this.lang)).fontSize(14).fontColor('#9CA3AF')
+          Text(I18n.t('inbox_empty', this.lang)).fontSize(14).fontColor($r('app.color.text_muted'))
         }
         .layoutWeight(1)
         .width('100%')
@@ -115,13 +115,13 @@ struct InboxPage {
                   Text(item.title)
                     .fontSize(15)
                     .fontWeight(item.read ? FontWeight.Regular : FontWeight.Medium)
-                    .fontColor('#111827')
+                    .fontColor($r('app.color.text_primary'))
                     .maxLines(1)
                     .textOverflow({ overflow: TextOverflow.Ellipsis })
                     .width('100%')
                   Text(item.content)
                     .fontSize(12)
-                    .fontColor('#9CA3AF')
+                    .fontColor($r('app.color.text_muted'))
                     .maxLines(2)
                     .textOverflow({ overflow: TextOverflow.Ellipsis })
                     .width('100%')
@@ -132,7 +132,7 @@ struct InboxPage {
               }
               .width('100%')
               .padding(14)
-              .backgroundColor(Color.White)
+              .backgroundColor($r('app.color.card_bg'))
               .borderRadius(12)
               .onClick(() => {
                 this.openItem(item);
@@ -147,6 +147,6 @@ struct InboxPage {
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#F3F4F6')
+    .backgroundColor($r('app.color.page_bg'))
   }
 }

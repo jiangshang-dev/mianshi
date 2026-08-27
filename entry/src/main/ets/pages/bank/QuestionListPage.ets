@@ -73,13 +73,13 @@ struct QuestionListPage {
       Row() {
         Text('‹')
           .fontSize(28)
-          .fontColor('#111827')
+          .fontColor($r('app.color.text_primary'))
           .padding({ right: 8 })
           .onClick(() => router.back())
         Text(this.title)
           .fontSize(18)
           .fontWeight(FontWeight.Bold)
-          .fontColor('#111827')
+          .fontColor($r('app.color.text_primary'))
           .layoutWeight(1)
         // Text(this.source === 'local_md' ? '本地' : '远程')
         //   .fontSize(12)
@@ -96,8 +96,8 @@ struct QuestionListPage {
           Row({ space: 8 }) {
             Text(I18n.t('all', this.lang))
               .fontSize(13)
-              .fontColor(this.selectedSubId.length === 0 ? Color.White : '#374151')
-              .backgroundColor(this.selectedSubId.length === 0 ? '#2563EB' : Color.White)
+              .fontColor(this.selectedSubId.length === 0 ? $r('app.color.text_on_color') : $r('app.color.chip_idle_text'))
+              .backgroundColor(this.selectedSubId.length === 0 ? $r('app.color.accent') : $r('app.color.card_bg'))
               .padding({ left: 12, right: 12, top: 8, bottom: 8 })
               .borderRadius(16)
               .onClick(() => {
@@ -107,8 +107,8 @@ struct QuestionListPage {
             ForEach(this.subCategories, (sub: SubCategory) => {
               Text(sub.name)
                 .fontSize(13)
-                .fontColor(this.selectedSubId === sub.id ? Color.White : '#374151')
-                .backgroundColor(this.selectedSubId === sub.id ? '#2563EB' : Color.White)
+                .fontColor(this.selectedSubId === sub.id ? $r('app.color.text_on_color') : $r('app.color.chip_idle_text'))
+                .backgroundColor(this.selectedSubId === sub.id ? $r('app.color.accent') : $r('app.color.card_bg'))
                 .padding({ left: 12, right: 12, top: 8, bottom: 8 })
                 .borderRadius(16)
                 .onClick(() => {
@@ -131,9 +131,9 @@ struct QuestionListPage {
         }.layoutWeight(1).width('100%').justifyContent(FlexAlign.Center)
       } else if (this.questions.length === 0) {
         Column({ space: 8 }) {
-          Text(I18n.t('empty', this.lang)).fontSize(16).fontColor('#6B7280')
+          Text(I18n.t('empty', this.lang)).fontSize(16).fontColor($r('app.color.text_muted'))
           Text(I18n.t('empty_remote', this.lang))
-            .fontSize(13).fontColor('#9CA3AF')
+            .fontSize(13).fontColor($r('app.color.text_muted'))
         }.layoutWeight(1).width('100%').justifyContent(FlexAlign.Center)
       } else {
         List({ space: 10 }) {
@@ -159,6 +159,6 @@ struct QuestionListPage {
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#F3F4F6')
+    .backgroundColor($r('app.color.page_bg'))
   }
 }

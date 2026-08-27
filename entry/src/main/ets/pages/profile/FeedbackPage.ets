@@ -54,21 +54,21 @@ struct FeedbackPage {
   build() {
     Column() {
       Row() {
-        Text('‹').fontSize(28).padding({ right: 8 }).onClick(() => router.back())
-        Text(I18n.t('feedback', this.lang)).fontSize(18).fontWeight(FontWeight.Bold)
+        Text('‹').fontSize(28).fontColor($r('app.color.text_primary')).padding({ right: 8 }).onClick(() => router.back())
+        Text(I18n.t('feedback', this.lang)).fontSize(18).fontWeight(FontWeight.Bold).fontColor($r('app.color.text_primary'))
       }
       .width('100%')
       .padding({ left: 16, right: 16, top: 12, bottom: 8 })
 
       Scroll() {
         Column({ space: 14 }) {
-          Text(I18n.t('feedback_type', this.lang)).fontSize(13).fontColor('#6B7280').width('100%')
+          Text(I18n.t('feedback_type', this.lang)).fontSize(13).fontColor($r('app.color.text_muted')).width('100%')
           Flex({ wrap: FlexWrap.Wrap }) {
             ForEach(this.types(), (item: TypeOpt) => {
               Text(item.label)
                 .fontSize(13)
-                .fontColor(this.typeKey === item.key ? Color.White : '#374151')
-                .backgroundColor(this.typeKey === item.key ? '#2563EB' : '#F3F4F6')
+                .fontColor(this.typeKey === item.key ? $r('app.color.text_on_color') : $r('app.color.chip_idle_text'))
+                .backgroundColor(this.typeKey === item.key ? $r('app.color.accent') : $r('app.color.chip_idle_bg'))
                 .padding({ left: 12, right: 12, top: 8, bottom: 8 })
                 .borderRadius(16)
                 .margin({ right: 8, bottom: 8 })
@@ -79,18 +79,22 @@ struct FeedbackPage {
           }
           .width('100%')
 
-          Text(I18n.t('feedback_content', this.lang)).fontSize(13).fontColor('#6B7280').width('100%')
+          Text(I18n.t('feedback_content', this.lang)).fontSize(13).fontColor($r('app.color.text_muted')).width('100%')
           TextArea({ text: this.content, placeholder: I18n.t('feedback_hint', this.lang) })
             .height(140)
-            .backgroundColor(Color.White)
+            .backgroundColor($r('app.color.card_bg'))
+            .fontColor($r('app.color.text_primary'))
+            .placeholderColor($r('app.color.text_muted'))
             .onChange((v: string) => {
               this.content = v;
             })
 
-          Text(I18n.t('feedback_contact', this.lang)).fontSize(13).fontColor('#6B7280').width('100%')
+          Text(I18n.t('feedback_contact', this.lang)).fontSize(13).fontColor($r('app.color.text_muted')).width('100%')
           TextInput({ text: this.contact, placeholder: '微信 / 邮箱 / 手机' })
             .height(44)
-            .backgroundColor(Color.White)
+            .backgroundColor($r('app.color.card_bg'))
+            .fontColor($r('app.color.text_primary'))
+            .placeholderColor($r('app.color.text_muted'))
             .onChange((v: string) => {
               this.contact = v;
             })
@@ -114,6 +118,6 @@ struct FeedbackPage {
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#F3F4F6')
+    .backgroundColor($r('app.color.page_bg'))
   }
 }

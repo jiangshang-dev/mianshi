@@ -52,7 +52,7 @@ export struct HomePage {
             Text(I18n.t('app_name', this.lang))
               .fontSize(24)
               .fontWeight(FontWeight.Bold)
-              .fontColor(Color.White)
+              .fontColor($r('app.color.text_on_color'))
           }
           .alignItems(HorizontalAlign.Start)
           .layoutWeight(1)
@@ -67,9 +67,9 @@ export struct HomePage {
         .width('100%')
 
         Row() {
-          Text(I18n.t('search_home', this.lang))
+            Text(I18n.t('search_home', this.lang))
             .fontSize(14)
-            .fontColor('#94A3B8')
+            .fontColor($r('app.color.header_search_text'))
             .layoutWeight(1)
         }
         .width('100%')
@@ -90,7 +90,7 @@ export struct HomePage {
       if (this.loading) {
         Column() {
           LoadingProgress().width(40).height(40).color('#2563EB')
-          Text(I18n.t('loading', this.lang)).fontSize(13).fontColor('#6B7280').margin({ top: 8 })
+          Text(I18n.t('loading', this.lang)).fontSize(13).fontColor($r('app.color.text_muted')).margin({ top: 8 })
         }
         .width('100%')
         .layoutWeight(1)
@@ -103,11 +103,11 @@ export struct HomePage {
                 Text(I18n.t('today_study', this.lang))
                   .fontSize(16)
                   .fontWeight(FontWeight.Bold)
-                  .fontColor('#111827')
+                  .fontColor($r('app.color.text_primary'))
                 Blank()
                 Text(I18n.t('continue_study', this.lang))
                   .fontSize(13)
-                  .fontColor('#2563EB')
+                  .fontColor($r('app.color.accent'))
                   .onClick(() => this.continueStudy())
               }
               .width('100%')
@@ -123,20 +123,20 @@ export struct HomePage {
             }
             .width('100%')
             .padding(16)
-            .backgroundColor(Color.White)
+            .backgroundColor($r('app.color.card_bg'))
             .borderRadius(16)
 
             if (this.groups.length === 0) {
               Text(I18n.t('no_cat_home', this.lang))
                 .fontSize(13)
-                .fontColor('#9CA3AF')
+                .fontColor($r('app.color.text_muted'))
                 .width('100%')
             }
 
             Column({ space: 16 }) {
               ForEach(this.groups, (g: CategoryGroupSection) => {
                 CategoryTagSection({
-                  title: g.title,
+                  title: I18n.sectionTitle(g.name, g.title, this.lang),
                   items: g.items,
                   textColor: g.textColor,
                   chipColor: g.bgColor,
@@ -145,7 +145,7 @@ export struct HomePage {
               }, (g: CategoryGroupSection) => g.name)
               Text(I18n.t('all_more', this.lang))
                 .fontSize(13)
-                .fontColor('#2563EB')
+                .fontColor($r('app.color.accent'))
                 .width('100%')
                 .onClick(() => {
                   router.pushUrl({ url: 'pages/bank/CategoryAllPage' });
@@ -153,19 +153,20 @@ export struct HomePage {
             }
             .width('100%')
             .padding(16)
-            .backgroundColor(Color.White)
+            .backgroundColor($r('app.color.card_bg'))
             .borderRadius(16)
 
             Column({ space: 10 }) {
               Text(I18n.t('hot_recommend', this.lang))
                 .fontSize(16)
                 .fontWeight(FontWeight.Bold)
+                .fontColor($r('app.color.text_primary'))
                 .width('100%')
 
               if (this.hotList.length === 0) {
                 Text(I18n.t('no_hot', this.lang))
                   .fontSize(13)
-                  .fontColor('#9CA3AF')
+                  .fontColor($r('app.color.text_muted'))
                   .width('100%')
                   .padding({ top: 8, bottom: 8 })
               } else {
@@ -195,7 +196,7 @@ export struct HomePage {
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#F3F4F6')
+    .backgroundColor($r('app.color.page_bg'))
   }
 
   private continueStudy(): void {
@@ -226,10 +227,10 @@ export struct HomePage {
       Text(value)
         .fontSize(20)
         .fontWeight(FontWeight.Bold)
-        .fontColor('#1E40AF')
+        .fontColor($r('app.color.stat_value'))
       Text(I18n.t(labelKey, this.lang))
         .fontSize(12)
-        .fontColor('#6B7280')
+        .fontColor($r('app.color.text_muted'))
     }
     .layoutWeight(1)
   }

@@ -1,5 +1,6 @@
 import { InterviewReport } from '../common/models/InterviewTypes';
 import { I18n } from '../common/i18n/I18n';
+import { AiGenMark, AiDisclaimerBar } from './AiGenMark';
 
 @Component
 export struct InterviewReportCard {
@@ -16,14 +17,20 @@ export struct InterviewReportCard {
 
   build() {
     Column({ space: 10 }) {
-      Text(I18n.t('iv_report', this.lang))
-        .fontSize(18)
-        .fontWeight(FontWeight.Bold)
-        .width('100%')
+      Row({ space: 8 }) {
+        Text(I18n.t('iv_report', this.lang))
+          .fontSize(18)
+          .fontWeight(FontWeight.Bold)
+          .fontColor($r('app.color.text_primary'))
+          .layoutWeight(1)
+        AiGenMark()
+      }
+      .width('100%')
+      AiDisclaimerBar({ shortText: true })
       Text(I18n.tf('total_score', `${this.report.score}`, this.lang))
         .fontSize(28)
         .fontWeight(FontWeight.Bold)
-        .fontColor('#2563EB')
+        .fontColor($r('app.color.accent'))
         .width('100%')
       Row() {
         this.scoreItem('score_acc', this.report.accuracy)
@@ -33,20 +40,20 @@ export struct InterviewReportCard {
       .width('100%')
       Text(I18n.tf('adv_label', this.report.advantages.join('；'), this.lang))
         .fontSize(13)
-        .fontColor('#374151')
+        .fontColor($r('app.color.chip_idle_text'))
         .width('100%')
       Text(I18n.tf('prob_label', this.report.problems.join('；'), this.lang))
         .fontSize(13)
-        .fontColor('#374151')
+        .fontColor($r('app.color.chip_idle_text'))
         .width('100%')
       Text(I18n.tf('sugg_label', this.report.suggestions.join('；'), this.lang))
         .fontSize(13)
-        .fontColor('#6B7280')
+        .fontColor($r('app.color.text_muted'))
         .width('100%')
     }
     .width('100%')
     .padding(16)
-    .backgroundColor(Color.White)
+    .backgroundColor($r('app.color.card_bg'))
     .borderRadius(14)
   }
 
@@ -56,10 +63,10 @@ export struct InterviewReportCard {
       Text(`${value}`)
         .fontSize(18)
         .fontWeight(FontWeight.Bold)
-        .fontColor('#1E40AF')
+        .fontColor($r('app.color.stat_value'))
       Text(I18n.t(labelKey, this.lang))
         .fontSize(11)
-        .fontColor('#6B7280')
+        .fontColor($r('app.color.text_muted'))
     }
     .layoutWeight(1)
   }

@@ -25,11 +25,13 @@ struct LegalPage {
       Row() {
         Text('‹')
           .fontSize(28)
+          .fontColor($r('app.color.text_primary'))
           .padding({ right: 8 })
           .onClick(() => router.back())
         Text(this.kind === 'privacy' ? I18n.t('privacy', this.lang) : I18n.t('user_agreement', this.lang))
           .fontSize(18)
           .fontWeight(FontWeight.Bold)
+          .fontColor($r('app.color.text_primary'))
       }
       .width('100%')
       .padding({ left: 16, right: 16, top: 12, bottom: 8 })
@@ -40,7 +42,7 @@ struct LegalPage {
             (text: string, idx: number) => {
               Text(text)
                 .fontSize(15)
-                .fontColor('#374151')
+                .fontColor($r('app.color.chip_idle_text'))
                 .lineHeight(24)
                 .width('100%')
             }, (text: string, idx: number) => `${this.lang}-${idx}`)
@@ -55,6 +57,6 @@ struct LegalPage {
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#F3F4F6')
+    .backgroundColor($r('app.color.page_bg'))
   }
 }

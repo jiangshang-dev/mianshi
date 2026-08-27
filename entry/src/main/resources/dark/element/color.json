@@ -1,8 +1,25 @@
 {
   "color": [
-    {
-      "name": "start_window_background",
-      "value": "#000000"
-    }
+    { "name": "start_window_background", "value": "#0F172A" },
+    { "name": "page_bg", "value": "#0F172A" },
+    { "name": "card_bg", "value": "#1E2937" },
+    { "name": "text_primary", "value": "#F8FAFC" },
+    { "name": "text_secondary", "value": "#E2E8F0" },
+    { "name": "text_muted", "value": "#CBD5E1" },
+    { "name": "divider", "value": "#334155" },
+    { "name": "tab_inactive", "value": "#94A3B8" },
+    { "name": "header_search_text", "value": "#FFFFFF" },
+    { "name": "chip_preview_bg", "value": "#0F172A" },
+    { "name": "accent", "value": "#60A5FA" },
+    { "name": "text_on_color", "value": "#FFFFFF" },
+    { "name": "chip_idle_bg", "value": "#0F172A" },
+    { "name": "chip_idle_text", "value": "#E2E8F0" },
+    { "name": "stat_value", "value": "#93C5FD" },
+    { "name": "input_bg", "value": "#1E2937" },
+    { "name": "preview_bg", "value": "#0F172A" },
+    { "name": "chevron", "value": "#94A3B8" },
+    { "name": "bubble_mine_bg", "value": "#1E3A8A" },
+    { "name": "ai_badge_bg", "value": "#1E3A8A" },
+    { "name": "ai_badge_text", "value": "#BFDBFE" }
   ]
 }

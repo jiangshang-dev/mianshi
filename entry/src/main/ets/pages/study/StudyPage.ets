@@ -34,7 +34,7 @@ export struct StudyPage {
         //   .width('100%')
 
         Column({ space: 10 }) {
-          Text(I18n.t('today_progress', this.lang)).fontSize(15).fontWeight(FontWeight.Medium).width('100%')
+          Text(I18n.t('today_progress', this.lang)).fontSize(15).fontWeight(FontWeight.Medium).fontColor($r('app.color.text_primary')).width('100%')
           Row() {
             this.cell(`${this.stats.questionCount}`, 'done_q')
             this.cell(`${this.stats.minutes}`, 'study_min')
@@ -44,22 +44,23 @@ export struct StudyPage {
         }
         .width('100%')
         .padding(16)
-        .backgroundColor(Color.White)
+        .backgroundColor($r('app.color.card_bg'))
         .borderRadius(14)
 
         Column({ space: 8 }) {
           Text(I18n.t('cal_ph', this.lang))
             .fontSize(15)
             .fontWeight(FontWeight.Medium)
+            .fontColor($r('app.color.text_primary'))
             .width('100%')
           Text(I18n.t('cal_hint', this.lang))
             .fontSize(13)
-            .fontColor('#6B7280')
+            .fontColor($r('app.color.text_muted'))
             .width('100%')
           Row({ space: 6 }) {
             ForEach(I18n.weekdays(this.lang), (d: string) => {
               Column() {
-                Text(d).fontSize(11).fontColor('#9CA3AF')
+                Text(d).fontSize(11).fontColor($r('app.color.text_muted'))
                 Column()
                   .width(18)
                   .height(18)
@@ -72,27 +73,28 @@ export struct StudyPage {
         }
         .width('100%')
         .padding(16)
-        .backgroundColor(Color.White)
+        .backgroundColor($r('app.color.card_bg'))
         .borderRadius(14)
 
         Column({ space: 8 }) {
           Text(I18n.t('weak_ph', this.lang))
             .fontSize(15)
             .fontWeight(FontWeight.Medium)
+            .fontColor($r('app.color.text_primary'))
             .width('100%')
           ForEach(['Redis 集群', 'MySQL 索引失效', 'JVM G1', '分布式锁'], (t: string) => {
             Row() {
-              Text(t).fontSize(14).fontColor('#111827').layoutWeight(1)
-              Text(I18n.t('go_review', this.lang)).fontSize(12).fontColor('#2563EB')
+              Text(t).fontSize(14).fontColor($r('app.color.text_primary')).layoutWeight(1)
+              Text(I18n.t('go_review', this.lang)).fontSize(12).fontColor($r('app.color.accent'))
             }
             .width('100%')
             .padding({ top: 10, bottom: 10 })
-            .border({ width: { bottom: 0.5 }, color: '#F3F4F6' })
+            .border({ width: { bottom: 0.5 }, color: $r('app.color.divider') })
           }, (t: string) => t)
         }
         .width('100%')
         .padding(16)
-        .backgroundColor(Color.White)
+        .backgroundColor($r('app.color.card_bg'))
         .borderRadius(14)
       }
       .padding({ left: 16, right: 16, top: 8, bottom: 24 })
@@ -100,7 +102,7 @@ export struct StudyPage {
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#F3F4F6')
+    .backgroundColor($r('app.color.page_bg'))
     .scrollBar(BarState.Off)
     .align(Alignment.Top)
   }
@@ -108,8 +110,8 @@ export struct StudyPage {
   @Builder
   cell(value: string, labelKey: string) {
     Column({ space: 4 }) {
-      Text(value).fontSize(18).fontWeight(FontWeight.Bold).fontColor('#1E40AF')
-      Text(I18n.t(labelKey, this.lang)).fontSize(11).fontColor('#6B7280')
+      Text(value).fontSize(18).fontWeight(FontWeight.Bold).fontColor($r('app.color.stat_value'))
+      Text(I18n.t(labelKey, this.lang)).fontSize(11).fontColor($r('app.color.text_muted'))
     }.layoutWeight(1)
   }
 }

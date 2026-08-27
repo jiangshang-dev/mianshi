@@ -51,7 +51,7 @@ export struct BankPage {
       .width('100%')
       .height('100%')
       .justifyContent(FlexAlign.Center)
-      .backgroundColor('#F3F4F6')
+      .backgroundColor($r('app.color.page_bg'))
     } else {
       Scroll() {
         Column({ space: 16 }) {
@@ -59,11 +59,11 @@ export struct BankPage {
             Text(I18n.t('bank_title', this.lang))
               .fontSize(20)
               .fontWeight(FontWeight.Bold)
-              .fontColor('#111827')
+              .fontColor($r('app.color.text_primary'))
               .layoutWeight(1)
             Text(I18n.t('all_cats', this.lang))
               .fontSize(13)
-              .fontColor('#2563EB')
+              .fontColor($r('app.color.accent'))
               .onClick(() => {
                 router.pushUrl({ url: 'pages/bank/CategoryAllPage' });
               })
@@ -73,12 +73,12 @@ export struct BankPage {
           if (this.isEmpty()) {
             Text(I18n.t('no_cat_bank', this.lang))
               .fontSize(13)
-              .fontColor('#9CA3AF')
+              .fontColor($r('app.color.text_muted'))
               .margin({ top: 40 })
               .width('100%')
           } else {
             ForEach(this.groups, (g: CategoryGroupSection) => {
-              this.groupBlock(g.title, g.items)
+              this.groupBlock(I18n.sectionTitle(g.name, g.title, this.lang), g.items)
             }, (g: CategoryGroupSection) => g.name)
           }
         }
@@ -87,7 +87,7 @@ export struct BankPage {
       }
       .width('100%')
       .height('100%')
-      .backgroundColor('#F3F4F6')
+      .backgroundColor($r('app.color.page_bg'))
       .scrollBar(BarState.Off)
       .align(Alignment.Top)
     }
@@ -102,7 +102,7 @@ export struct BankPage {
         Text(title)
           .fontSize(15)
           .fontWeight(FontWeight.Medium)
-          .fontColor('#374151')
+          .fontColor($r('app.color.text_secondary'))
           .width('100%')
         ForEach(list, (cat: Category) => {
           Row() {
@@ -112,18 +112,18 @@ export struct BankPage {
               Text(cat.name)
                 .fontSize(16)
                 .fontWeight(FontWeight.Medium)
-                .fontColor('#111827')
+                .fontColor($r('app.color.text_primary'))
               Text(I18n.tf('q_count', `${cat.articleCount}`, this.lang))
                 .fontSize(12)
-                .fontColor('#6B7280')
+                .fontColor($r('app.color.text_muted'))
             }
             .alignItems(HorizontalAlign.Start)
             .layoutWeight(1)
-            Text('›').fontSize(20).fontColor('#D1D5DB')
+            Text('›').fontSize(20).fontColor($r('app.color.chevron'))
           }
           .width('100%')
           .padding(14)
-          .backgroundColor(Color.White)
+          .backgroundColor($r('app.color.card_bg'))
           .borderRadius(12)
           .onClick(() => this.openCategory(cat))
         }, (cat: Category) => cat.id)
