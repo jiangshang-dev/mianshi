@@ -171,7 +171,7 @@ export class RemoteApiDataSource {
       try {
         const parsed = JSON.parse(resp.body) as RemoteCategoryGroupListResponse;
         const list = parsed.result ?? parsed.data;
-        if (list && list.length > 0) {
+        if (list) {
           const groups: CategoryGroupSection[] = [];
           list.forEach((row: RemoteCategoryGroupDto) => {
             const items = (row.items ?? []).map((d: RemoteCategoryDto) => this.toCategory(d));
@@ -187,9 +187,7 @@ export class RemoteApiDataSource {
               items
             });
           });
-          if (groups.length > 0) {
-            return groups;
-          }
+          return groups;
         }
       } catch (_e) {
       }
