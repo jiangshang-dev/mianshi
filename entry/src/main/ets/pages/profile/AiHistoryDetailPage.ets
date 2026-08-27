@@ -2,6 +2,7 @@ import { router } from '@kit.ArkUI';
 import { I18n } from '../../common/i18n/I18n';
 import { InterviewReportCard } from '../../components/InterviewReportCard';
 import { AiGenMark } from '../../components/AiGenMark';
+import { MdContentView } from '../../components/MdContentView';
 import { AiHistoryMessage, AiHistoryRepository } from '../../data/repository/AiHistoryRepository';
 import { InterviewRepository } from '../../data/repository/InterviewRepository';
 
@@ -177,11 +178,15 @@ struct AiHistoryDetailPage {
               .fontColor($r('app.color.text_muted'))
           }
           .width('100%')
-          Text(m.content)
-            .fontSize(14)
-            .fontColor($r('app.color.text_primary'))
-            .lineHeight(22)
-            .width('100%')
+          if (m.role === 'user') {
+            Text(m.content)
+              .fontSize(14)
+              .fontColor($r('app.color.text_primary'))
+              .lineHeight(22)
+              .width('100%')
+          } else {
+            MdContentView({ content: m.content, compact: false })
+          }
         }
         .width('100%')
         .padding(14)
