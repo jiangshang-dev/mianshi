@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>码上 Offer · 程序员的 AI 面试学习助手</title>
+  <meta name="description" content="码上 Offer（CodeOffer）面向程序员的鸿蒙面试刷题 App：题库、AI 讲解、模拟面试、学习打卡。华为应用市场即将上架。" />
+  <link rel="icon" href="./promo/logo.png" />
+  <style>
+    :root {
+      --blue-900: #1E3A8A;
+      --blue-600: #2563EB;
+      --sky-500: #0EA5E9;
+      --ink: #0F172A;
+      --muted: #64748B;
+      --line: #E2E8F0;
+      --card: #FFFFFF;
+      --bg: #F8FAFC;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { background: var(--bg); color: var(--ink); font-family: "PingFang SC", "HarmonyOS Sans SC", "Noto Sans SC", system-ui, sans-serif; }
+    a { color: inherit; text-decoration: none; }
+    .wrap { width: min(1120px, calc(100% - 40px)); margin: 0 auto; }
+
+    .nav {
+      position: sticky; top: 0; z-index: 20;
+      backdrop-filter: blur(16px);
+      background: rgba(248, 250, 252, 0.82);
+      border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+    }
+    .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+    .brand img { width: 36px; height: 36px; border-radius: 10px; }
+    .nav-actions { display: flex; gap: 10px; align-items: center; }
+    .ghost {
+      border: 1px solid var(--line); background: #fff; color: var(--ink);
+      padding: 8px 14px; border-radius: 999px; font-size: 14px;
+    }
+
+    .hero {
+      position: relative; overflow: hidden;
+      background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 55%, #0EA5E9 100%);
+      color: #fff; padding: 72px 0 88px;
+    }
+    .hero::after {
+      content: ""; position: absolute; inset: auto -80px -120px auto; width: 420px; height: 420px;
+      background: radial-gradient(circle, rgba(255,255,255,.18), transparent 70%);
+      pointer-events: none;
+    }
+    .hero-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 48px; align-items: center; position: relative; z-index: 1; }
+    .kicker {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.2);
+      padding: 6px 12px; border-radius: 999px; font-size: 13px;
+    }
+    .hero h1 { font-size: 48px; line-height: 1.15; margin: 18px 0 14px; letter-spacing: -0.03em; }
+    .hero h1 span { color: #BAE6FD; }
+    .lead { font-size: 18px; line-height: 1.7; color: #E0E7FF; max-width: 540px; }
+    .cta-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      min-height: 48px; padding: 0 20px; border-radius: 14px; font-weight: 650; font-size: 15px; border: 0; cursor: pointer;
+    }
+    .btn-huawei { background: #111827; color: #fff; }
+    .btn-huawei:disabled, .btn-huawei.is-pending { opacity: .72; cursor: not-allowed; }
+    .btn-light { background: #fff; color: var(--blue-600); }
+    .meta { margin-top: 18px; font-size: 13px; color: #C7D2FE; }
+    .phone {
+      background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2);
+      border-radius: 32px; padding: 18px; box-shadow: 0 24px 60px rgba(15, 23, 42, .28);
+    }
+    .phone-screen {
+      background: #fff; color: var(--ink); border-radius: 22px; overflow: hidden; min-height: 420px;
+    }
+    .phone-bar {
+      background: linear-gradient(135deg, #1E3A8A, #0EA5E9); color: #fff; padding: 22px 20px 18px;
+    }
+    .phone-bar small { opacity: .8; }
+    .phone-bar strong { display: block; font-size: 22px; margin-top: 4px; }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 16px; }
+    .stat { background: #F1F5F9; border-radius: 12px; padding: 12px 8px; text-align: center; }
+    .stat b { display: block; color: var(--blue-600); font-size: 18px; }
+    .stat span { font-size: 11px; color: var(--muted); }
+    .q { padding: 0 16px 16px; }
+    .q-item { border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-top: 8px; }
+    .q-item em { font-style: normal; color: var(--blue-600); font-size: 12px; }
+
+    section { padding: 72px 0; }
+    .sec h2 { font-size: 32px; letter-spacing: -0.03em; margin-bottom: 10px; }
+    .sec p.sub { color: var(--muted); font-size: 16px; margin-bottom: 28px; max-width: 640px; }
+    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .card {
+      background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 22px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, .04);
+    }
+    .icon {
+      width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center;
+      background: #EFF6FF; color: var(--blue-600); font-weight: 800; margin-bottom: 14px;
+    }
+    .card h3 { font-size: 18px; margin-bottom: 8px; }
+    .card p { color: var(--muted); line-height: 1.7; font-size: 14px; }
+
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .step { padding: 8px 4px; }
+    .num { font-size: 13px; color: var(--blue-600); font-weight: 700; margin-bottom: 8px; }
+
+    .download {
+      background: #0F172A; color: #fff; border-radius: 28px; padding: 48px 40px;
+      display: flex; justify-content: space-between; align-items: center; gap: 24px;
+    }
+    .download h2 { font-size: 28px; margin-bottom: 8px; }
+    .download p { color: #94A3B8; }
+    .note {
+      margin-top: 10px; font-size: 13px; color: #FDE68A;
+      background: rgba(251, 191, 36, .12); display: inline-block; padding: 6px 10px; border-radius: 8px;
+    }
+
+    footer { padding: 28px 0 48px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); }
+    footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+
+    @media (max-width: 860px) {
+      .hero { padding: 48px 0 56px; }
+      .hero-grid, .cards, .steps, .download { grid-template-columns: 1fr; display: grid; }
+      .download { text-align: left; }
+      .hero h1 { font-size: 34px; }
+      .phone { max-width: 360px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <div class="brand">
+        <img src="./promo/logo.png" alt="码上 Offer" />
+        码上 Offer
+      </div>
+      <div class="nav-actions">
+        <span class="ghost">HarmonyOS</span>
+        <a class="btn btn-huawei" id="navDownload" href="#download">华为应用市场</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <div class="kicker">面向程序员的 AI 面试学习助手</div>
+        <h1>刷题、问 AI、模拟面试<br /><span>码上拿到 Offer</span></h1>
+        <p class="lead">码上 Offer（CodeOffer）是原生鸿蒙面试刷题 App。题库可按技能 / 公司 / 专项刷，题目随时问 AI，还能用模拟面试练表达，学习记录帮你盯住薄弱点。</p>
+        <div class="cta-row">
+          <a class="btn btn-huawei" id="heroDownload" href="#download">前往华为应用市场</a>
+          <a class="btn btn-light" href="#features">看看能做什么</a>
+        </div>
+        <p class="meta">包名 com.xiaobai.mianshi · 支持华为账号登录 · 目前正在应用市场上架审核</p>
+      </div>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="phone-bar">
+            <small>你好，候选人</small>
+            <strong>码上 Offer</strong>
+          </div>
+          <div class="stats">
+            <div class="stat"><b>12</b><span>今日刷题</span></div>
+            <div class="stat"><b>36</b><span>分钟</span></div>
+            <div class="stat"><b>8</b><span>已掌握</span></div>
+            <div class="stat"><b>4</b><span>待复习</span></div>
+          </div>
+          <div class="q">
+            <div class="q-item"><em>热门技能 · Dubbo</em><div>说说 Dubbo 的服务暴露流程？</div></div>
+            <div class="q-item"><em>AI 模拟面试</em><div>已根据简历生成追问，点击开始作答</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec wrap" id="features">
+    <h2>为拿 Offer 准备的四件事</h2>
+    <p class="sub">不是资料堆砌。刷完能讲清楚、能被追问、知道自己弱在哪。</p>
+    <div class="cards">
+      <article class="card">
+        <div class="icon">&lt;/&gt;</div>
+        <h3>面试题库</h3>
+        <p>按热门技能、公司真题、专项分类刷题。题目带标准答案、口述版和可能追问，适合通勤碎片时间。</p>
+      </article>
+      <article class="card">
+        <div class="icon">AI</div>
+        <h3>题目随时问 AI</h3>
+        <p>卡在某一题时直接问助手：讲原理、对比方案、帮你组织面试表达，而不是只给一段标准答案。</p>
+      </article>
+      <article class="card">
+        <div class="icon">🎤</div>
+        <h3>AI 模拟面试</h3>
+        <p>按岗位和简历开一场模拟面试，智能追问、出面试报告，把“会写”练成“能讲”。</p>
+      </article>
+      <article class="card">
+        <div class="icon">📈</div>
+        <h3>学习与薄弱点</h3>
+        <p>打卡、掌握进度、薄弱知识点会留下来。下次打开知道该复习哪一类，而不是从头翻资料。</p>
+      </article>
+      <article class="card">
+        <div class="icon">📄</div>
+        <h3>简历辅助</h3>
+        <p>上传简历后，模拟面试可以结合你的项目经历提问，更接近真实一面。</p>
+      </article>
+      <article class="card">
+        <div class="icon">鸿</div>
+        <h3>原生鸿蒙</h3>
+        <p>HarmonyOS 原生应用，华为账号登录。刷题、收藏、学习记录跟账号走。</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="sec wrap">
+    <h2>怎么用</h2>
+    <p class="sub">三步进入状态，不必先啃完一整本面经。</p>
+    <div class="steps">
+      <div class="step">
+        <div class="num">01 · 选方向</div>
+        <h3>挑分类开刷</h3>
+        <p class="sub">Java、中间件、公司题，先从你目标岗位最常问的开始。</p>
+      </div>
+      <div class="step">
+        <div class="num">02 · 讲出来</div>
+        <h3>问 AI / 模拟面试</h3>
+        <p class="sub">会背不等于会答。用追问把知识压成 30 秒口述。</p>
+      </div>
+      <div class="step">
+        <div class="num">03 · 盯薄弱</div>
+        <h3>第二天接着补</h3>
+        <p class="sub">学习页会标出待复习和薄弱点，形成自己的面试闭环。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap" id="download" style="padding-bottom: 72px;">
+    <div class="download">
+      <div>
+        <h2>在华为应用市场下载</h2>
+        <p>HarmonyOS 手机 / 平板，搜索「码上 Offer」或点下方按钮。</p>
+        <div class="note" id="reviewNote">应用市场上架审核中，通过后即可下载。链接预留，上架后替换即可。</div>
+      </div>
+      <a class="btn btn-light" id="galleryBtn" href="#">华为应用市场 · 审核中</a>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <span>码上 Offer / CodeOffer · 面向程序员的 AI 面试学习助手</span>
+      <span>HarmonyOS · 包名 com.xiaobai.mianshi</span>
+    </div>
+  </footer>
+
+  <script>
+    // 上架通过后把链接填在这里，例如：
+    // https://appgallery.huawei.com/app/Cxxxxxxxxxx
+    const HUAWEI_APP_GALLERY_URL = '';
+
+    const buttons = ['navDownload', 'heroDownload', 'galleryBtn']
+      .map((id) => document.getElementById(id))
+      .filter(Boolean);
+    const note = document.getElementById('reviewNote');
+
+    if (HUAWEI_APP_GALLERY_URL) {
+      buttons.forEach((el) => {
+        el.href = HUAWEI_APP_GALLERY_URL;
+        el.target = '_blank';
+        el.rel = 'noopener';
+        el.classList.remove('is-pending');
+        if (el.id === 'galleryBtn') el.textContent = '打开华为应用市场';
+      });
+      if (note) note.textContent = '已上架，点击前往华为应用市场下载。';
+    } else {
+      buttons.forEach((el) => {
+        el.classList.add('is-pending');
+        el.addEventListener('click', (e) => {
+          e.preventDefault();
+          alert('华为应用市场上架审核中，通过后即可下载。');
+        });
+      });
+    }
+  </script>
+</body>
+</html>
