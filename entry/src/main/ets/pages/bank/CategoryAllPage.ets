@@ -1,7 +1,6 @@
 import { common } from '@kit.AbilityKit';
 import { router } from '@kit.ArkUI';
-import { Category } from '../../common/models/Types';
-import { CategoryGroupUtil } from '../../common/utils/CategoryGroupUtil';
+import { Category, CategoryGroupSection } from '../../common/models/Types';
 import { CategoryCard } from '../../components/CategoryCard';
 import { QuestionRepository } from '../../data/repository/QuestionRepository';
 import { I18n } from '../../common/i18n/I18n';
@@ -10,9 +9,8 @@ import { I18n } from '../../common/i18n/I18n';
 @Component
 struct CategoryAllPage {
   @StorageLink('appLang') lang: string = I18n.HANS;
-  @State private categories: Category[] = [];
+  @State private groups: CategoryGroupSection[] = [];
   @State private loading: boolean = true;
-  @State private groupNames: string[] = [];
 
   private repo: QuestionRepository = QuestionRepository.getInstance();
 
@@ -24,18 +22,9 @@ struct CategoryAllPage {
     this.loading = true;
     try {
       const ctx = getContext(this) as common.UIAbilityContext;
-      this.categories = await this.repo.getCategories(ctx);
-      const groups: string[] = [];
-      this.categories.forEach((c: Category) => {
-        const g = CategoryGroupUtil.normalize(c.group);
-        if (!groups.includes(g)) {
-          groups.push(g);
-        }
-      });
-      this.groupNames = CategoryGroupUtil.sortGroupNames(groups);
+      this.groups = await this.repo.getCategoryGroups(ctx);
     } catch (_e) {
-      this.categories = [];
-      this.groupNames = [];
+      this.groups = [];
     } finally {
       this.loading = false;
     }
@@ -52,8 +41,12 @@ struct CategoryAllPage {
     });
   }
 
-  private displayList(group: string): Category[] {
-    return CategoryGroupUtil.browseItems(this.categories, group);
+  private categoryCount(): number {
+    let n = 0;
+    this.groups.forEach((g: CategoryGroupSection) => {
+      n += g.items.length;
+    });
+    return n;
   }
 
   build() {
@@ -67,7 +60,7 @@ struct CategoryAllPage {
           .fontSize(18)
           .fontWeight(FontWeight.Bold)
           .layoutWeight(1)
-        Text(I18n.tf('count_unit', `${this.categories.length}`, this.lang))
+        Text(I18n.tf('count_unit', `${this.categoryCount()}`, this.lang))
           .fontSize(13)
           .fontColor('#6B7280')
       }
@@ -81,7 +74,7 @@ struct CategoryAllPage {
         .layoutWeight(1)
         .width('100%')
         .justifyContent(FlexAlign.Center)
-      } else if (this.categories.length === 0) {
+      } else if (this.groups.length === 0) {
         Column({ space: 8 }) {
           Text(I18n.t('no_cat_short', this.lang)).fontSize(16).fontColor('#6B7280')
           Text(I18n.t('no_cat_hint', this.lang)).fontSize(13).fontColor('#9CA3AF')
@@ -92,16 +85,16 @@ struct CategoryAllPage {
       } else {
         Scroll() {
           Column({ space: 16 }) {
-            ForEach(this.groupNames, (group: string) => {
+            ForEach(this.groups, (g: CategoryGroupSection) => {
               Column({ space: 10 }) {
-                Text(I18n.groupName(group, this.lang))
+                Text(g.title)
                   .fontSize(15)
                   .fontWeight(FontWeight.Medium)
                   .fontColor('#374151')
                   .width('100%')
 
                 Grid() {
-                  ForEach(this.displayList(group), (c: Category) => {
+                  ForEach(g.items, (c: Category) => {
                     GridItem() {
                       CategoryCard({
                         category: c,
@@ -118,7 +111,7 @@ struct CategoryAllPage {
                 .width('100%')
               }
               .width('100%')
-            }, (group: string) => group)
+            }, (g: CategoryGroupSection) => g.name)
           }
           .padding({ left: 16, right: 16, bottom: 24 })
           .width('100%')

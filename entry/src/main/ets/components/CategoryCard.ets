@@ -11,7 +11,7 @@ export struct CategoryCard {
     icon: '📘',
     order: 0,
     group: '',
-    source: 'local_md',
+    source: 'remote_api',
     articleCount: 0,
     children: []
   };

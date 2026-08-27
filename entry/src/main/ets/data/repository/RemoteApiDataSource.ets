@@ -1,5 +1,6 @@
 import { AppConfig } from '../../common/constants/AppConfig';
-import { Category, QuestionItem, SubCategory, AiStreamSnapshot, TodayStudyStats } from '../../common/models/Types';
+import { Category, CategoryGroupSection, QuestionItem, SubCategory, AiStreamSnapshot, TodayStudyStats } from '../../common/models/Types';
+import { CategoryGroupUtil } from '../../common/utils/CategoryGroupUtil';
 import { HttpClient, SseAbort } from '../../common/network/HttpClient';
 
 interface RemoteQuestionDto {
@@ -63,6 +64,21 @@ interface RemoteCategoryDto {
   children?: RemoteSubCategoryDto[];
 }
 
+interface RemoteCategoryGroupDto {
+  name?: string;
+  title?: string;
+  bgColor?: string;
+  textColor?: string;
+  orderNum?: number;
+  items?: RemoteCategoryDto[];
+}
+
+interface RemoteCategoryGroupListResponse {
+  code: number;
+  result?: RemoteCategoryGroupDto[];
+  data?: RemoteCategoryGroupDto[];
+}
+
 interface RemoteCategoryListResponse {
   code: number;
   result?: RemoteCategoryDto[];
@@ -106,6 +122,38 @@ export class RemoteApiDataSource {
       return this.mockCategories();
     }
     return [];
+  }
+
+  async listCategoryGroups(): Promise<CategoryGroupSection[]> {
+    const resp = await HttpClient.get('/api/category-groups', '');
+    if (resp.ok) {
+      try {
+        const parsed = JSON.parse(resp.body) as RemoteCategoryGroupListResponse;
+        const list = parsed.result ?? parsed.data;
+        if (list && list.length > 0) {
+          const groups: CategoryGroupSection[] = [];
+          list.forEach((row: RemoteCategoryGroupDto) => {
+            const items = (row.items ?? []).map((d: RemoteCategoryDto) => this.toCategory(d));
+            if (items.length === 0) {
+              return;
+            }
+            groups.push({
+              name: row.name ?? '',
+              title: (row.title && row.title.length > 0) ? row.title : (row.name ?? ''),
+              bgColor: row.bgColor ?? '#F3F4F6',
+              textColor: row.textColor ?? '#374151',
+              orderNum: row.orderNum ?? 0,
+              items
+            });
+          });
+          if (groups.length > 0) {
+            return groups;
+          }
+        }
+      } catch (_e) {
+      }
+    }
+    return CategoryGroupUtil.fromFlat(await this.listCategories());
   }
 
   async getHotQuestions(limit: number = 8): Promise<QuestionItem[]> {

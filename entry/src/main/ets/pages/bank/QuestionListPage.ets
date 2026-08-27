@@ -132,7 +132,7 @@ struct QuestionListPage {
       } else if (this.questions.length === 0) {
         Column({ space: 8 }) {
           Text(I18n.t('empty', this.lang)).fontSize(16).fontColor('#6B7280')
-          Text(this.source === 'remote_api' ? I18n.t('empty_remote', this.lang) : I18n.t('empty_local', this.lang))
+          Text(I18n.t('empty_remote', this.lang))
             .fontSize(13).fontColor('#9CA3AF')
         }.layoutWeight(1).width('100%').justifyContent(FlexAlign.Center)
       } else {

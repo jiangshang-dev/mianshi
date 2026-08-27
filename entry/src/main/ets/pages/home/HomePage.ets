@@ -1,7 +1,6 @@
 import { common } from '@kit.AbilityKit';
 import { router } from '@kit.ArkUI';
-import { Category, QuestionItem, TodayStudyStats } from '../../common/models/Types';
-import { CategoryGroupUtil } from '../../common/utils/CategoryGroupUtil';
+import { Category, CategoryGroupSection, QuestionItem, TodayStudyStats } from '../../common/models/Types';
 import { CategoryTagSection } from '../../components/CategoryTagSection';
 import { QuestionListItem } from '../../components/QuestionListItem';
 import { QuestionRepository } from '../../data/repository/QuestionRepository';
@@ -10,9 +9,7 @@ import { I18n } from '../../common/i18n/I18n';
 @Component
 export struct HomePage {
   @StorageLink('appLang') lang: string = I18n.HANS;
-  @State private skills: Category[] = [];
-  @State private companies: Category[] = [];
-  @State private specials: Category[] = [];
+  @State private groups: CategoryGroupSection[] = [];
   @State private hotList: QuestionItem[] = [];
   @State private stats: TodayStudyStats = {
     questionCount: 0,
@@ -32,16 +29,11 @@ export struct HomePage {
     try {
       const ctx = getContext(this) as common.UIAbilityContext;
       await this.repo.init(ctx);
-      const all = await this.repo.getCategories(ctx);
-      this.skills = CategoryGroupUtil.browseItems(all, CategoryGroupUtil.SKILL);
-      this.companies = CategoryGroupUtil.browseItems(all, CategoryGroupUtil.COMPANY);
-      this.specials = CategoryGroupUtil.browseItems(all, CategoryGroupUtil.SPECIAL);
+      this.groups = await this.repo.getCategoryGroups(ctx);
       this.hotList = await this.repo.getHot(ctx);
       this.stats = await this.repo.getTodayStudyStats();
     } catch (_e) {
-      this.skills = [];
-      this.companies = [];
-      this.specials = [];
+      this.groups = [];
       this.hotList = [];
       this.stats = { questionCount: 0, minutes: 0, mastered: 0, toReview: 0 };
     } finally {
@@ -134,7 +126,7 @@ export struct HomePage {
             .backgroundColor(Color.White)
             .borderRadius(16)
 
-            if (this.skills.length === 0 && this.companies.length === 0 && this.specials.length === 0) {
+            if (this.groups.length === 0) {
               Text(I18n.t('no_cat_home', this.lang))
                 .fontSize(13)
                 .fontColor('#9CA3AF')
@@ -142,27 +134,15 @@ export struct HomePage {
             }
 
             Column({ space: 16 }) {
-              CategoryTagSection({
-                title: I18n.t('hot_skills', this.lang),
-                items: this.skills,
-                textColor: '#9A3412',
-                chipColor: '#FFEDD5',
-                onTagClick: (cat: Category) => this.openCategory(cat)
-              })
-              CategoryTagSection({
-                title: I18n.t('company_bank', this.lang),
-                items: this.companies,
-                textColor: '#1E40AF',
-                chipColor: '#DBEAFE',
-                onTagClick: (cat: Category) => this.openCategory(cat)
-              })
-              CategoryTagSection({
-                title: I18n.t('special', this.lang),
-                items: this.specials,
-                textColor: '#166534',
-                chipColor: '#DCFCE7',
-                onTagClick: (cat: Category) => this.openCategory(cat)
-              })
+              ForEach(this.groups, (g: CategoryGroupSection) => {
+                CategoryTagSection({
+                  title: g.title,
+                  items: g.items,
+                  textColor: g.textColor,
+                  chipColor: g.bgColor,
+                  onTagClick: (cat: Category) => this.openCategory(cat)
+                })
+              }, (g: CategoryGroupSection) => g.name)
               Text(I18n.t('all_more', this.lang))
                 .fontSize(13)
                 .fontColor('#2563EB')

@@ -1,7 +1,6 @@
 import { common } from '@kit.AbilityKit';
 import { router } from '@kit.ArkUI';
-import { Category } from '../../common/models/Types';
-import { CategoryGroupUtil } from '../../common/utils/CategoryGroupUtil';
+import { Category, CategoryGroupSection } from '../../common/models/Types';
 import { CategoryIcon } from '../../components/CategoryIcon';
 import { QuestionRepository } from '../../data/repository/QuestionRepository';
 import { I18n } from '../../common/i18n/I18n';
@@ -9,9 +8,7 @@ import { I18n } from '../../common/i18n/I18n';
 @Component
 export struct BankPage {
   @StorageLink('appLang') lang: string = I18n.HANS;
-  @State private skills: Category[] = [];
-  @State private companies: Category[] = [];
-  @State private specials: Category[] = [];
+  @State private groups: CategoryGroupSection[] = [];
   @State private loading: boolean = true;
   private repo: QuestionRepository = QuestionRepository.getInstance();
 
@@ -23,14 +20,9 @@ export struct BankPage {
     this.loading = true;
     try {
       const ctx = getContext(this) as common.UIAbilityContext;
-      const all = await this.repo.getCategories(ctx);
-      this.skills = CategoryGroupUtil.browseItems(all, CategoryGroupUtil.SKILL);
-      this.companies = CategoryGroupUtil.browseItems(all, CategoryGroupUtil.COMPANY);
-      this.specials = CategoryGroupUtil.browseItems(all, CategoryGroupUtil.SPECIAL);
+      this.groups = await this.repo.getCategoryGroups(ctx);
     } catch (_e) {
-      this.skills = [];
-      this.companies = [];
-      this.specials = [];
+      this.groups = [];
     } finally {
       this.loading = false;
     }
@@ -48,7 +40,7 @@ export struct BankPage {
   }
 
   private isEmpty(): boolean {
-    return this.skills.length === 0 && this.companies.length === 0 && this.specials.length === 0;
+    return this.groups.length === 0;
   }
 
   build() {
@@ -85,9 +77,9 @@ export struct BankPage {
               .margin({ top: 40 })
               .width('100%')
           } else {
-            this.groupBlock('group_skill', this.skills)
-            this.groupBlock('group_company', this.companies)
-            this.groupBlock('group_special', this.specials)
+            ForEach(this.groups, (g: CategoryGroupSection) => {
+              this.groupBlock(g.title, g.items)
+            }, (g: CategoryGroupSection) => g.name)
           }
         }
         .padding({ left: 16, right: 16, top: 8, bottom: 24 })
@@ -102,12 +94,12 @@ export struct BankPage {
   }
 
   @Builder
-  groupBlock(titleKey: string, list: Category[]) {
+  groupBlock(title: string, list: Category[]) {
     if (list.length === 0) {
       Column().width(0).height(0)
     } else {
       Column({ space: 10 }) {
-        Text(I18n.t(titleKey, this.lang))
+        Text(title)
           .fontSize(15)
           .fontWeight(FontWeight.Medium)
           .fontColor('#374151')

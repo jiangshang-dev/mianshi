@@ -20,6 +20,15 @@ export interface Category {
   children: SubCategory[];
 }
 
+export interface CategoryGroupSection {
+  name: string;
+  title: string;
+  bgColor: string;
+  textColor: string;
+  orderNum: number;
+  items: Category[];
+}
+
 export interface ArticleSummary {
   id: string;
   title: string;

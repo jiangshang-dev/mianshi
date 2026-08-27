@@ -12,7 +12,7 @@ export struct QuestionListItem {
     tags: [],
     difficulty: '',
     hot: false,
-    source: 'local_md',
+    source: 'remote_api',
     mastery: 0,
     favorited: false
   };
