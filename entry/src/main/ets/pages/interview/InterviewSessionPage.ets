@@ -482,12 +482,13 @@ struct InterviewSessionPage {
       .width('100%')
       .padding({ left: 16, right: 16, top: 12, bottom: 8 })
 
-      Row({ space: 8 }) {
-        this.modeTab('mode_text', 'text')
-        this.modeTab('mode_voice', 'voice')
-      }
-      .width('100%')
-      .padding({ left: 16, right: 16, bottom: 8 })
+      //  todo 语音Tab
+      // Row({ space: 8 }) {
+        // this.modeTab('mode_text', 'text')
+        // this.modeTab('mode_voice', 'voice')
+      // }
+      // .width('100%')
+      // .padding({ left: 16, right: 16, bottom: 8 })
 
       if (!this.showReport) {
         Row() {
