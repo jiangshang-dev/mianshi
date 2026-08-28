@@ -17,6 +17,8 @@ export struct ProfilePage {
   @Watch('onResumeMetaChange')
   resumeFileName: string = '';
   @StorageLink('appLang') lang: string = I18n.HANS;
+  @StorageLink('questionAiEnabled') questionAiEnabled: boolean = true;
+  @StorageLink('interviewAiEnabled') interviewAiEnabled: boolean = true;
   @State private resume: ResumeProfile | null = null;
   @State private uploading: boolean = false;
 
@@ -283,14 +285,18 @@ export struct ProfilePage {
           this.menuRow('favorites', 'fav_sub', () => {
             this.openNeedLogin(I18n.t('favorites', this.lang), 'pages/profile/FavoritesPage');
           })
-          this.menuRow('ai_qa', 'ai_qa_sub', () => {
-            this.openNeedLogin(I18n.t('ai_qa_title', this.lang), 'pages/profile/AiHistoryPage', 'chat',
-              I18n.t('ai_qa_title', this.lang));
-          })
-          this.menuRow('iv_logs', 'iv_logs_sub', () => {
-            this.openNeedLogin(I18n.t('iv_logs', this.lang), 'pages/profile/AiHistoryPage', 'interview',
-              I18n.t('iv_logs', this.lang));
-          })
+          if (this.questionAiEnabled) {
+            this.menuRow('ai_qa', 'ai_qa_sub', () => {
+              this.openNeedLogin(I18n.t('ai_qa_title', this.lang), 'pages/profile/AiHistoryPage', 'chat',
+                I18n.t('ai_qa_title', this.lang));
+            })
+          }
+          if (this.interviewAiEnabled) {
+            this.menuRow('iv_logs', 'iv_logs_sub', () => {
+              this.openNeedLogin(I18n.t('iv_logs', this.lang), 'pages/profile/AiHistoryPage', 'interview',
+                I18n.t('iv_logs', this.lang));
+            })
+          }
           // this.menuRow('study_log', 'study_log_sub', () => {
           //   this.soon(I18n.t('study_log', this.lang));
           // })

@@ -22,7 +22,17 @@ export default class EntryAbility extends UIAbility {
     AppStorage.setOrCreate('colorMode', ConfigurationConstant.ColorMode.COLOR_MODE_NOT_SET);
     AppStorage.setOrCreate(SettingsFlags.NOTIFY, true);
     AppStorage.setOrCreate(SettingsFlags.REMIND, false);
-    AppStorage.setOrCreate(SettingsFlags.AI_NOTICE, false);
+    AppStorage.setOrCreate('commentSheetOpen', false);
+    AppStorage.setOrCreate('commentComposeOpen', false);
+    AppStorage.setOrCreate('commentDetailOpen', false);
+    AppStorage.setOrCreate('commentReplyToId', '');
+    AppStorage.setOrCreate('commentReplyToName', '');
+    AppStorage.setOrCreate('commentDetailId', '');
+    AppStorage.setOrCreate('commentQuestionId', '');
+    AppStorage.setOrCreate('commentReloadTick', 0);
+    AppStorage.setOrCreate('commentFeatureEnabled', true);
+    AppStorage.setOrCreate('questionAiEnabled', true);
+    AppStorage.setOrCreate('interviewAiEnabled', true);
     hilog.info(DOMAIN, 'testTag', '%{public}s', 'Ability onCreate');
   }
 

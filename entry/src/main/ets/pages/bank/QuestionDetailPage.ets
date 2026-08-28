@@ -10,6 +10,10 @@ import { AiNotice } from '../../common/utils/AiNotice';
 import { I18n } from '../../common/i18n/I18n';
 import { AiGenMark, AiDisclaimerBar } from '../../components/AiGenMark';
 import { BilibiliLink, BilibiliVideoItem } from '../../common/utils/BilibiliLink';
+import { CommentSection } from '../../components/CommentSection';
+import { CommentComposerPanel } from '../../components/CommentComposerPanel';
+import { CommentDetailPanel } from '../../components/CommentDetailPanel';
+import { AppFeatureRepository } from '../../data/repository/AppFeatureRepository';
 
 interface DetailRouteParams {
   id?: string;
@@ -19,6 +23,12 @@ interface DetailRouteParams {
 @Component
 struct QuestionDetailPage {
   @StorageLink('appLang') lang: string = I18n.HANS;
+  @StorageLink('commentSheetOpen') commentSheetOpen: boolean = false;
+  @StorageLink('commentComposeOpen') commentComposeOpen: boolean = false;
+  @StorageLink('commentDetailOpen') commentDetailOpen: boolean = false;
+  @StorageLink('commentReloadTick') commentReloadTick: number = 0;
+  @StorageLink('commentFeatureEnabled') commentFeatureEnabled: boolean = true;
+  @StorageLink('questionAiEnabled') @Watch('onQuestionAiFlag') questionAiEnabled: boolean = true;
   @State private question: QuestionItem | null = null;
   @State private loading: boolean = true;
   @State private showAi: boolean = false;
@@ -44,7 +54,19 @@ struct QuestionDetailPage {
   aboutToAppear(): void {
     const params = router.getParams() as DetailRouteParams;
     this.questionId = params.id ?? '';
+    AppFeatureRepository.getInstance().refresh();
     this.loadDetail();
+  }
+
+  onPageShow(): void {
+    AppFeatureRepository.getInstance().refresh();
+  }
+
+  onQuestionAiFlag(): void {
+    if (!this.questionAiEnabled) {
+      this.showAi = false;
+      this.stopAi();
+    }
   }
 
   aboutToDisappear(): void {
@@ -257,6 +279,9 @@ struct QuestionDetailPage {
   }
 
   private openAi(prompt?: string): void {
+    if (!this.questionAiEnabled) {
+      return;
+    }
     LoginGate.ensure(I18n.t('ai_feature', this.lang), () => {
       const ctx = getContext(this) as common.UIAbilityContext;
       AiNotice.ensure(ctx, () => {
@@ -472,28 +497,38 @@ struct QuestionDetailPage {
                 this.videoPanel()
               }
 
-              Column({ space: 8 }) {
-                Text(I18n.t('quick_ai', this.lang)).fontSize(15).fontWeight(FontWeight.Medium).fontColor($r('app.color.text_primary')).width('100%')
-                Flex({ wrap: FlexWrap.Wrap }) {
-                  ForEach(I18n.aiTips(this.lang), (tip: string) => {
-                    Text(tip).fontSize(12).fontColor('#1D4ED8')
-                      .padding({ left: 12, right: 12, top: 8, bottom: 8 })
-                      .backgroundColor('#EFF6FF').borderRadius(16)
-                      .margin({ right: 8, bottom: 8 })
-                      .onClick(() => {
-                        this.openAi(tip);
-                      })
-                  }, (tip: string) => tip)
-                }
-              }.width('100%').padding({ bottom: 80 })
+              if (this.questionAiEnabled) {
+                Column({ space: 8 }) {
+                  Text(I18n.t('quick_ai', this.lang)).fontSize(15).fontWeight(FontWeight.Medium).fontColor($r('app.color.text_primary')).width('100%')
+                  Flex({ wrap: FlexWrap.Wrap }) {
+                    ForEach(I18n.aiTips(this.lang), (tip: string) => {
+                      Text(tip).fontSize(12).fontColor('#1D4ED8')
+                        .padding({ left: 12, right: 12, top: 8, bottom: 8 })
+                        .backgroundColor('#EFF6FF').borderRadius(16)
+                        .margin({ right: 8, bottom: 8 })
+                        .onClick(() => {
+                          this.openAi(tip);
+                        })
+                    }, (tip: string) => tip)
+                  }
+                }.width('100%')
+              }
+
+              if (this.commentFeatureEnabled) {
+                CommentSection({
+                  questionId: this.question.id,
+                  composeOpen: this.commentComposeOpen,
+                  reloadTick: this.commentReloadTick
+                })
+              }
             }
-            .padding({ left: 16, right: 16, bottom: 16 }).width('100%')
+            .padding({ left: 16, right: 16, bottom: 96 }).width('100%')
           }.layoutWeight(1).scrollBar(BarState.Off).align(Alignment.Top)
         }
       }
       .width('100%').height('100%').backgroundColor($r('app.color.page_bg'))
 
-      if (!this.showAi && !this.videoFullScreen) {
+      if (this.questionAiEnabled && !this.showAi && !this.videoFullScreen && !this.commentSheetOpen) {
         Column() {
           Text('AI').fontSize(16).fontWeight(FontWeight.Bold).fontColor($r('app.color.text_on_color'))
         }
@@ -505,7 +540,7 @@ struct QuestionDetailPage {
         })
       }
 
-      if (this.showAi) {
+      if (this.questionAiEnabled && this.showAi) {
         Stack({ alignContent: Alignment.Bottom }) {
           Column()
             .width('100%')
@@ -681,6 +716,17 @@ struct QuestionDetailPage {
         }
         .width('100%')
         .height('100%')
+      }
+
+      if (this.commentFeatureEnabled && this.commentDetailOpen) {
+        CommentDetailPanel({
+          composeOpen: this.commentComposeOpen,
+          reloadTick: this.commentReloadTick
+        })
+      }
+
+      if (this.commentFeatureEnabled && this.commentComposeOpen) {
+        CommentComposerPanel()
       }
 
       if (this.videoFullScreen && this.videos.length > 0) {
