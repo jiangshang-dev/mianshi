@@ -180,6 +180,15 @@ export class I18n {
     I18n.put('detail_title', '题目详情', '題目詳情', 'Question');
     I18n.put('not_found', '未找到题目内容', '未找到題目內容', 'Question not found');
     I18n.put('answer_body', '标准答案 / 正文', '標準答案 / 正文', 'Answer');
+    I18n.put('tab_lecture', '文字讲义', '文字講義', 'Notes');
+    I18n.put('tab_video', '视频', '視頻', 'Video');
+    I18n.put('video_list', '视频列表', '視頻列表', 'Videos');
+    I18n.put('video_open', '浏览器打开', '瀏覽器打開', 'Open in browser');
+    I18n.put('video_open_bili', '打开B站', '打開B站', 'Open Bilibili');
+    I18n.put('video_fullscreen', '全屏', '全屏', 'Fullscreen');
+    I18n.put('video_exit_fs', '退出全屏', '退出全屏', 'Exit');
+    I18n.put('video_open_fail', '未安装B站时将尝试用浏览器打开', '未安裝B站時將嘗試用瀏覽器打開', 'No Bilibili app, opening in browser');
+    I18n.put('video_empty', '暂无可播放视频', '暫無可播放視頻', 'No playable video');
     I18n.put('interview_ans', '面试推荐回答', '面試推薦回答', 'Interview answer');
     I18n.put('knowledge', '知识点', '知識點', 'Key points');
     I18n.put('quick_ai', '快捷提问 AI', '快捷提問 AI', 'Ask AI');

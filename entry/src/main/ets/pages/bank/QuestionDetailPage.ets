@@ -1,5 +1,6 @@
-import { common } from '@kit.AbilityKit';
-import { promptAction, router } from '@kit.ArkUI';
+import { common, Want } from '@kit.AbilityKit';
+import { promptAction, router, window } from '@kit.ArkUI';
+import { webview } from '@kit.ArkWeb';
 import { AiChatMessage, AiStreamSnapshot, QuestionItem } from '../../common/models/Types';
 import { MdContentView } from '../../components/MdContentView';
 import { QuestionRepository } from '../../data/repository/QuestionRepository';
@@ -8,6 +9,7 @@ import { LoginGate } from '../../common/utils/LoginGate';
 import { AiNotice } from '../../common/utils/AiNotice';
 import { I18n } from '../../common/i18n/I18n';
 import { AiGenMark, AiDisclaimerBar } from '../../components/AiGenMark';
+import { BilibiliLink, BilibiliVideoItem } from '../../common/utils/BilibiliLink';
 
 interface DetailRouteParams {
   id?: string;
@@ -26,11 +28,18 @@ struct QuestionDetailPage {
   @State private favorited: boolean = false;
   @State private pageHeight: number = 0;
   @State private aiSheetHeight: number = 480;
+  @State private detailTab: string = 'lecture';
+  @State private videos: BilibiliVideoItem[] = [];
+  @State private videoIndex: number = 0;
+  @State private videoFullScreen: boolean = false;
   private questionId: string = '';
   private dragStartHeight: number = 480;
   private repo: QuestionRepository = QuestionRepository.getInstance();
   private aiAbort: SseAbort | null = null;
   private aiSessionId: string = '';
+  private webController: webview.WebviewController = new webview.WebviewController();
+  private fsController: webview.WebviewController = new webview.WebviewController();
+  private webAttached: boolean = false;
 
   aboutToAppear(): void {
     const params = router.getParams() as DetailRouteParams;
@@ -40,6 +49,7 @@ struct QuestionDetailPage {
 
   aboutToDisappear(): void {
     this.aiAbort?.abort();
+    this.exitVideoFullScreen();
   }
 
   private async loadDetail(): Promise<void> {
@@ -49,6 +59,10 @@ struct QuestionDetailPage {
       await this.repo.syncFavorites();
       this.question = await this.repo.getDetail(ctx, this.questionId);
       this.favorited = this.question !== null && this.question.favorited;
+      this.videos = this.question ? BilibiliLink.parseList(this.question.bilibiliUrls ?? []) : [];
+      this.videoIndex = 0;
+      this.detailTab = 'lecture';
+      this.webAttached = false;
       if (this.question) {
         this.repo.recordQuestionView(this.question.id);
       }
@@ -270,6 +284,96 @@ struct QuestionDetailPage {
     promptAction.showToast({ message: this.favorited ? I18n.t('fav_on', this.lang) : I18n.t('fav_off', this.lang) });
   }
 
+  private selectVideo(index: number): void {
+    if (index < 0 || index >= this.videos.length) {
+      return;
+    }
+    this.videoIndex = index;
+    if (this.webAttached) {
+      try {
+        this.webController.loadUrl(this.videos[index].embedUrl);
+      } catch (_e) {
+      }
+    }
+  }
+
+  private enterVideoFullScreen(): void {
+    if (this.videos.length === 0) {
+      return;
+    }
+    this.videoFullScreen = true;
+    this.applyFullScreenWindow(true);
+  }
+
+  private exitVideoFullScreen(): void {
+    if (!this.videoFullScreen) {
+      return;
+    }
+    this.videoFullScreen = false;
+    this.applyFullScreenWindow(false);
+  }
+
+  private async applyFullScreenWindow(on: boolean): Promise<void> {
+    try {
+      const ctx = getContext(this) as common.UIAbilityContext;
+      const win = await window.getLastWindow(ctx);
+      if (on) {
+        await win.setPreferredOrientation(window.Orientation.LANDSCAPE);
+        await win.setWindowLayoutFullScreen(true);
+        await win.setWindowSystemBarEnable([]);
+      } else {
+        await win.setPreferredOrientation(window.Orientation.PORTRAIT);
+        await win.setWindowLayoutFullScreen(false);
+        await win.setWindowSystemBarEnable(['status', 'navigation']);
+      }
+    } catch (_e) {
+    }
+  }
+
+  private currentVideo(): BilibiliVideoItem | null {
+    if (this.videoIndex < 0 || this.videoIndex >= this.videos.length) {
+      return null;
+    }
+    return this.videos[this.videoIndex];
+  }
+
+  private async openInBiliApp(): Promise<void> {
+    const item = this.currentVideo();
+    if (item === null) {
+      return;
+    }
+    const ctx = getContext(this) as common.UIAbilityContext;
+    if (item.appUrl.length > 0) {
+      const appWant: Want = {
+        action: 'ohos.want.action.viewData',
+        uri: item.appUrl
+      };
+      try {
+        await ctx.startAbility(appWant);
+        return;
+      } catch (_e) {
+      }
+    }
+    const webWant: Want = {
+      action: 'ohos.want.action.viewData',
+      entities: ['entity.system.browsable'],
+      uri: item.playUrl
+    };
+    try {
+      await ctx.startAbility(webWant);
+    } catch (_e) {
+      promptAction.showToast({ message: I18n.t('video_open_fail', this.lang) });
+    }
+  }
+
+  onBackPress(): boolean {
+    if (this.videoFullScreen) {
+      this.exitVideoFullScreen();
+      return true;
+    }
+    return false;
+  }
+
   private onSheetPanStart(): void {
     this.dragStartHeight = this.aiSheetHeight;
   }
@@ -328,32 +432,44 @@ struct QuestionDetailPage {
                 ' · ' + this.question.tags.join(' / ') : ''}`)
                 .fontSize(13).fontColor($r('app.color.text_muted')).width('100%')
 
-              Column({ space: 8 }) {
-                Text(I18n.t('answer_body', this.lang)).fontSize(15).fontWeight(FontWeight.Medium).fontColor($r('app.color.text_primary')).width('100%')
-                MdContentView({ content: this.question.content ?? '' })
-              }
-              .width('100%').padding(14).backgroundColor($r('app.color.card_bg')).borderRadius(14)
-
-              if (this.question.interviewAnswer) {
-                Column({ space: 8 }) {
-                  Text(I18n.t('interview_ans', this.lang)).fontSize(15).fontWeight(FontWeight.Medium).fontColor($r('app.color.text_primary')).width('100%')
-                  MdContentView({ content: this.question.interviewAnswer })
+              if (this.videos.length > 0) {
+                Row({ space: 8 }) {
+                  this.detailTabChip('tab_lecture', 'lecture')
+                  this.detailTabChip('tab_video', 'video')
                 }
-                .width('100%').padding(14).backgroundColor($r('app.color.card_bg')).borderRadius(14)
+                .width('100%')
               }
 
-              if (this.question.knowledgePoints && this.question.knowledgePoints.length > 0) {
+              if (this.videos.length === 0 || this.detailTab === 'lecture') {
                 Column({ space: 8 }) {
-                  Text(I18n.t('knowledge', this.lang)).fontSize(15).fontWeight(FontWeight.Medium).fontColor($r('app.color.text_primary')).width('100%')
-                  Flex({ wrap: FlexWrap.Wrap }) {
-                    ForEach(this.question.knowledgePoints, (p: string) => {
-                      Text(p).fontSize(12).fontColor('#3730A3').backgroundColor('#E0E7FF')
-                        .padding({ left: 10, right: 10, top: 6, bottom: 6 })
-                        .borderRadius(14).margin({ right: 8, bottom: 8 })
-                    }, (p: string) => p)
-                  }.width('100%')
+                  Text(I18n.t('answer_body', this.lang)).fontSize(15).fontWeight(FontWeight.Medium).fontColor($r('app.color.text_primary')).width('100%')
+                  MdContentView({ content: this.question.content ?? '' })
                 }
                 .width('100%').padding(14).backgroundColor($r('app.color.card_bg')).borderRadius(14)
+
+                if (this.question.interviewAnswer) {
+                  Column({ space: 8 }) {
+                    Text(I18n.t('interview_ans', this.lang)).fontSize(15).fontWeight(FontWeight.Medium).fontColor($r('app.color.text_primary')).width('100%')
+                    MdContentView({ content: this.question.interviewAnswer })
+                  }
+                  .width('100%').padding(14).backgroundColor($r('app.color.card_bg')).borderRadius(14)
+                }
+
+                if (this.question.knowledgePoints && this.question.knowledgePoints.length > 0) {
+                  Column({ space: 8 }) {
+                    Text(I18n.t('knowledge', this.lang)).fontSize(15).fontWeight(FontWeight.Medium).fontColor($r('app.color.text_primary')).width('100%')
+                    Flex({ wrap: FlexWrap.Wrap }) {
+                      ForEach(this.question.knowledgePoints, (p: string) => {
+                        Text(p).fontSize(12).fontColor('#3730A3').backgroundColor('#E0E7FF')
+                          .padding({ left: 10, right: 10, top: 6, bottom: 6 })
+                          .borderRadius(14).margin({ right: 8, bottom: 8 })
+                      }, (p: string) => p)
+                    }.width('100%')
+                  }
+                  .width('100%').padding(14).backgroundColor($r('app.color.card_bg')).borderRadius(14)
+                }
+              } else {
+                this.videoPanel()
               }
 
               Column({ space: 8 }) {
@@ -377,7 +493,7 @@ struct QuestionDetailPage {
       }
       .width('100%').height('100%').backgroundColor($r('app.color.page_bg'))
 
-      if (!this.showAi) {
+      if (!this.showAi && !this.videoFullScreen) {
         Column() {
           Text('AI').fontSize(16).fontWeight(FontWeight.Bold).fontColor($r('app.color.text_on_color'))
         }
@@ -566,6 +682,45 @@ struct QuestionDetailPage {
         .width('100%')
         .height('100%')
       }
+
+      if (this.videoFullScreen && this.videos.length > 0) {
+        Stack() {
+          Web({ src: this.videos[this.videoIndex].embedUrl, controller: this.fsController })
+            .width('100%')
+            .height('100%')
+            .javaScriptAccess(true)
+            .domStorageAccess(true)
+            .mediaPlayGestureAccess(true)
+            .onControllerAttached(() => {
+              try {
+                this.fsController.loadUrl(this.videos[this.videoIndex].embedUrl);
+              } catch (_e) {
+              }
+            })
+          Row() {
+            Text(I18n.t('video_exit_fs', this.lang))
+              .fontSize(14)
+              .fontColor('#FFFFFF')
+              .padding({ left: 16, right: 12, top: 10, bottom: 10 })
+              .onClick(() => {
+                this.exitVideoFullScreen();
+              })
+            Blank()
+            Text(I18n.t('video_open_bili', this.lang))
+              .fontSize(14)
+              .fontColor('#93C5FD')
+              .padding({ left: 12, right: 16, top: 10, bottom: 10 })
+              .onClick(() => {
+                this.openInBiliApp();
+              })
+          }
+          .width('100%')
+          .alignItems(VerticalAlign.Center)
+        }
+        .width('100%')
+        .height('100%')
+        .backgroundColor('#000000')
+      }
     }
     .width('100%').height('100%')
     .onAreaChange((_old: Area, area: Area) => {
@@ -578,5 +733,107 @@ struct QuestionDetailPage {
         }
       }
     })
+  }
+
+  @Builder
+  detailTabChip(labelKey: string, value: string) {
+    Text(I18n.t(labelKey, this.lang))
+      .fontSize(14)
+      .fontColor(this.detailTab === value ? $r('app.color.text_on_color') : $r('app.color.chip_idle_text'))
+      .backgroundColor(this.detailTab === value ? $r('app.color.accent') : $r('app.color.card_bg'))
+      .padding({ left: 16, right: 16, top: 10, bottom: 10 })
+      .borderRadius(20)
+      .layoutWeight(1)
+      .textAlign(TextAlign.Center)
+      .onClick(() => {
+        this.detailTab = value;
+        if (value !== 'video') {
+          this.webAttached = false;
+        }
+      })
+  }
+
+  @Builder
+  videoPanel() {
+    Column({ space: 10 }) {
+      if (this.videos.length === 0) {
+        Text(I18n.t('video_empty', this.lang))
+          .fontSize(13)
+          .fontColor($r('app.color.text_muted'))
+          .width('100%')
+      } else {
+        Web({ src: this.videos[this.videoIndex].embedUrl, controller: this.webController })
+          .width('100%')
+          .height(210)
+          .borderRadius(8)
+          .clip(true)
+          .javaScriptAccess(true)
+          .domStorageAccess(true)
+          .mediaPlayGestureAccess(true)
+          .onControllerAttached(() => {
+            this.webAttached = true;
+            try {
+              this.webController.loadUrl(this.videos[this.videoIndex].embedUrl);
+            } catch (_e) {
+            }
+          })
+          .onFullScreenEnter(() => {
+            this.enterVideoFullScreen();
+          })
+        Row({ space: 10 }) {
+          Text(this.videos[this.videoIndex].title)
+            .fontSize(14)
+            .fontWeight(FontWeight.Medium)
+            .fontColor($r('app.color.text_primary'))
+            .maxLines(2)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+            .layoutWeight(1)
+          Text(I18n.t('video_fullscreen', this.lang))
+            .fontSize(13)
+            .fontColor($r('app.color.accent'))
+            .onClick(() => {
+              this.enterVideoFullScreen();
+            })
+          Text(I18n.t('video_open_bili', this.lang))
+            .fontSize(13)
+            .fontColor($r('app.color.accent'))
+            .onClick(() => {
+              this.openInBiliApp();
+            })
+        }
+        .width('100%')
+        Text(I18n.t('video_list', this.lang))
+          .fontSize(15)
+          .fontWeight(FontWeight.Medium)
+          .fontColor($r('app.color.text_primary'))
+          .width('100%')
+        ForEach(this.videos, (v: BilibiliVideoItem, i: number) => {
+          Row({ space: 10 }) {
+            Text(`${i + 1}`)
+              .fontSize(13)
+              .fontWeight(FontWeight.Bold)
+              .fontColor(this.videoIndex === i ? $r('app.color.accent') : $r('app.color.text_muted'))
+              .width(22)
+            Text(v.title)
+              .fontSize(14)
+              .fontColor(this.videoIndex === i ? $r('app.color.accent') : $r('app.color.text_primary'))
+              .maxLines(2)
+              .textOverflow({ overflow: TextOverflow.Ellipsis })
+              .layoutWeight(1)
+          }
+          .width('100%')
+          .padding(10)
+          .borderRadius(10)
+          .backgroundColor(this.videoIndex === i ? $r('app.color.bubble_mine_bg') : $r('app.color.chip_idle_bg'))
+          .onClick(() => {
+            this.selectVideo(i);
+          })
+        }, (v: BilibiliVideoItem, i: number) => `${v.bvid}-${v.embedUrl}-${i}`)
+      }
+    }
+    .width('100%')
+    .padding(14)
+    .backgroundColor($r('app.color.card_bg'))
+    .borderRadius(14)
   }
 }

@@ -14,6 +14,7 @@ interface RemoteQuestionDto {
   answer: string;
   interviewAnswer?: string;
   knowledgePoints?: string[];
+  bilibiliUrls?: string[];
 }
 
 interface RemoteListResponse {
@@ -422,6 +423,7 @@ export class RemoteApiDataSource {
       content: d.answer,
       interviewAnswer: d.interviewAnswer,
       knowledgePoints: d.knowledgePoints,
+      bilibiliUrls: d.bilibiliUrls ?? [],
       mastery: 0,
       favorited: false
     };
@@ -690,6 +692,7 @@ export class RemoteApiDataSource {
       content: answer,
       interviewAnswer: interview,
       knowledgePoints: tags,
+      bilibiliUrls: [],
       mastery: 0,
       favorited: false
     };

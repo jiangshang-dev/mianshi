@@ -106,6 +106,7 @@ export class QuestionRepository {
       content: q.content,
       interviewAnswer: q.interviewAnswer,
       knowledgePoints: q.knowledgePoints,
+      bilibiliUrls: q.bilibiliUrls,
       mastery: q.mastery,
       favorited: this.favRepo.has(q.id)
     };

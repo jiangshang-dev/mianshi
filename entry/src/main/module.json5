@@ -11,6 +11,11 @@
     "deliveryWithInstall": true,
     "installationFree": false,
     "pages": "$profile:main_pages",
+    "querySchemes": [
+      "https",
+      "http",
+      "bilibili"
+    ],
     "metadata": [
       {
         "name": "client_id",

@@ -1,3 +1,5 @@
+import { HtmlCompat } from './HtmlCompat';
+
 export interface MdFrontMatter {
   title: string;
   description: string;
@@ -123,7 +125,8 @@ export interface MdBlockNode {
 
 export class MdBlocks {
   static parse(md: string): MdBlockNode[] {
-    const lines = md.split('\r\n').join('\n').split('\r').join('\n').split('\n');
+    const source = HtmlCompat.toMarkdown(md);
+    const lines = source.split('\r\n').join('\n').split('\r').join('\n').split('\n');
     const blocks: MdBlockNode[] = [];
     let i = 0;
     while (i < lines.length) {

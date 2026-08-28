@@ -57,6 +57,7 @@ export interface QuestionItem {
   content?: string;
   interviewAnswer?: string;
   knowledgePoints?: string[];
+  bilibiliUrls?: string[];
   mastery: number;
   favorited: boolean;
 }
