@@ -25,6 +25,9 @@ interface SessionRouteParams {
   difficulty?: string;
 }
 
+/**
+ * AI面试官
+ */
 @Entry
 @Component
 struct InterviewSessionPage {
