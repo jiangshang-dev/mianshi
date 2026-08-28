@@ -33,9 +33,9 @@ struct InterviewSessionPage {
   @State private messages: InterviewMessage[] = [];
   @State private inputText: string = '';
   @State private voiceTranscript: string = '';
-  @State private voiceStatus: string = '点击麦克风开始说话';
+  // @State private voiceStatus: string = '点击麦克风开始说话';
   @State private isRecording: boolean = false;
-  @State private isSpeaking: boolean = false;
+  // @State private isSpeaking: boolean = false;
   @State private voiceMuted: boolean = false;
   @State private speechReady: boolean = false;
   @State private elapsedSeconds: number = 0;
@@ -123,28 +123,29 @@ struct InterviewSessionPage {
   }
 
   private async initSpeech(): Promise<void> {
-    const ttsOk = await this.speech.initTts();
-    const ctx = getContext(this) as common.UIAbilityContext;
-    const micOk = await this.speech.requestMicPermission(ctx);
-    const asrOk = await this.speech.initAsr(
-      (text: string, isLast: boolean) => {
-        this.voiceTranscript = text;
-        if (isLast && text.trim().length > 0) {
-          this.isRecording = false;
-          this.voiceStatus = '识别完成，正在提交…';
-          this.submitAnswer(text);
-        }
-      },
-      (message: string) => {
-        this.isRecording = false;
-        this.voiceStatus = message;
-        promptAction.showToast({ message });
-      }
-    );
-    this.speechReady = ttsOk && micOk && asrOk;
-    if (!this.speechReady) {
-      this.voiceStatus = '当前设备语音能力不可用，请使用文字模式';
-    }
+    await this.speech.initTts();
+    // todo 上架暂时关闭麦克风权限申请
+    // const ctx = getContext(this) as common.UIAbilityContext;
+    // const micOk = await this.speech.requestMicPermission(ctx);
+    // const asrOk = await this.speech.initAsr(
+    //   (text: string, isLast: boolean) => {
+    //     this.voiceTranscript = text;
+    //     if (isLast && text.trim().length > 0) {
+    //       this.isRecording = false;
+    //       this.voiceStatus = '识别完成，正在提交…';
+    //       this.submitAnswer(text);
+    //     }
+    //   },
+    //   (message: string) => {
+    //     this.isRecording = false;
+    //     this.voiceStatus = message;
+    //     promptAction.showToast({ message });
+    //   }
+    // );
+    // this.speechReady = ttsOk && micOk && asrOk;
+    // if (!this.speechReady) {
+    //   this.voiceStatus = '当前设备语音能力不可用，请使用文字模式';
+    // }
   }
 
   private async beginInterview(): Promise<void> {
@@ -269,7 +270,7 @@ struct InterviewSessionPage {
     this.waitingAnswer = false;
     this.speech.stopSpeak();
     this.clearSpeakTimer();
-    this.isSpeaking = false;
+    // this.isSpeaking = false;
   }
 
   private maybeSpeak(text: string): void {
@@ -305,35 +306,35 @@ struct InterviewSessionPage {
       return;
     }
     this.clearSpeakTimer();
-    this.isSpeaking = true;
-    this.voiceStatus = '面试官正在说话，可点静音关闭';
+    // this.isSpeaking = true;
+    // this.voiceStatus = '面试官正在说话，可点静音关闭';
     await this.speech.speak(text);
-    const waitMs = Math.min(90000, Math.max(2800, text.length * 160));
-    this.speakTimer = setTimeout(() => {
-      this.isSpeaking = false;
-      if (!this.showReport && !this.voiceMuted) {
-        this.voiceStatus = '点击麦克风开始回答';
-      }
-    }, waitMs);
+    // const waitMs = Math.min(90000, Math.max(2800, text.length * 160));
+    // this.speakTimer = setTimeout(() => {
+    //   this.isSpeaking = false;
+    //   if (!this.showReport && !this.voiceMuted) {
+    //     this.voiceStatus = '点击麦克风开始回答';
+    //   }
+    // }, waitMs);
   }
 
   private async stopVoicePlayback(): Promise<void> {
     this.clearSpeakTimer();
     await this.speech.stopSpeak();
-    this.isSpeaking = false;
+    // this.isSpeaking = false;
   }
 
-  private async toggleMute(): Promise<void> {
-    this.voiceMuted = !this.voiceMuted;
-    if (this.voiceMuted) {
-      await this.stopVoicePlayback();
-      this.voiceStatus = '已静音，面试官回复不再朗读';
-      promptAction.showToast({ message: I18n.t('tts_off', this.lang) });
-    } else {
-      this.voiceStatus = '已开启朗读';
-      promptAction.showToast({ message: I18n.t('tts_on', this.lang) });
-    }
-  }
+  // private async toggleMute(): Promise<void> {
+  //   this.voiceMuted = !this.voiceMuted;
+  //   if (this.voiceMuted) {
+  //     await this.stopVoicePlayback();
+  //     this.voiceStatus = '已静音，面试官回复不再朗读';
+  //     promptAction.showToast({ message: I18n.t('tts_off', this.lang) });
+  //   } else {
+  //     this.voiceStatus = '已开启朗读';
+  //     promptAction.showToast({ message: I18n.t('tts_on', this.lang) });
+  //   }
+  // }
 
   private submitAnswer(answer: string): void {
     const text = answer.trim();
@@ -415,33 +416,33 @@ struct InterviewSessionPage {
     }
   }
 
-  private async toggleRecording(): Promise<void> {
-    if (!this.speechReady) {
-      promptAction.showToast({ message: I18n.t('voice_unavail', this.lang) });
-      return;
-    }
-    if (this.streaming || !this.waitingAnswer) {
-      promptAction.showToast({ message: I18n.t('wait_reply', this.lang) });
-      return;
-    }
-    if (this.isSpeaking) {
-      await this.stopVoicePlayback();
-    }
-    if (this.isRecording) {
-      await this.speech.stopListening();
-      this.isRecording = false;
-      this.voiceStatus = '识别结束';
-      return;
-    }
-    this.voiceTranscript = '';
-    const ok = await this.speech.startListening();
-    if (ok) {
-      this.isRecording = true;
-      this.voiceStatus = '正在聆听，请作答…';
-    } else {
-      promptAction.showToast({ message: I18n.t('asr_fail', this.lang) });
-    }
-  }
+  // private async toggleRecording(): Promise<void> {
+  //   if (!this.speechReady) {
+  //     promptAction.showToast({ message: I18n.t('voice_unavail', this.lang) });
+  //     return;
+  //   }
+  //   if (this.streaming || !this.waitingAnswer) {
+  //     promptAction.showToast({ message: I18n.t('wait_reply', this.lang) });
+  //     return;
+  //   }
+  //   if (this.isSpeaking) {
+  //     await this.stopVoicePlayback();
+  //   }
+  //   if (this.isRecording) {
+  //     await this.speech.stopListening();
+  //     this.isRecording = false;
+  //     this.voiceStatus = '识别结束';
+  //     return;
+  //   }
+  //   this.voiceTranscript = '';
+  //   const ok = await this.speech.startListening();
+  //   if (ok) {
+  //     this.isRecording = true;
+  //     this.voiceStatus = '正在聆听，请作答…';
+  //   } else {
+  //     promptAction.showToast({ message: I18n.t('asr_fail', this.lang) });
+  //   }
+  // }
 
   build() {
     Column() {
@@ -463,16 +464,16 @@ struct InterviewSessionPage {
         .alignItems(HorizontalAlign.Start)
         .layoutWeight(1)
 
-        if (this.mode === 'voice') {
-          Text(this.voiceMuted ? '🔇' : '🔊')
-            .fontSize(18)
-            .padding({ left: 8, right: 8, top: 6, bottom: 6 })
-            .backgroundColor(this.voiceMuted ? $r('app.color.chip_idle_bg') : $r('app.color.bubble_mine_bg'))
-            .borderRadius(10)
-            .onClick(() => {
-              this.toggleMute();
-            })
-        }
+        // if (this.mode === 'voice') {
+        //   Text(this.voiceMuted ? '🔇' : '🔊')
+        //     .fontSize(18)
+        //     .padding({ left: 8, right: 8, top: 6, bottom: 6 })
+        //     .backgroundColor(this.voiceMuted ? $r('app.color.chip_idle_bg') : $r('app.color.bubble_mine_bg'))
+        //     .borderRadius(10)
+        //     .onClick(() => {
+        //       this.toggleMute();
+        //     })
+        // }
 
         Text(this.formatTime(this.elapsedSeconds))
           .fontSize(13)
@@ -570,11 +571,11 @@ struct InterviewSessionPage {
           .padding({ left: 16, right: 16, top: 8, bottom: 16 })
         } else {
           Column({ space: 12 }) {
-            Text(this.voiceStatus)
-              .fontSize(13)
-              .fontColor($r('app.color.text_muted'))
-              .width('100%')
-              .textAlign(TextAlign.Center)
+            // Text(this.voiceStatus)
+            //   .fontSize(13)
+            //   .fontColor($r('app.color.text_muted'))
+            //   .width('100%')
+            //   .textAlign(TextAlign.Center)
 
             if (this.voiceTranscript.length > 0) {
               Text(this.voiceTranscript)
@@ -587,34 +588,34 @@ struct InterviewSessionPage {
             }
 
             Row({ space: 28 }) {
-              Column({ space: 6 }) {
-                Text(this.voiceMuted ? '🔇' : '🔊')
-                  .fontSize(22)
-                  .fontColor(this.voiceMuted ? '#6B7280' : '#2563EB')
-                Text(this.voiceMuted ? I18n.t('muted', this.lang) : I18n.t('mute', this.lang))
-                  .fontSize(11)
-                  .fontColor($r('app.color.text_muted'))
-              }
-              .width(64)
-              .height(72)
-              .justifyContent(FlexAlign.Center)
-              .onClick(() => {
-                this.toggleMute();
-              })
+              // Column({ space: 6 }) {
+              //   Text(this.voiceMuted ? '🔇' : '🔊')
+              //     .fontSize(22)
+              //     .fontColor(this.voiceMuted ? '#6B7280' : '#2563EB')
+              //   Text(this.voiceMuted ? I18n.t('muted', this.lang) : I18n.t('mute', this.lang))
+              //     .fontSize(11)
+              //     .fontColor($r('app.color.text_muted'))
+              // }
+              // .width(64)
+              // .height(72)
+              // .justifyContent(FlexAlign.Center)
+              // .onClick(() => {
+              //   this.toggleMute();
+              // })
 
-              Column() {
-                Text(this.isRecording ? '■' : '🎙')
-                  .fontSize(this.isRecording ? 22 : 28)
-                  .fontColor($r('app.color.text_on_color'))
-              }
-              .width(72)
-              .height(72)
-              .borderRadius(36)
-              .justifyContent(FlexAlign.Center)
-              .backgroundColor(this.isRecording ? '#EF4444' : '#2563EB')
-              .onClick(() => {
-                this.toggleRecording();
-              })
+              // Column() {
+              //   Text(this.isRecording ? '■' : '🎙')
+              //     .fontSize(this.isRecording ? 22 : 28)
+              //     .fontColor($r('app.color.text_on_color'))
+              // }
+              // .width(72)
+              // .height(72)
+              // .borderRadius(36)
+              // .justifyContent(FlexAlign.Center)
+              // .backgroundColor(this.isRecording ? '#EF4444' : '#2563EB')
+              // .onClick(() => {
+              //   this.toggleRecording();
+              // })
 
               Column({ space: 6 }) {
                 Text('⏹')
