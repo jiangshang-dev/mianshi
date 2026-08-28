@@ -209,6 +209,9 @@ export class I18n {
     I18n.put('search_ph', '搜题目 / 知识点 / 分类', '搜題目 / 知識點 / 分類', 'Search questions / topics');
     I18n.put('search_idle', '输入关键词，搜索题目、知识点或分类', '輸入關鍵詞，搜尋題目、知識點或分類', 'Type a keyword to search questions and topics');
     I18n.put('search_empty', '没有找到相关题目', '沒有找到相關題目', 'No matching questions');
+    I18n.put('hot_search', '热搜', '熱搜', 'Hot');
+    I18n.put('search_history', '搜索历史', '搜尋紀錄', 'History');
+    I18n.put('clear_history', '清空', '清空', 'Clear');
     I18n.put('need_login', '需要登录', '需要登入', 'Sign in required');
     I18n.put('need_login_msg', '{0}登录后才可使用', '{0}登入後才可使用', 'Sign in to use {0}');
     I18n.put('cancel', '取消', '取消', 'Cancel');

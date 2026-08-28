@@ -66,16 +66,19 @@ export struct HomePage {
         }
         .width('100%')
 
-        Row() {
-            Text(I18n.t('search_home', this.lang))
+        Row({ space: 8 }) {
+          Text('🔍')
+            .fontSize(14)
+          Text(I18n.t('search_home', this.lang))
             .fontSize(14)
             .fontColor($r('app.color.header_search_text'))
             .layoutWeight(1)
         }
         .width('100%')
-        .padding(12)
-        .backgroundColor('#FFFFFF22')
-        .borderRadius(12)
+        .height(40)
+        .padding({ left: 14, right: 14 })
+        .backgroundColor($r('app.color.header_search_bg'))
+        .borderRadius(20)
         .onClick(() => {
           router.pushUrl({ url: 'pages/search/SearchPage' });
         })
