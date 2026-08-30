@@ -1,6 +1,7 @@
 import { AiStreamSnapshot } from '../../common/models/Types';
 import { InterviewConfig, InterviewReport } from '../../common/models/InterviewTypes';
 import { HttpClient, SseAbort } from '../../common/network/HttpClient';
+import { DeviceProfile } from '../../common/utils/DeviceProfile';
 import { AuthRepository } from './AuthRepository';
 
 export interface InterviewTurnRequest {
@@ -30,6 +31,7 @@ interface InterviewApiBody {
   interviewerTitle: string;
   action: string;
   message: string;
+  userDevice: string;
 }
 
 interface InterviewReportDto {
@@ -69,7 +71,8 @@ export class InterviewRepository {
       focus: req.config.focus,
       interviewerTitle: req.config.interviewerTitle,
       action: req.action,
-      message: req.message
+      message: req.message,
+      userDevice: DeviceProfile.loginDevice()
     };
     let sessionId = req.sessionId;
     const wrapped = (snap: AiStreamSnapshot): void => {

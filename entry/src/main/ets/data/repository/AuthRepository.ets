@@ -2,6 +2,7 @@ import { common } from '@kit.AbilityKit';
 import { authentication } from '@kit.AccountKit';
 import { preferences } from '@kit.ArkData';
 import { hilog } from '@kit.PerformanceAnalysisKit';
+import { DeviceProfile } from '../../common/utils/DeviceProfile';
 import { AppConfig } from '../../common/constants/AppConfig';
 import { LoginOutcome, UserProfile } from '../../common/models/UserTypes';
 import { HttpClient } from '../../common/network/HttpClient';
@@ -23,6 +24,18 @@ interface HuaweiAuthPayload {
 interface HuaweiAuthAttempt {
   payload: HuaweiAuthPayload | null;
   failCode: number;
+}
+
+interface HuaweiLoginBody {
+  authorizationCode: string;
+  idToken: string;
+  openId: string;
+  unionId: string;
+  nickname: string;
+  avatar: string;
+  state: string;
+  clientSource: string;
+  loginDevice: string;
 }
 
 interface LoginApiBody {
@@ -139,7 +152,7 @@ export class AuthRepository {
       if (!hasCredential) {
         return { ok: false, profile: null, message: '华为账号未返回有效凭证，请重试' };
       }
-      const body = JSON.stringify({
+      const loginBody: HuaweiLoginBody = {
         authorizationCode: payload.authorizationCode ?? '',
         idToken: payload.idToken ?? '',
         openId: payload.openID ?? '',
@@ -147,8 +160,10 @@ export class AuthRepository {
         nickname: payload.nickName ?? '华为用户',
         avatar: payload.avatarUri ?? '',
         state: `${Date.now()}`,
-        clientSource: 'harmony'
-      });
+        clientSource: 'harmony',
+        loginDevice: DeviceProfile.loginDevice()
+      };
+      const body = JSON.stringify(loginBody);
       const resp = await HttpClient.postJson('/user/auth/huaweiLogin', body, AppConfig.LOGIN_TIMEOUT_MS);
       if (resp.code === -1) {
         return { ok: false, profile: null, message: '无法连接服务器，请确认后台已启动' };

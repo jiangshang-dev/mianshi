@@ -2,6 +2,7 @@ import { AppConfig } from '../../common/constants/AppConfig';
 import { Category, CategoryGroupSection, QuestionItem, SubCategory, AiStreamSnapshot, TodayStudyStats } from '../../common/models/Types';
 import { CategoryGroupUtil } from '../../common/utils/CategoryGroupUtil';
 import { HttpClient, SseAbort } from '../../common/network/HttpClient';
+import { DeviceProfile } from '../../common/utils/DeviceProfile';
 
 interface RemoteQuestionDto {
   id: string;
@@ -35,6 +36,7 @@ interface AiChatRequest {
   message: string;
   userId?: string;
   sessionId?: string;
+  userDevice?: string;
 }
 
 interface AiChatData {
@@ -344,7 +346,8 @@ export class RemoteApiDataSource {
       title: title,
       message: userMessage,
       userId: uid !== undefined ? uid : '',
-      sessionId: sessionId !== undefined ? sessionId : ''
+      sessionId: sessionId !== undefined ? sessionId : '',
+      userDevice: DeviceProfile.loginDevice()
     };
     const resp = await HttpClient.postSse('/api/ai/chat', JSON.stringify(req), onUpdate, abort);
     if (abort?.stopped) {
@@ -364,7 +367,8 @@ export class RemoteApiDataSource {
       questionId: questionId,
       title: title,
       message: userMessage,
-      userId: uid !== undefined ? uid : ''
+      userId: uid !== undefined ? uid : '',
+      userDevice: DeviceProfile.loginDevice()
     };
     const resp = await HttpClient.postJson('/api/ai/chat', JSON.stringify(req));
     if (resp.ok) {

@@ -3,6 +3,7 @@ import { util } from '@kit.ArkTS';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { AppConfig } from '../constants/AppConfig';
 import { AiStreamSnapshot } from '../models/Types';
+import { DeviceProfile } from '../utils/DeviceProfile';
 import { SseParser } from './SseParser';
 
 const DOMAIN = 0xC0DE;
@@ -46,6 +47,7 @@ interface HttpJsonHeader {
   'Content-Type': string;
   'Accept': string;
   'Authorization': string;
+  'X-Login-Device': string;
 }
 
 interface HttpSseHeader {
@@ -53,12 +55,14 @@ interface HttpSseHeader {
   'Accept': string;
   'Cache-Control': string;
   'Authorization': string;
+  'X-Login-Device': string;
 }
 
 interface HttpMultipartHeader {
   'Content-Type': string;
   'Accept': string;
   'Authorization': string;
+  'X-Login-Device': string;
 }
 
 export interface MultipartPart {
@@ -82,7 +86,8 @@ export class HttpClient {
     const header: HttpJsonHeader = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      'Authorization': HttpClient.authValue()
+      'Authorization': HttpClient.authValue(),
+      'X-Login-Device': DeviceProfile.loginDevice()
     };
     return header;
   }
@@ -92,7 +97,8 @@ export class HttpClient {
       'Content-Type': 'application/json',
       'Accept': 'text/event-stream',
       'Cache-Control': 'no-cache',
-      'Authorization': HttpClient.authValue()
+      'Authorization': HttpClient.authValue(),
+      'X-Login-Device': DeviceProfile.loginDevice()
     };
     return header;
   }
@@ -132,7 +138,8 @@ export class HttpClient {
     const header: HttpMultipartHeader = {
       'Content-Type': 'multipart/form-data',
       'Accept': 'application/json',
-      'Authorization': HttpClient.authValue()
+      'Authorization': HttpClient.authValue(),
+      'X-Login-Device': DeviceProfile.loginDevice()
     };
     const formList: Array<http.MultiFormData> = [];
     for (let i = 0; i < parts.length; i++) {
