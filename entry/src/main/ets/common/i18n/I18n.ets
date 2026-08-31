@@ -189,6 +189,9 @@ export class I18n {
     I18n.put('video_exit_fs', '退出全屏', '退出全屏', 'Exit');
     I18n.put('video_open_fail', '未安装B站时将尝试用浏览器打开', '未安裝B站時將嘗試用瀏覽器打開', 'No Bilibili app, opening in browser');
     I18n.put('video_empty', '暂无可播放视频', '暫無可播放視頻', 'No playable video');
+    I18n.put('image_load_fail', '图片加载失败', '圖片加載失敗', 'Image failed to load');
+    I18n.put('image_preview_close', '关闭', '關閉', 'Close');
+    I18n.put('image_preview_hint', '双击或捏合可放大', '雙擊或捏合可放大', 'Double-tap or pinch to zoom');
     I18n.put('interview_ans', '面试推荐回答', '面試推薦回答', 'Interview answer');
     I18n.put('knowledge', '知识点', '知識點', 'Key points');
     I18n.put('quick_ai', '快捷提问 AI', '快捷提問 AI', 'Ask AI');

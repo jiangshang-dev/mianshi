@@ -116,11 +116,27 @@ export interface MdInlineSpan {
   code: boolean;
 }
 
+export interface MdTableCell {
+  inlines: MdInlineSpan[];
+}
+
+export interface MdTableRow {
+  cells: MdTableCell[];
+}
+
+export interface MdTextChunk {
+  kind: string;
+  text: string;
+  src: string;
+}
+
 export interface MdBlockNode {
   kind: string;
   inlines: MdInlineSpan[];
   code: string;
   bullet: string;
+  src: string;
+  rows: MdTableRow[];
 }
 
 export class MdBlocks {
@@ -162,6 +178,24 @@ export class MdBlocks {
         i++;
         continue;
       }
+      const imgSrc = MdBlocks.lineImageSrc(trimmed);
+      if (imgSrc.length > 0) {
+        blocks.push(MdBlocks.imageNode(imgSrc));
+        i++;
+        continue;
+      }
+      if (MdBlocks.isTableRow(trimmed)) {
+        const tableLines: string[] = [];
+        while (i < lines.length && MdBlocks.isTableRow(lines[i].trim())) {
+          tableLines.push(lines[i].trim());
+          i++;
+        }
+        const rows = MdBlocks.parseTable(tableLines);
+        if (rows.length > 0) {
+          blocks.push(MdBlocks.tableNode(rows));
+        }
+        continue;
+      }
       if (trimmed.startsWith('>')) {
         const quoteLines: string[] = [];
         while (i < lines.length && lines[i].trim().startsWith('>')) {
@@ -200,16 +234,14 @@ export class MdBlocks {
         const t = lines[i].trim();
         if (t.length === 0 || t.startsWith('```') || MdBlocks.headingLevel(t) > 0
           || t.startsWith('>') || MdBlocks.unorderedBullet(t).length > 0
-          || MdBlocks.orderedItem(t).length > 0) {
+          || MdBlocks.orderedItem(t).length > 0 || MdBlocks.isTableRow(t)
+          || MdBlocks.lineImageSrc(t).length > 0) {
           break;
         }
         para.push(lines[i]);
         i++;
       }
-      const text = para.join('\n');
-      if (text.length > 0) {
-        blocks.push(MdBlocks.node('p', MdBlocks.parseInlines(text), '', ''));
-      }
+      MdBlocks.flushParagraph(para.join('\n'), blocks);
     }
     return blocks;
   }
@@ -261,13 +293,244 @@ export class MdBlocks {
     }
     flush();
     if (result.length === 0) {
-      result.push({ text: raw, bold: false, italic: false, code: false });
+      result.push({ text: s, bold: false, italic: false, code: false });
     }
     return result;
   }
 
   private static node(kind: string, inlines: MdInlineSpan[], code: string, bullet: string): MdBlockNode {
-    return { kind: kind, inlines: inlines, code: code, bullet: bullet };
+    return { kind: kind, inlines: inlines, code: code, bullet: bullet, src: '', rows: [] };
+  }
+
+  private static imageNode(src: string): MdBlockNode {
+    return { kind: 'img', inlines: [], code: '', bullet: '', src: src, rows: [] };
+  }
+
+  private static tableNode(rows: MdTableRow[]): MdBlockNode {
+    return { kind: 'table', inlines: [], code: '', bullet: '', src: '', rows: rows };
+  }
+
+  /** 整行就是一张图：Markdown / HTML / 裸图片地址 */
+  static lineImageSrc(line: string): string {
+    const t = line.trim();
+    if (t.length === 0) {
+      return '';
+    }
+    if (t.startsWith('![') && t.indexOf('](') > 1) {
+      const rb = t.indexOf('](');
+      const close = t.lastIndexOf(')');
+      if (close > rb + 2 && close === t.length - 1) {
+        return MdBlocks.cleanImageSrc(t.substring(rb + 2, close));
+      }
+    }
+    const lower = t.toLowerCase();
+    if (lower.startsWith('<img')) {
+      return MdBlocks.htmlImgSrc(t);
+    }
+    if (MdBlocks.isBareImageUrl(t)) {
+      return t;
+    }
+    return '';
+  }
+
+  static isTableRow(line: string): boolean {
+    const t = line.trim();
+    if (t.length < 3 || !t.startsWith('|')) {
+      return false;
+    }
+    return t.indexOf('|', 1) > 0;
+  }
+
+  static parseTable(lines: string[]): MdTableRow[] {
+    const rows: MdTableRow[] = [];
+    let colCount = 0;
+    for (let i = 0; i < lines.length; i++) {
+      if (MdBlocks.isTableSep(lines[i])) {
+        continue;
+      }
+      const cells = MdBlocks.splitTableCells(lines[i]);
+      if (cells.length > colCount) {
+        colCount = cells.length;
+      }
+      const rowCells: MdTableCell[] = [];
+      for (let c = 0; c < cells.length; c++) {
+        rowCells.push({ inlines: MdBlocks.parseInlines(cells[c]) });
+      }
+      rows.push({ cells: rowCells });
+    }
+    for (let r = 0; r < rows.length; r++) {
+      while (rows[r].cells.length < colCount) {
+        rows[r].cells.push({ inlines: [{ text: '', bold: false, italic: false, code: false }] });
+      }
+    }
+    return rows;
+  }
+
+  private static isTableSep(line: string): boolean {
+    const t = line.trim().split(' ').join('');
+    if (!t.startsWith('|')) {
+      return false;
+    }
+    let inner = t;
+    if (inner.startsWith('|')) {
+      inner = inner.substring(1);
+    }
+    if (inner.endsWith('|')) {
+      inner = inner.substring(0, inner.length - 1);
+    }
+    const parts = inner.split('|');
+    if (parts.length === 0) {
+      return false;
+    }
+    for (let i = 0; i < parts.length; i++) {
+      if (!/^:?-{3,}:?$/.test(parts[i])) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private static splitTableCells(line: string): string[] {
+    let t = line.trim();
+    if (t.startsWith('|')) {
+      t = t.substring(1);
+    }
+    if (t.endsWith('|')) {
+      t = t.substring(0, t.length - 1);
+    }
+    const raw = t.split('|');
+    const cells: string[] = [];
+    for (let i = 0; i < raw.length; i++) {
+      cells.push(raw[i].trim());
+    }
+    return cells;
+  }
+
+  private static flushParagraph(text: string, blocks: MdBlockNode[]): void {
+    if (text.trim().length === 0) {
+      return;
+    }
+    const chunks = MdBlocks.splitImages(text);
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      if (chunk.kind === 'img' && chunk.src.length > 0) {
+        blocks.push(MdBlocks.imageNode(chunk.src));
+      } else if (chunk.text.trim().length > 0) {
+        blocks.push(MdBlocks.node('p', MdBlocks.parseInlines(chunk.text), '', ''));
+      }
+    }
+  }
+
+  private static splitImages(text: string): MdTextChunk[] {
+    const out: MdTextChunk[] = [];
+    let i = 0;
+    let buf = '';
+    const flushText = (): void => {
+      if (buf.length > 0) {
+        out.push({ kind: 'text', text: buf, src: '' });
+        buf = '';
+      }
+    };
+    while (i < text.length) {
+      if (text.substring(i, i + 2) === '![') {
+        const rb = text.indexOf('](', i + 2);
+        if (rb > i) {
+          const close = text.indexOf(')', rb + 2);
+          if (close > rb) {
+            const src = MdBlocks.cleanImageSrc(text.substring(rb + 2, close));
+            if (src.length > 0) {
+              flushText();
+              out.push({ kind: 'img', text: '', src: src });
+              i = close + 1;
+              continue;
+            }
+          }
+        }
+      }
+      if (text.substring(i, i + 8) === 'https://' || text.substring(i, i + 7) === 'http://') {
+        let end = i;
+        while (end < text.length && !MdBlocks.isUrlEnd(text.charAt(end))) {
+          end++;
+        }
+        const url = text.substring(i, end);
+        if (MdBlocks.isBareImageUrl(url)) {
+          flushText();
+          out.push({ kind: 'img', text: '', src: url });
+          i = end;
+          continue;
+        }
+      }
+      buf += text.charAt(i);
+      i++;
+    }
+    flushText();
+    return out;
+  }
+
+  private static cleanImageSrc(raw: string): string {
+    let src = raw.trim();
+    const space = src.indexOf(' ');
+    if (space > 0) {
+      src = src.substring(0, space);
+    }
+    if ((src.startsWith('"') && src.endsWith('"')) || (src.startsWith("'") && src.endsWith("'"))) {
+      src = src.substring(1, src.length - 1);
+    }
+    return src;
+  }
+
+  private static htmlImgSrc(tag: string): string {
+    const lower = tag.toLowerCase();
+    const key = 'src=';
+    const at = lower.indexOf(key);
+    if (at < 0) {
+      return '';
+    }
+    let i = at + key.length;
+    while (i < tag.length && tag.charAt(i) === ' ') {
+      i++;
+    }
+    if (i >= tag.length) {
+      return '';
+    }
+    const q = tag.charAt(i);
+    if (q === '"' || q === "'") {
+      const end = tag.indexOf(q, i + 1);
+      return end > i ? MdBlocks.cleanImageSrc(tag.substring(i + 1, end)) : '';
+    }
+    let end = i;
+    while (end < tag.length && tag.charAt(end) !== ' ' && tag.charAt(end) !== '>') {
+      end++;
+    }
+    return MdBlocks.cleanImageSrc(tag.substring(i, end));
+  }
+
+  static isBareImageUrl(t: string): boolean {
+    const lower = t.toLowerCase();
+    if (lower.indexOf('http://') !== 0 && lower.indexOf('https://') !== 0) {
+      return false;
+    }
+    let path = t;
+    const hash = path.indexOf('#');
+    if (hash > 0) {
+      path = path.substring(0, hash);
+    }
+    const query = path.indexOf('?');
+    if (query > 0) {
+      path = path.substring(0, query);
+    }
+    const dot = path.lastIndexOf('.');
+    if (dot < 0 || dot < path.lastIndexOf('/')) {
+      return false;
+    }
+    const ext = path.substring(dot).toLowerCase();
+    return ext === '.png' || ext === '.jpg' || ext === '.jpeg' || ext === '.gif'
+      || ext === '.webp' || ext === '.bmp' || ext === '.svg';
+  }
+
+  private static isUrlEnd(ch: string): boolean {
+    return ch === ' ' || ch === '\n' || ch === '\t' || ch === ')' || ch === ']' || ch === '<'
+      || ch === '"' || ch === "'" || ch === '>';
   }
 
   private static headingLevel(line: string): number {
