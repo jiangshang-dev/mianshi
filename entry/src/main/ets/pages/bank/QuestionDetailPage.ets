@@ -294,6 +294,19 @@ struct QuestionDetailPage {
     });
   }
 
+  private openReport(): void {
+    if (!this.question) {
+      return;
+    }
+    const q = this.question;
+    LoginGate.ensure(I18n.t('report_feature', this.lang), () => {
+      router.pushUrl({
+        url: 'pages/bank/QuestionReportPage',
+        params: { 'questionId': q.id, 'questionTitle': q.title }
+      });
+    });
+  }
+
   private toggleStar(): void {
     if (!this.question) {
       return;
@@ -413,6 +426,13 @@ struct QuestionDetailPage {
         Row() {
           Text('‹').fontSize(28).fontColor($r('app.color.text_primary')).padding({ right: 8 }).onClick(() => router.back())
           Text(I18n.t('detail_title', this.lang)).fontSize(18).fontWeight(FontWeight.Bold).fontColor($r('app.color.text_primary')).layoutWeight(1)
+          Text(I18n.t('report_feature', this.lang))
+            .fontSize(13)
+            .fontColor($r('app.color.text_muted'))
+            .padding({ right: 14, top: 4, bottom: 4 })
+            .onClick(() => {
+              this.openReport();
+            })
           Text(this.favorited ? '★' : '☆')
             .fontSize(22)
             .fontColor(this.favorited ? '#F59E0B' : $r('app.color.chevron'))

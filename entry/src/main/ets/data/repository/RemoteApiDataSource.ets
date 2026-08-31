@@ -3,6 +3,7 @@ import { Category, CategoryGroupSection, QuestionItem, SubCategory, AiStreamSnap
 import { CategoryGroupUtil } from '../../common/utils/CategoryGroupUtil';
 import { HttpClient, SseAbort } from '../../common/network/HttpClient';
 import { DeviceProfile } from '../../common/utils/DeviceProfile';
+import { LoginGate } from '../../common/utils/LoginGate';
 
 interface RemoteQuestionDto {
   id: string;
@@ -58,6 +59,15 @@ export interface InboxItem {
 
 interface FeedbackSubmitRequest {
   feedbackType: string;
+  content: string;
+  contact: string;
+}
+
+interface QuestionReportRequest {
+  userId: string;
+  questionId: string;
+  questionTitle: string;
+  reportType: string;
   content: string;
   contact: string;
 }
@@ -619,6 +629,29 @@ export class RemoteApiDataSource {
         '@EnableAutoConfiguration + 条件注解 + starter 自动配置。',
         '核心是条件注解决定是否装配。', categoryId)
     ];
+  }
+
+  /** 题目纠错。后台需实现 POST /api/question-reports，Shiro 放行该路径。 */
+  static async submitQuestionReport(questionId: string, questionTitle: string, reportType: string,
+    content: string, contact: string): Promise<boolean> {
+    const payload: QuestionReportRequest = {
+      userId: LoginGate.currentUserId(),
+      questionId: questionId,
+      questionTitle: questionTitle,
+      reportType: reportType,
+      content: content,
+      contact: contact
+    };
+    const resp = await HttpClient.postJson('/api/question-reports', JSON.stringify(payload));
+    if (!resp.ok) {
+      return false;
+    }
+    try {
+      const parsed = JSON.parse(resp.body) as RemoteOkResponse;
+      return parsed.success === true || parsed.code === 200;
+    } catch (_e) {
+      return false;
+    }
   }
 
   static async submitFeedback(feedbackType: string, content: string, contact: string): Promise<boolean> {
