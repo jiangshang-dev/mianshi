@@ -6,14 +6,17 @@ import { MdContentView } from '../../components/MdContentView';
 import { QuestionRepository } from '../../data/repository/QuestionRepository';
 import { SseAbort } from '../../common/network/HttpClient';
 import { LoginGate } from '../../common/utils/LoginGate';
+import { MemberGate } from '../../common/utils/MemberGate';
 import { AiNotice } from '../../common/utils/AiNotice';
 import { I18n } from '../../common/i18n/I18n';
 import { AiGenMark, AiDisclaimerBar } from '../../components/AiGenMark';
+import { MemberBadge, MemberNeedHint } from '../../components/MemberBadge';
 import { BilibiliLink, BilibiliVideoItem } from '../../common/utils/BilibiliLink';
 import { CommentSection } from '../../components/CommentSection';
 import { CommentComposerPanel } from '../../components/CommentComposerPanel';
 import { CommentDetailPanel } from '../../components/CommentDetailPanel';
 import { AppFeatureRepository } from '../../data/repository/AppFeatureRepository';
+import { MemberRepository } from '../../data/repository/MemberRepository';
 
 interface DetailRouteParams {
   id?: string;
@@ -55,6 +58,7 @@ struct QuestionDetailPage {
     const params = router.getParams() as DetailRouteParams;
     this.questionId = params.id ?? '';
     AppFeatureRepository.getInstance().refresh();
+    MemberRepository.getInstance().refreshStatus();
     this.loadDetail();
   }
 
@@ -140,7 +144,17 @@ struct QuestionDetailPage {
         return;
       }
       const last = this.lastAssistant();
-      if (last && last.content.length === 0 && last.thinking.length === 0) {
+      if (last && last.phase === 'error' && MemberGate.isQuotaError(last.content)) {
+        this.patchLastAssistant({
+          role: 'assistant',
+          content: MemberGate.displayMessage(last.content),
+          thinking: last.thinking,
+          thinkingDone: last.thinkingDone,
+          thinkingOpen: last.thinkingOpen,
+          phase: last.phase
+        });
+        MemberGate.promptUpgrade(last.content);
+      } else if (last && last.content.length === 0 && last.thinking.length === 0) {
         this.applyStream({
           thinking: '',
           markdown: reply.length > 0 ? reply : 'AI 没有返回内容，请稍后重试。',
@@ -581,6 +595,7 @@ struct QuestionDetailPage {
 
               Row({ space: 8 }) {
                 Text(I18n.t('ai_helper', this.lang)).fontSize(16).fontWeight(FontWeight.Bold).fontColor($r('app.color.text_primary')).layoutWeight(1)
+                MemberBadge()
                 AiGenMark()
                 if (this.aiBusy) {
                   Text(I18n.t('stop', this.lang)).fontSize(13).fontColor('#DC2626').margin({ right: 12 }).onClick(() => {
@@ -613,12 +628,16 @@ struct QuestionDetailPage {
             )
 
             if (this.aiMessages.length === 0) {
-              Text(I18n.t('ai_empty', this.lang))
-                .fontSize(13)
-                .fontColor($r('app.color.text_muted'))
-                .width('100%')
-                .layoutWeight(1)
-                .padding({ top: 4, bottom: 8 })
+              Column({ space: 10 }) {
+                MemberNeedHint()
+                Text(I18n.t('ai_empty', this.lang))
+                  .fontSize(13)
+                  .fontColor($r('app.color.text_muted'))
+                  .width('100%')
+              }
+              .width('100%')
+              .layoutWeight(1)
+              .padding({ top: 4, bottom: 8 })
             } else {
               List({ space: 8 }) {
                 ForEach(this.aiMessages, (m: AiChatMessage, idx: number) => {

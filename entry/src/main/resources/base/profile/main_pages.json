@@ -17,6 +17,14 @@
     "pages/profile/AiHistoryDetailPage",
     "pages/profile/FeedbackPage",
     "pages/profile/InboxPage",
-    "pages/profile/InboxDetailPage"
+    "pages/profile/InboxDetailPage",
+    "pages/profile/MemberPage",
+    "pages/profile/UserCenterPage",
+    "pages/mall/MallPage",
+    "pages/mall/MallProductPage",
+    "pages/mall/MallConfirmPage",
+    "pages/mall/MallAddressPage",
+    "pages/mall/MallOrdersPage",
+    "pages/mall/MallOrderDetailPage"
   ]
 }

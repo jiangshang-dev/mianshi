@@ -1,8 +1,8 @@
 export class AppConfig {
   static readonly APP_NAME: string = '码上 Offer';
   // static readonly REMOTE_API_BASE: string = 'https://www.fondia.top/jeecgboot';
-  static readonly REMOTE_API_BASE: string = 'https://www.mianshi-offer.cn/jeecgboot';
-  // static readonly REMOTE_API_BASE: string = 'http://192.168.3.4:8080/jeecg-boot';
+  // static readonly REMOTE_API_BASE: string = 'https://www.mianshi-offer.cn/jeecgboot';
+  static readonly REMOTE_API_BASE: string = 'http://192.168.3.4:8080/jeecg-boot';
   // static readonly REMOTE_API_BASE: string = 'http://192.168.1.170:8080/jeecg-boot';
   static readonly REMOTE_RESUME_UPLOAD_PATH: string = '/api/resume/upload';
   /** 分类 / 题库 / 热门 / 搜索只走后端 API */

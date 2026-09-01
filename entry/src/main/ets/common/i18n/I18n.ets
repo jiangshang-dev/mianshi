@@ -30,6 +30,10 @@ export class I18n {
     return I18n.t(key, lang).replace('{0}', arg);
   }
 
+  static tf2(key: string, arg0: string, arg1: string, lang?: string): string {
+    return I18n.t(key, lang).replace('{0}', arg0).replace('{1}', arg1);
+  }
+
   static langName(lang: string): string {
     if (lang === I18n.HANT) {
       return '正體中文';
@@ -501,5 +505,139 @@ export class I18n {
       '「AI 問答」和「AI 模擬面試」將使用人工智慧生成文本，並在內容旁標註「AI生成」。生成結果僅供學習參考，可能存在錯誤，不構成錄用或專業建議。請勿用於違法違規、侵權或考試作弊。繼續即表示你已閱讀並同意《使用者協議》中的人工智慧條款。',
       'AI Q&A and mock interviews generate text with AI and label it “AI generated”. Results are for study only, may be wrong, and are not hiring or professional advice. Do not use them unlawfully. Continue means you agree to the AI terms in the User Agreement.');
     I18n.put('ai_notice_ok', '同意并继续', '同意並繼續', 'Agree and continue');
+    I18n.put('member_title', '会员中心', '會員中心', 'Membership');
+    I18n.put('member_sub', '开通后解锁 AI 讲解与模拟面试', '開通後解鎖 AI 講解與模擬面試', 'Unlock AI Q&A and mock interviews');
+    I18n.put('member_need_title', '需要会员', '需要會員', 'Membership required');
+    I18n.put('member_need_msg', 'AI 功能需开通会员后使用。', 'AI 功能需開通會員後使用。',
+      'AI features require membership.');
+    I18n.put('member_go', '去开通', '去開通', 'Upgrade');
+    I18n.put('member_not_yet', '尚未开通会员', '尚未開通會員', 'Not a member yet');
+    I18n.put('member_lifetime_on', '永久会员已开通', '永久會員已開通', 'Lifetime member');
+    I18n.put('member_until', '有效期至 {0}', '有效期至 {0}', 'Until {0}');
+    I18n.put('member_unlimited', '不限次数', '不限次數', 'Unlimited');
+    I18n.put('member_remain', '剩余 {0}', '剩餘 {0}', '{0} left');
+    I18n.put('member_buy', '立即开通', '立即開通', 'Subscribe');
+    I18n.put('member_renew', '续费 / 升级', '續費 / 升級', 'Renew');
+    I18n.put('member_buying', '支付中…', '支付中…', 'Paying…');
+    I18n.put('member_restore', '恢复购买', '恢復購買', 'Restore purchases');
+    I18n.put('member_load_fail', '会员信息加载失败', '會員資訊載入失敗', 'Failed to load membership');
+    I18n.put('member_iap_tip', '支付由华为应用内购买完成，虚拟商品不支持退款到第三方。沙盒测试请使用调试签名与沙盒账号。',
+      '支付由華為應用內購買完成，虛擬商品不支援退款到第三方。沙盒測試請使用調試簽名與沙盒帳號。',
+      'Paid via Huawei IAP. Use a sandbox account for testing.');
+    I18n.put('member_iap_unavail', '当前环境暂无华为 IAP，已展示后台标价。真机调试签名 + 沙盒账号可完成购买。',
+      '當前環境暫無華為 IAP，已展示後台標價。真機調試簽名 + 沙盒帳號可完成購買。',
+      'Huawei IAP is unavailable here. Catalog prices are shown.');
+    I18n.put('member_badge', '会员', '會員', 'VIP');
+    I18n.put('member_badge_life', '永久会员', '永久會員', 'Lifetime');
+    I18n.put('member_badge_need', '会员专享', '會員專享', 'Members');
+    I18n.put('member_ai_need', 'AI 讲解与模拟面试需开通会员', 'AI 講解與模擬面試需開通會員', 'AI features require membership');
+    I18n.put('member_hero_sub', '开通后解锁题目 AI 讲解与模拟面试', '開通後解鎖題目 AI 講解與模擬面試', 'Unlock AI Q&A and mock interviews');
+    I18n.put('member_hero_life', '全部 AI 功能长期可用', '全部 AI 功能長期可用', 'All AI features stay available');
+    I18n.put('member_hero_on', '会员权益生效中', '會員權益生效中', 'Membership is active');
+    I18n.put('member_gate_off_title', '会员体系未开启', '會員體系未開啟', 'Membership is off');
+    I18n.put('member_gate_off_msg', '运营已关闭会员总开关，AI 功能不再校验会员，付费入口暂不可用。',
+      '運營已關閉會員總開關，AI 功能不再校驗會員，付費入口暫不可用。',
+      'Membership is disabled by ops. AI is not gated.');
+    I18n.put('member_perk_title', '会员权益', '會員權益', 'Benefits');
+    I18n.put('member_perk_ai', '· 题目详情 AI 讲解，针对当前题追问', '· 題目詳情 AI 講解，針對當前題追問', '· Question AI explanations');
+    I18n.put('member_perk_iv', '· AI 模拟面试，结合简历追问并生成报告', '· AI 模擬面試，結合簡歷追問並生成報告', '· AI mock interviews');
+    I18n.put('member_perk_quota', '· 按套餐享对应次数，年卡 / 永久更划算', '· 按套餐享對應次數，年卡 / 永久更划算', '· Quota by plan');
+    I18n.put('member_plan_hot', '推荐', '推薦', 'Popular');
+    I18n.put('mall_title', '积分商城', '積分商城', 'Mall');
+    I18n.put('mall_sub', '积分或现金兑换虚拟 / 实物商品', '積分或現金兌換虛擬 / 實物商品', 'Redeem virtual or physical goods');
+    I18n.put('mall_orders', '我的订单', '我的訂單', 'Orders');
+    I18n.put('mall_address', '收货地址', '收貨地址', 'Address');
+    I18n.put('mall_points', '当前积分 {0}', '目前積分 {0}', 'Points {0}');
+    I18n.put('mall_empty', '暂无上架商品', '暫無上架商品', 'No products');
+    I18n.put('mall_load_fail', '商城加载失败', '商城載入失敗', 'Failed to load mall');
+    I18n.put('mall_detail', '商品详情', '商品詳情', 'Product');
+    I18n.put('mall_gone', '商品不存在或已下架', '商品不存在或已下架', 'Product unavailable');
+    I18n.put('mall_stock', '库存 {0}', '庫存 {0}', 'Stock {0}');
+    I18n.put('mall_stock_unlimited', '库存充足', '庫存充足', 'In stock');
+    I18n.put('mall_stock_short', '库存不足', '庫存不足', 'Out of stock');
+    I18n.put('mall_sold_out', '已售罄', '已售罄', 'Sold out');
+    I18n.put('mall_freight', '运费 {0}', '運費 {0}', 'Freight {0}');
+    I18n.put('mall_buy_cash', '立即购买', '立即購買', 'Buy now');
+    I18n.put('mall_buy_points', '积分兑换', '積分兌換', 'Redeem');
+    I18n.put('mall_confirm', '确认订单', '確認訂單', 'Checkout');
+    I18n.put('mall_need_addr', '实物商品请先填写收货地址', '實物商品請先填寫收貨地址', 'Add a shipping address');
+    I18n.put('mall_manage_addr', '管理', '管理', 'Manage');
+    I18n.put('mall_remark', '订单备注', '訂單備註', 'Remark');
+    I18n.put('mall_remark_ph', '选填，给商家的留言', '選填，給商家的留言', 'Optional note');
+    I18n.put('mall_cash_hint', '现金订单提交后待后台确认收款，确认后再发货或到账。', '現金訂單提交後待後台確認收款，確認後再發貨或到賬。', 'Cash orders wait for admin payment confirmation.');
+    I18n.put('mall_submit', '提交订单', '提交訂單', 'Place order');
+    I18n.put('mall_submitting', '提交中…', '提交中…', 'Submitting…');
+    I18n.put('mall_wait_pay', '订单已提交，等待确认收款', '訂單已提交，等待確認收款', 'Submitted, waiting for payment');
+    I18n.put('mall_order_ok', '下单成功', '下單成功', 'Order placed');
+    I18n.put('mall_order_fail', '操作失败', '操作失敗', 'Failed');
+    I18n.put('mall_addr_add', '新增地址', '新增地址', 'Add');
+    I18n.put('mall_addr_edit', '编辑地址', '編輯地址', 'Edit address');
+    I18n.put('mall_addr_empty', '还没有收货地址', '還沒有收貨地址', 'No address yet');
+    I18n.put('mall_addr_required', '请填写收货人、手机号、省市区和详细地址', '請填寫收貨人、手機號、省市區和詳細地址', 'Name, phone, region and address required');
+    I18n.put('mall_please_select', '请选择', '請選擇', 'Select');
+    I18n.put('mall_addr_saved', '地址已保存', '地址已保存', 'Address saved');
+    I18n.put('mall_addr_fail', '地址操作失败', '地址操作失敗', 'Address failed');
+    I18n.put('mall_addr_del', '删除地址', '刪除地址', 'Delete address');
+    I18n.put('mall_addr_del_msg', '确认删除这条收货地址？', '確認刪除這條收貨地址？', 'Delete this address?');
+    I18n.put('mall_recv_name', '收货人', '收貨人', 'Receiver');
+    I18n.put('mall_recv_phone', '手机号', '手機號', 'Phone');
+    I18n.put('mall_province', '省', '省', 'Province');
+    I18n.put('mall_city', '市', '市', 'City');
+    I18n.put('mall_district', '区', '區', 'District');
+    I18n.put('mall_detail_addr', '详细地址', '詳細地址', 'Street');
+    I18n.put('mall_default_addr', '设为默认', '設為預設', 'Default');
+    I18n.put('mall_default', '默认', '預設', 'Default');
+    I18n.put('mall_yes', '是', '是', 'Yes');
+    I18n.put('mall_no', '否', '否', 'No');
+    I18n.put('mall_save', '保存', '保存', 'Save');
+    I18n.put('mall_edit', '编辑', '編輯', 'Edit');
+    I18n.put('mall_use_addr', '使用', '使用', 'Use');
+    I18n.put('mall_order_empty', '暂无订单', '暫無訂單', 'No orders');
+    I18n.put('mall_order_detail', '订单详情', '訂單詳情', 'Order');
+    I18n.put('mall_order_gone', '订单不存在', '訂單不存在', 'Order not found');
+    I18n.put('mall_order_no', '订单号', '訂單號', 'Order no.');
+    I18n.put('mall_qty', '数量', '數量', 'Qty');
+    I18n.put('mall_goods_type', '形态', '形態', 'Type');
+    I18n.put('mall_pay_type', '支付', '支付', 'Pay');
+    I18n.put('mall_pay_amount', '应付', '應付', 'Amount');
+    I18n.put('mall_time', '下单时间', '下單時間', 'Created');
+    I18n.put('mall_logistics', '物流公司', '物流公司', 'Courier');
+    I18n.put('mall_logistics_no', '物流单号', '物流單號', 'Tracking no.');
+    I18n.put('mall_cancel', '取消订单', '取消訂單', 'Cancel order');
+    I18n.put('mall_cancel_msg', '未发货订单可取消；积分订单会退回积分。', '未發貨訂單可取消；積分訂單會退回積分。', 'Unshipped orders can be cancelled. Points will be refunded.');
+    I18n.put('mall_cancelled', '订单已取消', '訂單已取消', 'Cancelled');
+    I18n.put('mall_confirm_recv', '确认收货', '確認收貨', 'Confirm receipt');
+    I18n.put('mall_confirm_recv_msg', '确认已收到商品？', '確認已收到商品？', 'Have you received the goods?');
+    I18n.put('mall_received', '已确认收货', '已確認收貨', 'Received');
+    I18n.put('uc_title', '个人中心', '個人中心', 'Profile');
+    I18n.put('uc_load_fail', '个人中心加载失败', '個人中心載入失敗', 'Failed to load profile');
+    I18n.put('uc_points', '当前积分', '目前積分', 'Points');
+    I18n.put('uc_profile_points', '积分 {0}', '積分 {0}', 'Points {0}');
+    I18n.put('uc_checkin', '签到 +{0}', '簽到 +{0}', 'Check in +{0}');
+    I18n.put('uc_checking', '签到中…', '簽到中…', 'Checking in…');
+    I18n.put('uc_checked', '今日已签', '今日已簽', 'Checked in');
+    I18n.put('uc_checkin_ok', '签到成功，+{0} 积分', '簽到成功，+{0} 積分', 'Checked in, +{0} points');
+    I18n.put('uc_checkin_fail', '签到失败', '簽到失敗', 'Check-in failed');
+    I18n.put('uc_streak', '已连续签到 {0} 天', '已連續簽到 {0} 天', '{0}-day streak');
+    I18n.put('uc_checkin_hint', '连续第 1～7 天分别为 10 / 15 / 20 / 30 / 40 / 50 / 80 积分，断签后从第 1 天重新计。',
+      '連續第 1～7 天分別為 10 / 15 / 20 / 30 / 40 / 50 / 80 積分，斷簽後從第 1 天重新計。',
+      'Days 1–7: 10/15/20/30/40/50/80. A miss resets to day 1.');
+    I18n.put('uc_checkin_card', '每日签到', '每日簽到', 'Daily check-in');
+    I18n.put('uc_checkin_sub', '连续 {0} 天 · 今日 +{1}', '連續 {0} 天 · 今日 +{1}', '{0}-day streak · today +{1}');
+    I18n.put('uc_checkin_first', '今日签到可得 +{0}', '今日簽到可得 +{0}', 'Check in today for +{0}');
+    I18n.put('uc_checkin_done_sub', '连续 {0} 天 · 今日已领取', '連續 {0} 天 · 今日已領取', '{0}-day streak · claimed today');
+    I18n.put('uc_study', '刷题奖励', '刷題獎勵', 'Study rewards');
+    I18n.put('uc_study_line', '今日刷题 {0} 分钟，已得 {1} 积分', '今日刷題 {0} 分鐘，已得 {1} 積分',
+      'Studied {0} min today, earned {1} points');
+    I18n.put('uc_study_hint', '每满 10 分钟 +5 积分，每天最多 6 次（60 分钟 / 30 积分）。打开题目详情会计入时长。',
+      '每滿 10 分鐘 +5 積分，每天最多 6 次（60 分鐘 / 30 積分）。打開題目詳情會計入時長。',
+      '+5 per 10 minutes, up to 6 times a day (60 min / 30 pts).');
+    I18n.put('uc_study_next', '再刷 {0} 分钟可再得 {1} 积分', '再刷 {0} 分鐘可再得 {1} 積分',
+      'Study {0} more min for +{1}');
+    I18n.put('uc_study_max', '今日刷题积分已达上限', '今日刷題積分已達上限', 'Daily study points cap reached');
+    I18n.put('uc_member_bonus', '开通会员奖励', '開通會員獎勵', 'Membership bonus');
+    I18n.put('uc_ledger', '积分明细', '積分明細', 'Points history');
+    I18n.put('uc_ledger_empty', '暂无积分流水', '暫無積分流水', 'No points history yet');
+    I18n.put('uc_tap_center', '点击进入个人中心', '點擊進入個人中心', 'Open profile');
   }
 }

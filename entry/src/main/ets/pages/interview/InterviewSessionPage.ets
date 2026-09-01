@@ -15,9 +15,11 @@ import { AuthRepository } from '../../data/repository/AuthRepository';
 import { InterviewParsedReply, InterviewRepository } from '../../data/repository/InterviewRepository';
 import { ResumeRepository } from '../../data/repository/ResumeRepository';
 import { LoginGate } from '../../common/utils/LoginGate';
+import { MemberGate } from '../../common/utils/MemberGate';
 import { InterviewReportCard } from '../../components/InterviewReportCard';
 import { I18n } from '../../common/i18n/I18n';
 import { AiGenMark, AiDisclaimerBar } from '../../components/AiGenMark';
+import { MemberBadge } from '../../components/MemberBadge';
 
 interface SessionRouteParams {
   role?: string;
@@ -162,6 +164,13 @@ struct InterviewSessionPage {
     this.waitingAnswer = false;
     const parsed = await this.streamAction('start', '');
     if (!parsed) {
+      return;
+    }
+    if (MemberGate.isQuotaError(parsed.display)) {
+      const shown = MemberGate.displayMessage(parsed.display);
+      this.replaceBubble(this.streamBubbleId, shown);
+      this.waitingAnswer = false;
+      MemberGate.promptUpgrade(parsed.display);
       return;
     }
     if (InterviewRepository.looksLikeError(parsed.display) && this.engine) {
@@ -378,6 +387,12 @@ struct InterviewSessionPage {
       this.waitingAnswer = !this.showReport;
       return;
     }
+    if (MemberGate.isQuotaError(parsed.display)) {
+      this.replaceBubble(this.streamBubbleId, MemberGate.displayMessage(parsed.display));
+      this.waitingAnswer = false;
+      MemberGate.promptUpgrade(parsed.display);
+      return;
+    }
     if (InterviewRepository.looksLikeError(parsed.display)) {
       const engine = this.engine;
       if (engine && appendCandidate) {
@@ -456,10 +471,13 @@ struct InterviewSessionPage {
           .padding({ right: 8 })
           .onClick(() => router.back())
         Column({ space: 2 }) {
-          Text(I18n.t('mock_iv', this.lang))
-            .fontSize(18)
-            .fontWeight(FontWeight.Bold)
-            .fontColor($r('app.color.text_primary'))
+          Row({ space: 6 }) {
+            Text(I18n.t('mock_iv', this.lang))
+              .fontSize(18)
+              .fontWeight(FontWeight.Bold)
+              .fontColor($r('app.color.text_primary'))
+            MemberBadge({ tapToOpen: false })
+          }
           Text(this.sessionTitle)
             .fontSize(12)
             .fontColor($r('app.color.text_muted'))

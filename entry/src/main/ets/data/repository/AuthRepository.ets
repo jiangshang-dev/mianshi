@@ -7,6 +7,7 @@ import { AppConfig } from '../../common/constants/AppConfig';
 import { LoginOutcome, UserProfile } from '../../common/models/UserTypes';
 import { HttpClient } from '../../common/network/HttpClient';
 import { ResumeRepository } from './ResumeRepository';
+import { MemberGate } from '../../common/utils/MemberGate';
 
 const DOMAIN = 0xC0DE;
 const PREF_NAME = 'user_auth';
@@ -97,6 +98,10 @@ export class AuthRepository {
       AppStorage.setOrCreate('userAvatarUrl', '');
       AppStorage.setOrCreate('userToken', '');
       AppStorage.setOrCreate('isLoggedIn', false);
+      AppStorage.setOrCreate('userPoints', 0);
+      AppStorage.setOrCreate('userTodayChecked', false);
+      AppStorage.setOrCreate('userCheckinStreak', 0);
+      AppStorage.setOrCreate('userTodayReward', 10);
     }
   }
 
@@ -206,6 +211,7 @@ export class AuthRepository {
   async logout(context: common.UIAbilityContext): Promise<void> {
     await this.clearLocal(context);
     await ResumeRepository.getInstance().clearLocalSession(context);
+    MemberGate.clearMember();
   }
 
   async clearLocal(context: common.UIAbilityContext): Promise<void> {

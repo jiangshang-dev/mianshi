@@ -2,6 +2,7 @@ import { HttpClient } from '../../common/network/HttpClient';
 import { CommentUi } from '../../common/utils/CommentUi';
 
 export interface AppFeatureFlags {
+  memberEnabled?: boolean;
   commentEnabled: boolean;
   questionAiEnabled: boolean;
   interviewAiEnabled: boolean;
@@ -17,6 +18,7 @@ export class AppFeatureRepository {
   static readonly COMMENT = 'commentFeatureEnabled';
   static readonly QUESTION_AI = 'questionAiEnabled';
   static readonly INTERVIEW_AI = 'interviewAiEnabled';
+  static readonly MEMBER = 'memberEnabled';
 
   private static instance: AppFeatureRepository | null = null;
 
@@ -31,6 +33,7 @@ export class AppFeatureRepository {
     let commentOn = true;
     let questionAiOn = true;
     let interviewAiOn = true;
+    let memberOn = true;
     try {
       const resp = await HttpClient.get('/api/app/features');
       if (resp.ok) {
@@ -40,6 +43,7 @@ export class AppFeatureRepository {
           commentOn = flags.commentEnabled !== false;
           questionAiOn = flags.questionAiEnabled !== false;
           interviewAiOn = flags.interviewAiEnabled !== false;
+          memberOn = flags.memberEnabled !== false;
         }
       }
     } catch (_e) {
@@ -47,6 +51,7 @@ export class AppFeatureRepository {
     CommentUi.setBool(AppFeatureRepository.COMMENT, commentOn);
     CommentUi.setBool(AppFeatureRepository.QUESTION_AI, questionAiOn);
     CommentUi.setBool(AppFeatureRepository.INTERVIEW_AI, interviewAiOn);
+    CommentUi.setBool(AppFeatureRepository.MEMBER, memberOn);
     if (!commentOn) {
       CommentUi.closeDetail();
     }

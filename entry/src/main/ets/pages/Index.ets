@@ -5,6 +5,8 @@ import { InterviewPage } from './interview/InterviewPage';
 import { ProfilePage } from './profile/ProfilePage';
 import { AuthRepository } from '../data/repository/AuthRepository';
 import { AppFeatureRepository } from '../data/repository/AppFeatureRepository';
+import { MemberRepository } from '../data/repository/MemberRepository';
+import { PointsRepository } from '../data/repository/PointsRepository';
 import { I18n } from '../common/i18n/I18n';
 
 @Entry
@@ -16,9 +18,26 @@ struct Index {
 
   aboutToAppear(): void {
     const ctx = getContext(this) as common.UIAbilityContext;
-    AuthRepository.getInstance().load(ctx);
+    AuthRepository.getInstance().load(ctx).then(() => {
+      this.refreshPoints();
+    });
     AppFeatureRepository.getInstance().refresh();
+    MemberRepository.getInstance().refreshStatus();
     this.normalizeIndex();
+  }
+
+  onPageShow(): void {
+    AppFeatureRepository.getInstance().refresh();
+    MemberRepository.getInstance().refreshStatus();
+    this.refreshPoints();
+  }
+
+  private refreshPoints(): void {
+    if (!AuthRepository.getInstance().isLoggedIn()) {
+      return;
+    }
+    PointsRepository.getInstance().me().catch(() => {
+    });
   }
 
   onInterviewFlag(): void {

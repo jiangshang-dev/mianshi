@@ -5,6 +5,11 @@ import { AuthRepository } from '../../data/repository/AuthRepository';
 import { ResumeRepository } from '../../data/repository/ResumeRepository';
 import { LoginGate } from '../../common/utils/LoginGate';
 import { I18n } from '../../common/i18n/I18n';
+import { MemberGate } from '../../common/utils/MemberGate';
+import { MemberBadge } from '../../components/MemberBadge';
+import { MemberRepository } from '../../data/repository/MemberRepository';
+import { PointsRepository } from '../../data/repository/PointsRepository';
+import { CheckinResult } from '../../common/models/PointsTypes';
 
 @Component
 export struct ProfilePage {
@@ -19,8 +24,14 @@ export struct ProfilePage {
   @StorageLink('appLang') lang: string = I18n.HANS;
   @StorageLink('questionAiEnabled') questionAiEnabled: boolean = true;
   @StorageLink('interviewAiEnabled') interviewAiEnabled: boolean = true;
+  @StorageLink('memberEnabled') memberEnabled: boolean = true;
+  @StorageLink('userPoints') userPoints: number = 0;
+  @StorageLink('userTodayChecked') todayChecked: boolean = false;
+  @StorageLink('userCheckinStreak') checkinStreak: number = 0;
+  @StorageLink('userTodayReward') todayReward: number = 10;
   @State private resume: ResumeProfile | null = null;
   @State private uploading: boolean = false;
+  @State private checking: boolean = false;
 
   private repo: ResumeRepository = ResumeRepository.getInstance();
   private auth: AuthRepository = AuthRepository.getInstance();
@@ -31,6 +42,12 @@ export struct ProfilePage {
 
   onLoginStateChange(): void {
     this.loadResume();
+    this.loadPoints();
+    if (this.isLoggedIn) {
+      MemberRepository.getInstance().refreshStatus();
+    } else {
+      MemberGate.clearMember();
+    }
   }
 
   onResumeMetaChange(): void {
@@ -40,6 +57,10 @@ export struct ProfilePage {
   private async bootstrap(): Promise<void> {
     await this.refreshUser();
     await this.loadResume();
+    if (this.isLoggedIn) {
+      await MemberRepository.getInstance().refreshStatus();
+    }
+    await this.loadPoints();
   }
 
   private async refreshUser(): Promise<void> {
@@ -88,9 +109,63 @@ export struct ProfilePage {
     });
   }
 
+  private async loadPoints(): Promise<void> {
+    if (!this.isLoggedIn) {
+      return;
+    }
+    try {
+      await PointsRepository.getInstance().me();
+    } catch (_e) {
+    }
+  }
+
+  private goUserCenter(): void {
+    LoginGate.ensure(I18n.t('uc_title', this.lang), () => {
+      router.pushUrl({ url: 'pages/profile/UserCenterPage' });
+    });
+  }
+
   private onProfileCardClick(): void {
     if (!this.isLoggedIn) {
       this.goLogin();
+      return;
+    }
+    this.goUserCenter();
+  }
+
+  private checkinSub(): string {
+    if (this.todayChecked) {
+      return I18n.tf('uc_checkin_done_sub', `${this.checkinStreak}`, this.lang);
+    }
+    if (this.checkinStreak <= 0) {
+      return I18n.tf('uc_checkin_first', `${this.todayReward}`, this.lang);
+    }
+    return I18n.tf2('uc_checkin_sub', `${this.checkinStreak}`, `${this.todayReward}`, this.lang);
+  }
+
+  private async doCheckin(): Promise<void> {
+    if (!this.isLoggedIn) {
+      this.goLogin();
+      return;
+    }
+    if (this.checking || this.todayChecked) {
+      return;
+    }
+    this.checking = true;
+    try {
+      const result: CheckinResult = await PointsRepository.getInstance().checkin();
+      await this.loadPoints();
+      if (result.already === true) {
+        promptAction.showToast({ message: I18n.t('uc_checked', this.lang) });
+      } else {
+        promptAction.showToast({
+          message: I18n.tf('uc_checkin_ok', `${result.awarded !== undefined ? result.awarded : 0}`, this.lang)
+        });
+      }
+    } catch (err) {
+      promptAction.showToast({ message: err instanceof Error ? err.message : I18n.t('uc_checkin_fail', this.lang) });
+    } finally {
+      this.checking = false;
     }
   }
 
@@ -160,24 +235,37 @@ export struct ProfilePage {
             .backgroundColor(this.isLoggedIn ? '#CF0A2C' : '#E5E7EB')
           }
 
-          Column({ space: 2 }) {
-            Text(this.isLoggedIn ?
-              (this.displayName.length > 0 ? this.displayName : I18n.t('huawei_user', this.lang)) : I18n.t('go_login', this.lang))
-              .fontSize(17)
-              .fontWeight(FontWeight.Bold)
-              .fontColor(this.isLoggedIn ? $r('app.color.text_primary') : $r('app.color.accent'))
+          Column({ space: 4 }) {
+            Row({ space: 8 }) {
+              Text(this.isLoggedIn ?
+                (this.displayName.length > 0 ? this.displayName : I18n.t('huawei_user', this.lang)) : I18n.t('go_login', this.lang))
+                .fontSize(17)
+                .fontWeight(FontWeight.Bold)
+                .fontColor(this.isLoggedIn ? $r('app.color.text_primary') : $r('app.color.accent'))
+                .maxLines(1)
+                .textOverflow({ overflow: TextOverflow.Ellipsis })
+                .layoutWeight(1)
+              if (this.isLoggedIn && this.memberEnabled) {
+                MemberBadge()
+              }
+            }
+            .width('100%')
+            .alignItems(VerticalAlign.Center)
             Text(this.isLoggedIn ? I18n.t('huawei_on', this.lang) : I18n.t('tap_login', this.lang))
               .fontSize(12)
               .fontColor($r('app.color.text_muted'))
+            if (this.isLoggedIn) {
+              Text(I18n.tf('uc_profile_points', `${this.userPoints}`, this.lang))
+                .fontSize(12)
+                .fontColor('#B45309')
+            }
           }
           .alignItems(HorizontalAlign.Start)
           .layoutWeight(1)
 
-          if (!this.isLoggedIn) {
-            Text('›')
-              .fontSize(18)
-              .fontColor($r('app.color.chevron'))
-          }
+          Text('›')
+            .fontSize(18)
+            .fontColor($r('app.color.chevron'))
         }
         .width('100%')
         .padding(12)
@@ -186,6 +274,43 @@ export struct ProfilePage {
         .onClick(() => {
           this.onProfileCardClick();
         })
+
+        if (this.isLoggedIn) {
+          Row() {
+            Column({ space: 2 }) {
+              Text(I18n.t('uc_checkin_card', this.lang))
+                .fontSize(15)
+                .fontWeight(FontWeight.Medium)
+                .fontColor($r('app.color.text_primary'))
+              Text(this.checkinSub())
+                .fontSize(12)
+                .fontColor($r('app.color.text_muted'))
+                .maxLines(1)
+                .textOverflow({ overflow: TextOverflow.Ellipsis })
+            }
+            .alignItems(HorizontalAlign.Start)
+            .layoutWeight(1)
+            .onClick(() => {
+              this.goUserCenter();
+            })
+            Button(this.todayChecked ?
+              I18n.t('uc_checked', this.lang) :
+              (this.checking ? I18n.t('uc_checking', this.lang) :
+                I18n.tf('uc_checkin', `${this.todayReward}`, this.lang)))
+              .height(34)
+              .fontSize(13)
+              .backgroundColor(this.todayChecked ? '#E5E7EB' : '#F59E0B')
+              .fontColor(this.todayChecked ? '#6B7280' : Color.White)
+              .enabled(!this.todayChecked && !this.checking)
+              .onClick(() => {
+                this.doCheckin();
+              })
+          }
+          .width('100%')
+          .padding(14)
+          .backgroundColor($r('app.color.card_bg'))
+          .borderRadius(14)
+        }
 
         Column({ space: 10 }) {
           Row() {
@@ -282,6 +407,14 @@ export struct ProfilePage {
         .borderRadius(14)
 
         Column() {
+          if (this.memberEnabled) {
+            this.menuRow('member_title', 'member_sub', () => {
+              MemberGate.goMember();
+            })
+          }
+          this.menuRow('mall_title', 'mall_sub', () => {
+            this.openNeedLogin(I18n.t('mall_title', this.lang), 'pages/mall/MallPage');
+          })
           this.menuRow('favorites', 'fav_sub', () => {
             this.openNeedLogin(I18n.t('favorites', this.lang), 'pages/profile/FavoritesPage');
           })

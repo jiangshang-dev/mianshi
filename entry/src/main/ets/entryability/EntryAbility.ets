@@ -33,6 +33,14 @@ export default class EntryAbility extends UIAbility {
     AppStorage.setOrCreate('commentFeatureEnabled', true);
     AppStorage.setOrCreate('questionAiEnabled', true);
     AppStorage.setOrCreate('interviewAiEnabled', true);
+    AppStorage.setOrCreate('memberEnabled', true);
+    AppStorage.setOrCreate('isMember', false);
+    AppStorage.setOrCreate('isLifetimeMember', false);
+    AppStorage.setOrCreate('memberPlanName', '');
+    AppStorage.setOrCreate('userPoints', 0);
+    AppStorage.setOrCreate('userTodayChecked', false);
+    AppStorage.setOrCreate('userCheckinStreak', 0);
+    AppStorage.setOrCreate('userTodayReward', 10);
     hilog.info(DOMAIN, 'testTag', '%{public}s', 'Ability onCreate');
   }
 

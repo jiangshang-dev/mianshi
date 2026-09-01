@@ -9,6 +9,8 @@ import { LoginGate } from '../../common/utils/LoginGate';
 import { AiNotice } from '../../common/utils/AiNotice';
 import { I18n } from '../../common/i18n/I18n';
 import { AiDisclaimerBar, AiGenMark } from '../../components/AiGenMark';
+import { MemberBadge, MemberNeedHint } from '../../components/MemberBadge';
+import { MemberRepository } from '../../data/repository/MemberRepository';
 
 interface SessionNavParams {
   role: string;
@@ -58,6 +60,7 @@ export struct InterviewPage {
     this.levels = opts.levels;
     this.difficulties = opts.difficulties;
     await this.loadResume();
+    MemberRepository.getInstance().refreshStatus();
     if (this.roles.indexOf(this.selectedRole) < 0) {
       this.selectedRole = opts.defaultRole;
     }
@@ -189,11 +192,15 @@ export struct InterviewPage {
           .borderRadius(14)
 
           Column({ space: 10 }) {
-            Text(I18n.t('mock_iv', this.lang))
-              .fontSize(16)
-              .fontWeight(FontWeight.Bold)
-              .fontColor($r('app.color.text_primary'))
-              .width('100%')
+            Row({ space: 6 }) {
+              Text(I18n.t('mock_iv', this.lang))
+                .fontSize(16)
+                .fontWeight(FontWeight.Bold)
+                .fontColor($r('app.color.text_primary'))
+                .layoutWeight(1)
+              MemberBadge()
+            }
+            .width('100%')
             Text(I18n.tf('iv_soon', `${this.selectedRole} · ${this.selectedLevel} · ${this.selectedDiff}`, this.lang))
               .fontSize(13)
               .fontColor($r('app.color.text_muted'))
@@ -255,6 +262,7 @@ export struct InterviewPage {
             .width('100%')
             .alignItems(VerticalAlign.Center)
             AiDisclaimerBar()
+            MemberNeedHint()
             if (!this.isLoggedIn) {
               Row({ space: 8 }) {
                 Text(I18n.t('iv_guest_badge', this.lang))
