@@ -28,6 +28,7 @@ struct MallConfirmPage {
   @State private quantity: number = 1;
   @State private remark: string = '';
   @State private points: number = 0;
+  @State private payChoice: string = 'points';
   private repo: MallRepository = MallRepository.getInstance();
   private productId: string = '';
 
@@ -45,6 +46,11 @@ struct MallConfirmPage {
     this.loading = true;
     try {
       this.product = await this.repo.product(this.productId);
+      if (this.product !== null && this.product.payType === 'cash') {
+        this.payChoice = 'cash';
+      } else {
+        this.payChoice = 'points';
+      }
       const me = await this.repo.me();
       this.points = mallNum(me.points);
       await this.loadAddresses();
@@ -129,8 +135,19 @@ struct MallConfirmPage {
     return this.product !== null && this.product.goodsType === 'physical';
   }
 
+  private isBothPay(): boolean {
+    return this.product !== null && this.product.payType === 'both';
+  }
+
+  private chosenPay(): string {
+    if (this.isBothPay()) {
+      return this.payChoice;
+    }
+    return this.product !== null && this.product.payType === 'cash' ? 'cash' : 'points';
+  }
+
   private isCash(): boolean {
-    return this.product !== null && this.product.payType === 'cash';
+    return this.chosenPay() === 'cash';
   }
 
   private changeQty(delta: number): void {
@@ -180,7 +197,8 @@ struct MallConfirmPage {
         productId: this.productId,
         quantity: this.quantity,
         addressId: this.selectedId,
-        remark: this.remark.trim()
+        remark: this.remark.trim(),
+        payType: this.chosenPay()
       };
       const order = await this.repo.createOrder(body);
       const oid = mallStr(order.id);
@@ -303,6 +321,40 @@ struct MallConfirmPage {
             .padding(14)
             .backgroundColor($r('app.color.card_bg'))
             .borderRadius(12)
+
+            if (this.isBothPay()) {
+              Column({ space: 8 }) {
+                Text(I18n.t('mall_choose_pay', this.lang))
+                  .fontSize(13)
+                  .fontColor($r('app.color.text_muted'))
+                  .width('100%')
+                Row({ space: 10 }) {
+                  Text(I18n.t('mall_buy_points', this.lang))
+                    .fontSize(13)
+                    .fontColor(this.payChoice === 'points' ? '#FFFFFF' : $r('app.color.text_primary'))
+                    .padding({ left: 14, right: 14, top: 8, bottom: 8 })
+                    .backgroundColor(this.payChoice === 'points' ? '#2563EB' : '#F3F4F6')
+                    .borderRadius(8)
+                    .onClick(() => {
+                      this.payChoice = 'points';
+                    })
+                  Text(I18n.t('mall_buy_cash', this.lang))
+                    .fontSize(13)
+                    .fontColor(this.payChoice === 'cash' ? '#FFFFFF' : $r('app.color.text_primary'))
+                    .padding({ left: 14, right: 14, top: 8, bottom: 8 })
+                    .backgroundColor(this.payChoice === 'cash' ? '#2563EB' : '#F3F4F6')
+                    .borderRadius(8)
+                    .onClick(() => {
+                      this.payChoice = 'cash';
+                    })
+                }
+                .width('100%')
+              }
+              .width('100%')
+              .padding(14)
+              .backgroundColor($r('app.color.card_bg'))
+              .borderRadius(12)
+            }
 
             Column({ space: 6 }) {
               Text(I18n.t('mall_remark', this.lang)).fontSize(13).fontColor($r('app.color.text_muted')).width('100%')

@@ -77,7 +77,20 @@ struct MallProductPage {
     return p !== null && p.payType === 'cash';
   }
 
+  private isBothPay(): boolean {
+    const p = this.product;
+    return p !== null && p.payType === 'both';
+  }
+
+  private isPanGoods(): boolean {
+    const p = this.product;
+    return p !== null && p.goodsType === 'pan';
+  }
+
   private buyLabel(): string {
+    if (this.isBothPay()) {
+      return I18n.t('mall_buy_now', this.lang);
+    }
     return this.isCashPay() ? I18n.t('mall_buy_cash', this.lang) : I18n.t('mall_buy_points', this.lang);
   }
 
@@ -118,7 +131,7 @@ struct MallProductPage {
 
   private originText(): string {
     const p = this.product;
-    if (p === null || p.payType !== 'cash') {
+    if (p === null || (p.payType !== 'cash' && p.payType !== 'both')) {
       return '';
     }
     const origin = mallNum(p.originalPriceFen);
@@ -237,6 +250,15 @@ struct MallProductPage {
                 .fontColor($r('app.color.chip_idle_text'))
                 .lineHeight(22)
                 .width('100%')
+            }
+            if (this.isPanGoods()) {
+              Text(I18n.t('mall_pan_hint', this.lang))
+                .fontSize(13)
+                .fontColor($r('app.color.text_muted'))
+                .width('100%')
+                .padding(10)
+                .backgroundColor('#F8FAFC')
+                .borderRadius(8)
             }
             if (this.productHint().length > 0) {
               Text(this.productHint())

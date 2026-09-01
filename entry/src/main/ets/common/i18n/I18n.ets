@@ -559,6 +559,14 @@ export class I18n {
     I18n.put('mall_freight', '运费 {0}', '運費 {0}', 'Freight {0}');
     I18n.put('mall_buy_cash', '立即购买', '立即購買', 'Buy now');
     I18n.put('mall_buy_points', '积分兑换', '積分兌換', 'Redeem');
+    I18n.put('mall_buy_now', '去购买', '去購買', 'Buy');
+    I18n.put('mall_choose_pay', '支付方式', '支付方式', 'Payment');
+    I18n.put('mall_pan_hint', '购买完成后，在订单详情查看网盘链接和提取码。', '購買完成後，在訂單詳情查看網盤連結和提取碼。', 'The cloud disk link appears on the order after payment.');
+    I18n.put('mall_pan_link', '网盘链接', '網盤連結', 'Link');
+    I18n.put('mall_pan_code', '提取码', '提取碼', 'Code');
+    I18n.put('mall_pan_copy', '复制', '複製', 'Copy');
+    I18n.put('mall_pan_copied', '已复制', '已複製', 'Copied');
+    I18n.put('mall_pan_wait', '确认收款后可查看网盘链接', '確認收款後可查看網盤連結', 'Link unlocks after payment is confirmed');
     I18n.put('mall_confirm', '确认订单', '確認訂單', 'Checkout');
     I18n.put('mall_need_addr', '实物商品请先填写收货地址', '實物商品請先填寫收貨地址', 'Add a shipping address');
     I18n.put('mall_manage_addr', '管理', '管理', 'Manage');

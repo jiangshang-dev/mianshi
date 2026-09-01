@@ -1,3 +1,4 @@
+import { pasteboard } from '@kit.BasicServicesKit';
 import { promptAction, router } from '@kit.ArkUI';
 import { I18n } from '../../common/i18n/I18n';
 import {
@@ -100,6 +101,37 @@ struct MallOrderDetailPage {
   private isPhysicalOrder(): boolean {
     const o = this.order;
     return o !== null && o.goodsType === 'physical';
+  }
+
+  private isPanOrder(): boolean {
+    const o = this.order;
+    return o !== null && o.goodsType === 'pan';
+  }
+
+  private panUrl(): string {
+    const o = this.order;
+    return o === null ? '' : mallStr(o.panUrl);
+  }
+
+  private panCode(): string {
+    const o = this.order;
+    return o === null ? '' : mallStr(o.panCode);
+  }
+
+  private hasPanDelivered(): boolean {
+    return this.panUrl().length > 0 && this.orderStatus() === 'received';
+  }
+
+  private copyText(text: string): void {
+    if (text.length === 0) {
+      return;
+    }
+    const data = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, text);
+    pasteboard.getSystemPasteboard().setData(data).then(() => {
+      promptAction.showToast({ message: I18n.t('mall_pan_copied', this.lang) });
+    }).catch(() => {
+      promptAction.showToast({ message: I18n.t('mall_pan_copied', this.lang) });
+    });
   }
 
   private orderReceiver(): string {
@@ -277,6 +309,52 @@ struct MallOrderDetailPage {
             .padding(14)
             .backgroundColor($r('app.color.card_bg'))
             .borderRadius(12)
+
+            if (this.isPanOrder()) {
+              Column({ space: 8 }) {
+                Text(I18n.t('mall_pan_link', this.lang))
+                  .fontSize(15)
+                  .fontWeight(FontWeight.Medium)
+                  .fontColor($r('app.color.text_primary'))
+                  .width('100%')
+                if (this.hasPanDelivered()) {
+                  Text(this.panUrl())
+                    .fontSize(13)
+                    .fontColor('#2563EB')
+                    .width('100%')
+                  Row({ space: 16 }) {
+                    Text(I18n.t('mall_pan_copy', this.lang))
+                      .fontSize(13)
+                      .fontColor($r('app.color.accent'))
+                      .onClick(() => {
+                        this.copyText(this.panUrl());
+                      })
+                    if (this.panCode().length > 0) {
+                      Text(`${I18n.t('mall_pan_code', this.lang)} ${this.panCode()}`)
+                        .fontSize(13)
+                        .fontColor($r('app.color.text_primary'))
+                        .layoutWeight(1)
+                      Text(I18n.t('mall_pan_copy', this.lang))
+                        .fontSize(13)
+                        .fontColor($r('app.color.accent'))
+                        .onClick(() => {
+                          this.copyText(this.panCode());
+                        })
+                    }
+                  }
+                  .width('100%')
+                } else {
+                  Text(I18n.t('mall_pan_wait', this.lang))
+                    .fontSize(13)
+                    .fontColor($r('app.color.text_muted'))
+                    .width('100%')
+                }
+              }
+              .width('100%')
+              .padding(14)
+              .backgroundColor($r('app.color.card_bg'))
+              .borderRadius(12)
+            }
 
             if (this.isPhysicalOrder()) {
               Column({ space: 8 }) {

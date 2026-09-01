@@ -15,6 +15,7 @@ export interface MallProduct {
   soldCount?: number;
   virtualHint?: string;
   status?: number;
+  memberDays?: number;
 }
 
 export interface MallAddress {
@@ -58,6 +59,8 @@ export interface MallOrder {
   buyerRemark?: string;
   adminRemark?: string;
   createTime?: string;
+  panUrl?: string;
+  panCode?: string;
 }
 
 export interface MallMe {
@@ -130,6 +133,7 @@ export interface MallCreateBody {
   quantity: number;
   addressId: string;
   remark: string;
+  payType: string;
 }
 
 export interface MallAddressBody {
@@ -190,7 +194,8 @@ export function copyMallProduct(raw: MallProduct): MallProduct {
       stock: mallNum(raw.stock, -1),
       soldCount: mallNum(raw.soldCount),
       virtualHint: mallStr(raw.virtualHint),
-      status: mallNum(raw.status, 1)
+      status: mallNum(raw.status, 1),
+      memberDays: mallNum(raw.memberDays)
     };
     return item;
   } catch (_e) {
@@ -249,7 +254,9 @@ export function copyMallOrder(raw: MallOrder): MallOrder {
       cancelTime: mallStr(raw.cancelTime),
       buyerRemark: mallStr(raw.buyerRemark),
       adminRemark: mallStr(raw.adminRemark),
-      createTime: mallStr(raw.createTime)
+      createTime: mallStr(raw.createTime),
+      panUrl: mallStr(raw.panUrl),
+      panCode: mallStr(raw.panCode)
     };
     return item;
   } catch (_e) {
@@ -272,18 +279,36 @@ export function copyMallMe(raw: MallMe): MallMe {
 }
 
 export function mallProductPrice(product: MallProduct): string {
-  if (mallStr(product.payType) === 'cash') {
+  const pay = mallStr(product.payType);
+  if (pay === 'both') {
+    return `${mallNum(product.pointsPrice)}积分 / ${mallFenText(product.priceFen)}`;
+  }
+  if (pay === 'cash') {
     return mallFenText(product.priceFen);
   }
   return `${mallNum(product.pointsPrice)}积分`;
 }
 
 export function mallGoodsLabel(goodsType?: string): string {
-  return mallStr(goodsType) === 'physical' ? '实物' : '虚拟';
+  const type = mallStr(goodsType);
+  if (type === 'physical') {
+    return '实物';
+  }
+  if (type === 'pan') {
+    return '网盘';
+  }
+  return '虚拟';
 }
 
 export function mallPayLabel(payType?: string): string {
-  return mallStr(payType) === 'cash' ? '现金' : '积分';
+  const pay = mallStr(payType);
+  if (pay === 'cash') {
+    return '现金';
+  }
+  if (pay === 'both') {
+    return '积分/现金';
+  }
+  return '积分';
 }
 
 export function mallStatusLabel(status?: string): string {
