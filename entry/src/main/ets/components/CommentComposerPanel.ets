@@ -150,6 +150,9 @@ export struct CommentComposerPanel {
       if (result.status === 0) {
         const hint = result.hint.length > 0 ? result.hint : I18n.t('comment_rejected', this.lang);
         promptAction.showToast({ message: hint });
+      } else if (result.status === 2) {
+        const hint = result.hint.length > 0 ? result.hint : I18n.t('forum_pending', this.lang);
+        promptAction.showToast({ message: hint });
       } else {
         promptAction.showToast({ message: I18n.t('comment_ok', this.lang) });
       }

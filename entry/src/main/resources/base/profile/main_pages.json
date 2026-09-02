@@ -25,6 +25,10 @@
     "pages/mall/MallConfirmPage",
     "pages/mall/MallAddressPage",
     "pages/mall/MallOrdersPage",
-    "pages/mall/MallOrderDetailPage"
+    "pages/mall/MallOrderDetailPage",
+    "pages/blog/BlogDetailPage",
+    "pages/forum/ForumDetailPage",
+    "pages/forum/ForumRepliesPage",
+    "pages/forum/ForumComposePage"
   ]
 }

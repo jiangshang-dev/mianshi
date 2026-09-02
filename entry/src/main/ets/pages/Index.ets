@@ -2,6 +2,8 @@ import { common } from '@kit.AbilityKit';
 import { HomePage } from './home/HomePage';
 import { BankPage } from './bank/BankPage';
 import { InterviewPage } from './interview/InterviewPage';
+import { BlogPage } from './blog/BlogPage';
+import { ForumPage } from './forum/ForumPage';
 import { ProfilePage } from './profile/ProfilePage';
 import { AuthRepository } from '../data/repository/AuthRepository';
 import { AppFeatureRepository } from '../data/repository/AppFeatureRepository';
@@ -14,7 +16,9 @@ import { I18n } from '../common/i18n/I18n';
 struct Index {
   @StorageLink('mainTabIndex') currentIndex: number = 0;
   @StorageLink('appLang') lang: string = I18n.HANS;
-  @StorageLink('interviewAiEnabled') @Watch('onInterviewFlag') interviewAiEnabled: boolean = true;
+  @StorageLink('interviewAiEnabled') @Watch('onFeatureFlag') interviewAiEnabled: boolean = true;
+  @StorageLink('blogEnabled') @Watch('onFeatureFlag') blogEnabled: boolean = true;
+  @StorageLink('forumEnabled') @Watch('onFeatureFlag') forumEnabled: boolean = true;
 
   aboutToAppear(): void {
     const ctx = getContext(this) as common.UIAbilityContext;
@@ -40,12 +44,18 @@ struct Index {
     });
   }
 
-  onInterviewFlag(): void {
+  onFeatureFlag(): void {
     this.normalizeIndex();
   }
 
   private normalizeIndex(): void {
     if (!this.interviewAiEnabled && this.currentIndex === 2) {
+      this.currentIndex = 0;
+    }
+    if (!this.blogEnabled && this.currentIndex === 3) {
+      this.currentIndex = 0;
+    }
+    if (!this.forumEnabled && this.currentIndex === 4) {
       this.currentIndex = 0;
     }
   }
@@ -56,6 +66,12 @@ struct Index {
 
   private openTab(tabIndex: number): void {
     if (!this.interviewAiEnabled && tabIndex === 2) {
+      return;
+    }
+    if (!this.blogEnabled && tabIndex === 3) {
+      return;
+    }
+    if (!this.forumEnabled && tabIndex === 4) {
       return;
     }
     this.currentIndex = tabIndex;
@@ -97,6 +113,16 @@ struct Index {
         .tabBar('')
 
         TabContent() {
+          BlogPage()
+        }
+        .tabBar('')
+
+        TabContent() {
+          ForumPage()
+        }
+        .tabBar('')
+
+        TabContent() {
           ProfilePage()
         }
         .tabBar('')
@@ -106,6 +132,14 @@ struct Index {
       .barHeight(0)
       .onChange((index: number) => {
         if (!this.interviewAiEnabled && index === 2) {
+          this.currentIndex = 0;
+          return;
+        }
+        if (!this.blogEnabled && index === 3) {
+          this.currentIndex = 0;
+          return;
+        }
+        if (!this.forumEnabled && index === 4) {
           this.currentIndex = 0;
           return;
         }
@@ -120,7 +154,13 @@ struct Index {
         if (this.interviewAiEnabled) {
           this.navItem('tab_interview', 2, '🤖')
         }
-        this.navItem('tab_profile', 3, '👤')
+        if (this.blogEnabled) {
+          this.navItem('tab_blog', 3, '📖')
+        }
+        if (this.forumEnabled) {
+          this.navItem('tab_forum', 4, '💬')
+        }
+        this.navItem('tab_profile', 5, '👤')
       }
       .width('100%')
       .height(58)

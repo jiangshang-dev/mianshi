@@ -15,6 +15,7 @@ import { BilibiliLink, BilibiliVideoItem } from '../../common/utils/BilibiliLink
 import { CommentSection } from '../../components/CommentSection';
 import { CommentComposerPanel } from '../../components/CommentComposerPanel';
 import { CommentDetailPanel } from '../../components/CommentDetailPanel';
+import { CommentUi } from '../../common/utils/CommentUi';
 import { AppFeatureRepository } from '../../data/repository/AppFeatureRepository';
 import { MemberRepository } from '../../data/repository/MemberRepository';
 
@@ -45,6 +46,7 @@ struct QuestionDetailPage {
   @State private videos: BilibiliVideoItem[] = [];
   @State private videoIndex: number = 0;
   @State private videoFullScreen: boolean = false;
+  @State private refreshing: boolean = false;
   private questionId: string = '';
   private dragStartHeight: number = 480;
   private repo: QuestionRepository = QuestionRepository.getInstance();
@@ -97,6 +99,14 @@ struct QuestionDetailPage {
     } finally {
       this.loading = false;
     }
+  }
+
+  private pullRefresh(): void {
+    this.refreshing = true;
+    CommentUi.bumpReload();
+    setTimeout((): void => {
+      this.refreshing = false;
+    }, 800);
   }
 
   private async sendAi(text: string): Promise<void> {
@@ -466,6 +476,7 @@ struct QuestionDetailPage {
             Text(I18n.t('not_found', this.lang)).fontSize(15).fontColor($r('app.color.text_muted'))
           }.layoutWeight(1).width('100%').justifyContent(FlexAlign.Center)
         } else {
+          Refresh({ refreshing: this.refreshing }) {
           Scroll() {
             Column({ space: 14 }) {
               Row({ space: 6 }) {
@@ -558,6 +569,10 @@ struct QuestionDetailPage {
             }
             .padding({ left: 16, right: 16, bottom: 96 }).width('100%')
           }.layoutWeight(1).scrollBar(BarState.Off).align(Alignment.Top)
+          }
+          .layoutWeight(1)
+          .width('100%')
+          .onRefreshing(() => this.pullRefresh())
         }
       }
       .width('100%').height('100%').backgroundColor($r('app.color.page_bg'))

@@ -30,10 +30,14 @@ export default class EntryAbility extends UIAbility {
     AppStorage.setOrCreate('commentDetailId', '');
     AppStorage.setOrCreate('commentQuestionId', '');
     AppStorage.setOrCreate('commentReloadTick', 0);
+    AppStorage.setOrCreate('forumListTick', 0);
+    AppStorage.setOrCreate('blogCommentTick', 0);
     AppStorage.setOrCreate('commentFeatureEnabled', true);
     AppStorage.setOrCreate('questionAiEnabled', true);
     AppStorage.setOrCreate('interviewAiEnabled', true);
     AppStorage.setOrCreate('memberEnabled', true);
+    AppStorage.setOrCreate('blogEnabled', true);
+    AppStorage.setOrCreate('forumEnabled', true);
     AppStorage.setOrCreate('isMember', false);
     AppStorage.setOrCreate('isLifetimeMember', false);
     AppStorage.setOrCreate('memberPlanName', '');
