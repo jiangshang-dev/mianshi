@@ -638,15 +638,15 @@ struct ForumDetailPage {
         .layoutWeight(1)
         .alignItems(HorizontalAlign.Start)
         .margin({ left: 10 })
-        if (!this.isMine()) {
-          Text(I18n.t('forum_follow', this.lang))
-            .fontSize(13)
-            .fontColor('#FFFFFF')
-            .padding({ left: 12, right: 12, top: 6, bottom: 6 })
-            .borderRadius(16)
-            .backgroundColor('#2563EB')
-            .onClick(() => this.followSoon())
-        }
+        // if (!this.isMine()) {
+        //   Text(I18n.t('forum_follow', this.lang))
+        //     .fontSize(13)
+        //     .fontColor('#FFFFFF')
+        //     .padding({ left: 12, right: 12, top: 6, bottom: 6 })
+        //     .borderRadius(16)
+        //     .backgroundColor('#2563EB')
+        //     .onClick(() => this.followSoon())
+        // }
       }
       .width('100%')
       .alignItems(VerticalAlign.Center)
