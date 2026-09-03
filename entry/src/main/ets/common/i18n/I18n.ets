@@ -374,7 +374,13 @@ export class I18n {
     I18n.put('resume_fmt', '支持 PDF、Word、TXT、Markdown', '支援 PDF、Word、TXT、Markdown', 'PDF, Word, TXT, Markdown');
     I18n.put('resume_account', '简历跟账号走，退出后本机不保留', '履歷跟帳號走，退出後本機不保留', 'Resume follows your account');
     I18n.put('favorites', '收藏夹', '收藏夾', 'Favorites');
-    I18n.put('fav_sub', '收藏的题目', '收藏的題目', 'Saved questions');
+    I18n.put('fav_sub', '题目、专栏与广场', '題目、專欄與廣場', 'Questions, columns, posts');
+    I18n.put('fav_tab_q', '面试', '面試', 'Questions');
+    I18n.put('fav_tab_blog', '专栏', '專欄', 'Columns');
+    I18n.put('fav_tab_forum', '广场', '廣場', 'Forum');
+    I18n.put('fav_empty_q', '还没有收藏题目', '還沒有收藏題目', 'No saved questions');
+    I18n.put('fav_empty_blog', '还没有收藏专栏', '還沒有收藏專欄', 'No saved columns');
+    I18n.put('fav_empty_forum', '还没有收藏帖子', '還沒有收藏帖子', 'No saved posts');
     I18n.put('ai_qa', 'AI 问答', 'AI 問答', 'AI Q&A');
     I18n.put('ai_qa_sub', '题目讲解对话历史', '題目講解對話歷史', 'Question chat history');
     I18n.put('ai_qa_title', 'AI 问答记录', 'AI 問答記錄', 'AI Q&A history');
@@ -428,8 +434,8 @@ export class I18n {
     I18n.put('inbox_login', '登录后查看站内信', '登入後查看站內信', 'Sign in to see inbox');
     I18n.put('inbox_unread', '{0} 条未读', '{0} 則未讀', '{0} unread');
     I18n.put('inbox_all_read', '全部已读', '全部已讀', 'Mark all read');
-    I18n.put('fav_login', '登录后查看收藏的题目', '登入後查看收藏的題目', 'Sign in to see favorites');
-    I18n.put('fav_empty', '还没有收藏题目', '還沒有收藏題目', 'No favorites yet');
+    I18n.put('fav_login', '登录后查看收藏', '登入後查看收藏', 'Sign in to see favorites');
+    I18n.put('fav_empty', '还没有收藏内容', '還沒有收藏內容', 'No favorites yet');
     I18n.put('unnamed_q', '未命名题目', '未命名題目', 'Untitled question');
     I18n.put('hist_login', '登录后查看历史记录', '登入後查看歷史記錄', 'Sign in to see history');
     I18n.put('hist_empty_iv', '还没有模拟面试记录', '還沒有模擬面試記錄', 'No mock interviews yet');
@@ -575,6 +581,9 @@ export class I18n {
     I18n.put('mall_remark', '订单备注', '訂單備註', 'Remark');
     I18n.put('mall_remark_ph', '选填，给商家的留言', '選填，給商家的留言', 'Optional note');
     I18n.put('mall_cash_hint', '现金订单提交后待后台确认收款，确认后再发货或到账。', '現金訂單提交後待後台確認收款，確認後再發貨或到賬。', 'Cash orders wait for admin payment confirmation.');
+    I18n.put('mall_vip_free', '会员免费', '會員免費', 'Free for members');
+    I18n.put('mall_vip_tag', '会员价', '會員價', 'Member price');
+    I18n.put('mall_vip_hint', '会员积分兑换免费；现金按商品设置免费或折扣。', '會員積分兌換免費；現金按商品設定免費或折扣。', 'Members redeem points for free; cash follows product VIP rules.');
     I18n.put('mall_submit', '提交订单', '提交訂單', 'Place order');
     I18n.put('mall_submitting', '提交中…', '提交中…', 'Submitting…');
     I18n.put('mall_wait_pay', '订单已提交，等待确认收款', '訂單已提交，等待確認收款', 'Submitted, waiting for payment');
@@ -690,6 +699,7 @@ export class I18n {
     I18n.put('forum_hot', '热门', '熱門', 'Hot');
     I18n.put('forum_followed', '已关注', '已關注', 'Following');
     I18n.put('forum_fav', '收藏', '收藏', 'Save');
+    I18n.put('forum_untitled', '未命名帖子', '未命名帖子', 'Untitled post');
     I18n.put('forum_share', '分享', '分享', 'Share');
     I18n.put('forum_search_ph', '搜索帖子', '搜尋帖子', 'Search posts');
     I18n.put('forum_search_empty', '没有找到相关帖子', '沒有找到相關帖子', 'No matching posts');

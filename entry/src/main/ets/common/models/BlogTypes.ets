@@ -65,6 +65,13 @@ export interface JeecgBlogArticleResp {
   code?: number;
 }
 
+export interface JeecgBlogArticleListResp {
+  success?: boolean;
+  message?: string;
+  result?: BlogArticle[];
+  code?: number;
+}
+
 export interface JeecgBlogToggleResp {
   success?: boolean;
   message?: string;

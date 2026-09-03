@@ -8,6 +8,7 @@ import {
   BlogCommentVote,
   BlogCommentVoteBody,
   BlogToggle,
+  JeecgBlogArticleListResp,
   JeecgBlogArticlePageResp,
   JeecgBlogArticleResp,
   JeecgBlogCategoryListResp,
@@ -108,6 +109,20 @@ export class BlogRepository {
     const result = parsed.result;
     const empty: BlogToggle = { on: false, count: 0 };
     return result !== undefined ? result : empty;
+  }
+
+  async listFavorites(): Promise<BlogArticle[]> {
+    const resp = await HttpClient.get('/api/blog/favorites', '');
+    const parsed: JeecgBlogArticleListResp = JSON.parse(resp.body) as JeecgBlogArticleListResp;
+    this.ensureOk(parsed.success, parsed.message, resp.ok, '收藏加载失败');
+    const list: BlogArticle[] = [];
+    const raw = parsed.result;
+    if (raw !== undefined) {
+      for (let i = 0; i < raw.length; i++) {
+        list.push(copyBlogArticle(raw[i]));
+      }
+    }
+    return list;
   }
 
   async comments(articleId: string): Promise<BlogComment[]> {

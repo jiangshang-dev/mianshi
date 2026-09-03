@@ -9,6 +9,7 @@ import {
   ForumToggle,
   JeecgForumCategoryListResp,
   JeecgForumPostPageResp,
+  JeecgForumPostListResp,
   JeecgForumMsgResp,
   JeecgForumPostResp,
   JeecgForumReplyResp,
@@ -155,6 +156,28 @@ export class ForumRepository {
     this.ensureOk(parsed.success, parsed.message, resp.ok, '点赞失败');
     const empty: ForumToggle = { on: false, count: 0 };
     return parsed.result !== undefined ? parsed.result : empty;
+  }
+
+  async toggleFavorite(id: string): Promise<ForumToggle> {
+    const resp = await HttpClient.postJson(`/api/forum/posts/${id}/favorite`, '{}');
+    const parsed: JeecgForumToggleResp = JSON.parse(resp.body) as JeecgForumToggleResp;
+    this.ensureOk(parsed.success, parsed.message, resp.ok, '收藏失败');
+    const empty: ForumToggle = { on: false, count: 0 };
+    return parsed.result !== undefined ? parsed.result : empty;
+  }
+
+  async listFavorites(): Promise<ForumPost[]> {
+    const resp = await HttpClient.get('/api/forum/favorites', '');
+    const parsed: JeecgForumPostListResp = JSON.parse(resp.body) as JeecgForumPostListResp;
+    this.ensureOk(parsed.success, parsed.message, resp.ok, '收藏加载失败');
+    const list: ForumPost[] = [];
+    const raw = parsed.result;
+    if (raw !== undefined) {
+      for (let i = 0; i < raw.length; i++) {
+        list.push(copyForumPost(raw[i]));
+      }
+    }
+    return list;
   }
 
   private ensureOk(success: boolean | undefined, message: string | undefined, ok: boolean, fallback: string): void {

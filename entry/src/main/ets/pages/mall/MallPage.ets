@@ -168,6 +168,14 @@ struct MallPage {
                       .fontSize(14)
                       .fontWeight(FontWeight.Bold)
                       .fontColor('#CF0A2C')
+                    if (item.vipActive === true) {
+                      Text(I18n.t('mall_vip_tag', this.lang))
+                        .fontSize(10)
+                        .fontColor('#FFFFFF')
+                        .backgroundColor('#D97706')
+                        .padding({ left: 4, right: 4, top: 1, bottom: 1 })
+                        .borderRadius(4)
+                    }
                   }
                 }
                 .alignItems(HorizontalAlign.Start)

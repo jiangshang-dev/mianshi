@@ -240,6 +240,10 @@ struct ForumDetailPage {
     return this.post === null ? false : mallBool(this.post.liked);
   }
 
+  private postFavored(): boolean {
+    return this.post === null ? false : mallBool(this.post.favored);
+  }
+
   private postViewCount(): number {
     return this.post === null ? 0 : mallNum(this.post.viewCount);
   }
@@ -281,6 +285,25 @@ struct ForumDetailPage {
         updated.likeCount = mallNum(res.count);
         this.post = updated;
         ForumRepository.bumpList();
+      }).catch((err: Error) => promptAction.showToast({ message: err.message }));
+    });
+  }
+
+  private toggleFav(): void {
+    LoginGate.ensure(I18n.t('forum_fav', this.lang), () => {
+      this.repo.toggleFavorite(this.postId).then((res) => {
+        const current = this.post;
+        if (current === null) {
+          return;
+        }
+        const updated = copyForumPost(current);
+        updated.favored = res.on === true;
+        updated.favoriteCount = mallNum(res.count);
+        this.post = updated;
+        ForumRepository.bumpList();
+        promptAction.showToast({
+          message: res.on === true ? I18n.t('fav_on', this.lang) : I18n.t('fav_off', this.lang)
+        });
       }).catch((err: Error) => promptAction.showToast({ message: err.message }));
     });
   }
@@ -419,6 +442,11 @@ struct ForumDetailPage {
             .fontWeight(FontWeight.Bold)
             .fontColor($r('app.color.text_primary'))
             .layoutWeight(1)
+          Text(this.postFavored() ? '★' : '☆')
+            .fontSize(22)
+            .fontColor(this.postFavored() ? '#F59E0B' : '#6B7280')
+            .padding({ left: 10, right: 6 })
+            .onClick(() => this.toggleFav())
           if (this.isMine()) {
             Text(I18n.t('delete', this.lang))
               .fontSize(14)

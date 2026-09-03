@@ -16,6 +16,12 @@ export interface MallProduct {
   virtualHint?: string;
   status?: number;
   memberDays?: number;
+  vipPointsFree?: number;
+  vipCashType?: string;
+  vipDiscountPct?: number;
+  vipActive?: boolean;
+  effectivePointsPrice?: number;
+  effectivePriceFen?: number;
 }
 
 export interface MallAddress {
@@ -66,6 +72,7 @@ export interface MallOrder {
 export interface MallMe {
   points?: number;
   userId?: number;
+  member?: boolean;
 }
 
 export interface JeecgMallMsgResp {
@@ -195,7 +202,13 @@ export function copyMallProduct(raw: MallProduct): MallProduct {
       soldCount: mallNum(raw.soldCount),
       virtualHint: mallStr(raw.virtualHint),
       status: mallNum(raw.status, 1),
-      memberDays: mallNum(raw.memberDays)
+      memberDays: mallNum(raw.memberDays),
+      vipPointsFree: mallNum(raw.vipPointsFree, 1),
+      vipCashType: mallStr(raw.vipCashType),
+      vipDiscountPct: mallNum(raw.vipDiscountPct, 80),
+      vipActive: raw.vipActive === true,
+      effectivePointsPrice: mallNum(raw.effectivePointsPrice, mallNum(raw.pointsPrice)),
+      effectivePriceFen: mallNum(raw.effectivePriceFen, mallNum(raw.priceFen))
     };
     return item;
   } catch (_e) {
@@ -269,7 +282,8 @@ export function copyMallMe(raw: MallMe): MallMe {
   try {
     const item: MallMe = {
       points: mallNum(raw.points),
-      userId: mallNum(raw.userId)
+      userId: mallNum(raw.userId),
+      member: raw.member === true
     };
     return item;
   } catch (_e) {
@@ -278,15 +292,38 @@ export function copyMallMe(raw: MallMe): MallMe {
   }
 }
 
+export function mallEffectivePoints(product: MallProduct): number {
+  if (product.effectivePointsPrice !== undefined) {
+    return mallNum(product.effectivePointsPrice);
+  }
+  return mallNum(product.pointsPrice);
+}
+
+export function mallEffectiveCashFen(product: MallProduct): number {
+  if (product.effectivePriceFen !== undefined) {
+    return mallNum(product.effectivePriceFen);
+  }
+  return mallNum(product.priceFen);
+}
+
+export function mallPointsText(points: number): string {
+  if (points <= 0) {
+    return '免费';
+  }
+  return `${points}积分`;
+}
+
 export function mallProductPrice(product: MallProduct): string {
   const pay = mallStr(product.payType);
+  const pts = mallEffectivePoints(product);
+  const cash = mallEffectiveCashFen(product);
   if (pay === 'both') {
-    return `${mallNum(product.pointsPrice)}积分 / ${mallFenText(product.priceFen)}`;
+    return `${mallPointsText(pts)} / ${cash <= 0 ? '免费' : mallFenText(cash)}`;
   }
   if (pay === 'cash') {
-    return mallFenText(product.priceFen);
+    return cash <= 0 ? '免费' : mallFenText(cash);
   }
-  return `${mallNum(product.pointsPrice)}积分`;
+  return mallPointsText(pts);
 }
 
 export function mallGoodsLabel(goodsType?: string): string {

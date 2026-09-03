@@ -26,10 +26,12 @@ export interface ForumPost {
   pending?: boolean;
   rejectHint?: string;
   liked?: boolean;
+  favored?: boolean;
   mine?: boolean;
   viewCount?: number;
   likeCount?: number;
   replyCount?: number;
+  favoriteCount?: number;
   postPoints?: number;
   createTime?: string;
   replies?: ForumReply[];
@@ -129,6 +131,13 @@ export interface JeecgForumPostResp {
   code?: number;
 }
 
+export interface JeecgForumPostListResp {
+  success?: boolean;
+  message?: string;
+  result?: ForumPost[];
+  code?: number;
+}
+
 export interface JeecgForumReplyResp {
   success?: boolean;
   message?: string;
@@ -207,10 +216,12 @@ export function copyForumPost(raw: ForumPost): ForumPost {
     pending: mallBool(raw.pending),
     rejectHint: mallStr(raw.rejectHint),
     liked: mallBool(raw.liked),
+    favored: mallBool(raw.favored),
     mine: mallBool(raw.mine),
     viewCount: mallNum(raw.viewCount),
     likeCount: mallNum(raw.likeCount),
     replyCount: mallNum(raw.replyCount),
+    favoriteCount: mallNum(raw.favoriteCount),
     postPoints: mallNum(raw.postPoints),
     createTime: mallStr(raw.createTime),
     replies: replies

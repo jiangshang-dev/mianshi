@@ -5,8 +5,11 @@ import {
   MallCreateBody,
   MallProduct,
   mallAddressLine,
+  mallEffectiveCashFen,
+  mallEffectivePoints,
   mallFenText,
   mallNum,
+  mallPointsText,
   mallProductPrice,
   mallStr
 } from '../../common/models/MallTypes';
@@ -169,11 +172,33 @@ struct MallConfirmPage {
       return '';
     }
     if (this.isCash()) {
-      const goods = mallNum(p.priceFen) * this.quantity;
+      const goods = mallEffectiveCashFen(p) * this.quantity;
       const freight = this.isPhysical() ? mallNum(p.freightFen) : 0;
-      return mallFenText(goods + freight);
+      const total = goods + freight;
+      if (total <= 0) {
+        return I18n.t('mall_vip_free', this.lang);
+      }
+      return mallFenText(total);
     }
-    return `${mallNum(p.pointsPrice) * this.quantity}积分`;
+    return mallPointsText(mallEffectivePoints(p) * this.quantity);
+  }
+
+  private needCashHint(): boolean {
+    const p = this.product;
+    if (p === null) {
+      return false;
+    }
+    const goods = mallEffectiveCashFen(p) * this.quantity;
+    const freight = this.isPhysical() ? mallNum(p.freightFen) : 0;
+    return goods + freight > 0;
+  }
+
+  private vipHint(): string {
+    const p = this.product;
+    if (p === null || p.vipActive !== true) {
+      return '';
+    }
+    return I18n.t('mall_vip_hint', this.lang);
   }
 
   private goAddress(): void {
@@ -202,8 +227,9 @@ struct MallConfirmPage {
       };
       const order = await this.repo.createOrder(body);
       const oid = mallStr(order.id);
+      const waitCash = this.isCash() && mallNum(order.payAmountFen) > 0;
       promptAction.showToast({
-        message: this.isCash() ? I18n.t('mall_wait_pay', this.lang) : I18n.t('mall_order_ok', this.lang)
+        message: waitCash ? I18n.t('mall_wait_pay', this.lang) : I18n.t('mall_order_ok', this.lang)
       });
       if (oid.length > 0) {
         router.pushUrl({
@@ -298,6 +324,14 @@ struct MallConfirmPage {
                 Text(this.productPrice())
                   .fontSize(13)
                   .fontColor('#CF0A2C')
+                if (this.vipHint().length > 0) {
+                  Text(I18n.t('mall_vip_tag', this.lang))
+                    .fontSize(10)
+                    .fontColor('#FFFFFF')
+                    .backgroundColor('#D97706')
+                    .padding({ left: 5, right: 5, top: 1, bottom: 1 })
+                    .borderRadius(4)
+                }
               }
               .alignItems(HorizontalAlign.Start)
               .layoutWeight(1)
@@ -372,12 +406,18 @@ struct MallConfirmPage {
             .backgroundColor($r('app.color.card_bg'))
             .borderRadius(12)
 
+            if (this.vipHint().length > 0) {
+              Text(this.vipHint())
+                .fontSize(12)
+                .fontColor('#D97706')
+                .width('100%')
+            }
             if (!this.isCash()) {
               Text(I18n.tf('mall_points', `${this.points}`, this.lang))
                 .fontSize(13)
                 .fontColor($r('app.color.text_muted'))
                 .width('100%')
-            } else {
+            } else if (this.needCashHint()) {
               Text(I18n.t('mall_cash_hint', this.lang))
                 .fontSize(12)
                 .fontColor($r('app.color.text_muted'))

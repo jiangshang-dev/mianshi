@@ -322,8 +322,35 @@ export struct ForumPage {
     });
   }
 
-  private favSoon(): void {
-    promptAction.showToast({ message: I18n.t('forum_soon', this.lang) });
+  private favPost(item: ForumPost): void {
+    const id = mallStr(item.id);
+    if (id.length === 0) {
+      return;
+    }
+    LoginGate.ensure(I18n.t('forum_fav', this.lang), () => {
+      this.repo.toggleFavorite(id).then((res) => {
+        const next: ForumPost[] = [];
+        for (let i = 0; i < this.posts.length; i++) {
+          const row = this.posts[i];
+          if (mallStr(row.id) === id) {
+            const updated = copyForumPost(row);
+            updated.favored = res.on === true;
+            updated.favoriteCount = mallNum(res.count);
+            next.push(updated);
+          } else {
+            next.push(row);
+          }
+        }
+        this.posts = next;
+        promptAction.showToast({
+          message: res.on === true ? I18n.t('fav_on', this.lang) : I18n.t('fav_off', this.lang)
+        });
+      }).catch((err: Error) => promptAction.showToast({ message: err.message }));
+    });
+  }
+
+  private favColor(on: boolean): string {
+    return on ? '#F59E0B' : '#9CA3AF';
   }
 
   private sharePost(item: ForumPost): void {
@@ -498,7 +525,7 @@ export struct ForumPage {
                 ListItem() {
                   this.postCard(item)
                 }
-              }, (item: ForumPost) => `${mallStr(item.id)}-${mallBool(item.liked) ? 1 : 0}-${mallNum(item.likeCount)}-${mallNum(item.replyCount)}-${mallBool(item.featured) ? 1 : 0}`)
+              }, (item: ForumPost) => `${mallStr(item.id)}-${mallBool(item.liked) ? 1 : 0}-${mallNum(item.likeCount)}-${mallNum(item.replyCount)}-${mallBool(item.favored) ? 1 : 0}-${mallNum(item.favoriteCount)}-${mallBool(item.featured) ? 1 : 0}`)
             }
             .width('100%')
             .height('100%')
@@ -703,14 +730,14 @@ export struct ForumPage {
             .width(18)
             .height(18)
             .objectFit(ImageFit.Contain)
-            .fillColor('#9CA3AF')
+            .fillColor(this.favColor(mallBool(item.favored)))
           Text(I18n.t('forum_fav', this.lang))
             .fontSize(12)
-            .fontColor('#9CA3AF')
+            .fontColor(this.favColor(mallBool(item.favored)))
         }
         .layoutWeight(1)
         .justifyContent(FlexAlign.Center)
-        .onClick(() => this.favSoon())
+        .onClick(() => this.favPost(item))
 
         Row({ space: 4 }) {
           Image($r('app.media.ic_forum_share'))

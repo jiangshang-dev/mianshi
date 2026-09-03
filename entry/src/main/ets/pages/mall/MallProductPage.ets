@@ -134,12 +134,20 @@ struct MallProductPage {
     if (p === null || (p.payType !== 'cash' && p.payType !== 'both')) {
       return '';
     }
+    const sale = mallNum(p.effectivePriceFen, mallNum(p.priceFen));
+    if (p.vipActive === true && mallNum(p.priceFen) > sale) {
+      return mallFenText(p.priceFen);
+    }
     const origin = mallNum(p.originalPriceFen);
-    const price = mallNum(p.priceFen);
-    if (origin <= price) {
+    if (origin <= sale) {
       return '';
     }
     return mallFenText(origin);
+  }
+
+  private showVipTag(): boolean {
+    const p = this.product;
+    return p !== null && p.vipActive === true;
   }
 
   private buy(): void {
@@ -217,6 +225,14 @@ struct MallProductPage {
                   .fontSize(13)
                   .fontColor($r('app.color.text_muted'))
                   .decoration({ type: TextDecorationType.LineThrough })
+              }
+              if (this.showVipTag()) {
+                Text(I18n.t('mall_vip_tag', this.lang))
+                  .fontSize(10)
+                  .fontColor('#FFFFFF')
+                  .backgroundColor('#D97706')
+                  .padding({ left: 6, right: 6, top: 2, bottom: 2 })
+                  .borderRadius(4)
               }
             }
             .width('100%')
