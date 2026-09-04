@@ -358,27 +358,30 @@ struct ForumRepliesPage {
         .backgroundColor($r('app.color.card_bg'))
 
         Refresh({ refreshing: this.refreshing }) {
-          if (this.threadList.length === 0) {
-            Column() {
-              Text(this.emptyText()).fontSize(14).fontColor($r('app.color.text_muted'))
-            }
-            .width('100%')
-            .height('100%')
-            .justifyContent(FlexAlign.Center)
-          } else {
-            List({ space: 10 }) {
+          List({ space: 10 }) {
+            if (this.threadList.length === 0) {
+              ListItem() {
+                Column() {
+                  Text(this.emptyText()).fontSize(14).fontColor($r('app.color.text_muted'))
+                }
+                .width('100%')
+                .height(280)
+                .justifyContent(FlexAlign.Center)
+              }
+            } else {
               ForEach(this.threadList, (thread: ForumReplyThread) => {
                 ListItem() {
                   this.threadCard(thread)
                 }
               }, (thread: ForumReplyThread) =>
-                `${this.replyTick}-${mallStr(thread.root.id)}-${thread.floor}-${mallNum(thread.root.likeCount)}-${thread.children.length}`)
+                `${this.replyTick}-${mallStr(thread.root.id)}-${thread.floor}-${mallNum(thread.root.likeCount)}-${thread.children.length}-${mallBool(thread.root.pending) ? 1 : 0}-${mallStr(thread.root.rejectHint)}`)
             }
-            .width('100%')
-            .height('100%')
-            .padding({ left: 12, right: 12, top: 10, bottom: 16 })
-            .scrollBar(BarState.Off)
           }
+          .width('100%')
+          .height('100%')
+          .padding({ left: 12, right: 12, top: 10, bottom: 16 })
+          .scrollBar(BarState.Off)
+          .edgeEffect(EdgeEffect.None)
         }
         .layoutWeight(1)
         .width('100%')

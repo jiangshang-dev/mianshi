@@ -5,13 +5,13 @@
         "name": "default",
         "type": "HarmonyOS",
         "material": {
-          "storeFile": "/Users/xiaobai/Desktop/鸿蒙/mianshi_release.p12",
-          "storePassword": "0000001E92AEEC05474C8F4930595E2396242A654305A802ADCD21E9E58E223D360D4EEC74D63D3DFDF8169F6200",
-          "keyAlias": "mianshi_release",
-          "keyPassword": "0000001EA455A5C73E7340AE56F72C33D51255FCCB31AE8071191B7C0782D803F6253099572CACEA4637B9996DA0",
+          "certpath": "/Users/xiaobai/.ohos/config/default_mianshi_r3k1zoLJnuysMGna8myk1Hp1ZPmk5AoogGJN12UObK4=.cer",
+          "keyAlias": "debugKey",
+          "keyPassword": "0000001B2F578697C81AC70970F274CDAE1ADF2DF738557277D123D4FEB3939124E7D892F2995D5F49AB50",
+          "profile": "/Users/xiaobai/.ohos/config/default_mianshi_r3k1zoLJnuysMGna8myk1Hp1ZPmk5AoogGJN12UObK4=.p7b",
           "signAlg": "SHA256withECDSA",
-          "profile": "/Users/xiaobai/Desktop/鸿蒙/mianshi_releaseRelease.p7b",
-          "certpath": "/Users/xiaobai/Desktop/鸿蒙/mianshi_release.cer"
+          "storeFile": "/Users/xiaobai/.ohos/config/default_mianshi_r3k1zoLJnuysMGna8myk1Hp1ZPmk5AoogGJN12UObK4=.p12",
+          "storePassword": "0000001B4CC5324BCA90C6CFA49C645A47F49AFA3AE9504D8923DE4D3D0E863E914A4A5EA9BB85A74A4714"
         }
       }
     ],

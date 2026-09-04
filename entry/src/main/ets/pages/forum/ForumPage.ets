@@ -531,6 +531,7 @@ export struct ForumPage {
             .height('100%')
             .padding({ left: 12, right: 12, top: 8, bottom: 80 })
             .scrollBar(BarState.Off)
+            .edgeEffect(EdgeEffect.None)
             .onReachEnd(() => {
               if (this.finished || this.loading) {
                 return;

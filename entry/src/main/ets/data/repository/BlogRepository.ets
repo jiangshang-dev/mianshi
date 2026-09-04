@@ -15,6 +15,7 @@ import {
   JeecgBlogCommentListResp,
   JeecgBlogCommentResp,
   JeecgBlogCommentVoteResp,
+  JeecgBlogMsgResp,
   JeecgBlogToggleResp,
   copyBlogArticle,
   copyBlogCategory,
@@ -164,6 +165,12 @@ export class BlogRepository {
     const result = parsed.result;
     const empty: BlogCommentVote = { commentId: commentId, likeCount: 0, dislikeCount: 0, myVote: 0 };
     return result !== undefined ? result : empty;
+  }
+
+  async deleteComment(id: string): Promise<void> {
+    const resp = await HttpClient.postJson(`/api/blog/comments/${id}/delete`, '{}');
+    const parsed: JeecgBlogMsgResp = JSON.parse(resp.body) as JeecgBlogMsgResp;
+    this.ensureOk(parsed.success, parsed.message, resp.ok, '删除失败');
   }
 
   private ensureOk(success: boolean | undefined, message: string | undefined, ok: boolean, fallback: string): void {

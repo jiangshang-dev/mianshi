@@ -11,6 +11,7 @@ import {
   MallAddress,
   MallAddressBody,
   MallCreateBody,
+  MallIapVerifyBody,
   MallMe,
   MallOrder,
   MallProduct,
@@ -168,6 +169,32 @@ export class MallRepository {
     const parsed: JeecgMallOrderResp = JSON.parse(resp.body) as JeecgMallOrderResp;
     this.ensureOk(parsed.success, parsed.message, resp.ok, '订单不存在');
     return parsed.result !== undefined ? copyMallOrder(parsed.result) : null;
+  }
+
+  async verifyIap(orderId: string, body: MallIapVerifyBody): Promise<MallOrder> {
+    const resp = await HttpClient.postJson(`/api/mall/orders/${orderId}/iap/verify`, JSON.stringify(body));
+    if (resp.body.length === 0) {
+      throw new Error('验单失败');
+    }
+    const parsed: JeecgMallOrderResp = JSON.parse(resp.body) as JeecgMallOrderResp;
+    this.ensureOk(parsed.success, parsed.message, resp.ok, '验单失败');
+    if (parsed.result === undefined) {
+      throw new Error('验单失败');
+    }
+    return copyMallOrder(parsed.result);
+  }
+
+  async verifyIapRestore(body: MallIapVerifyBody): Promise<MallOrder> {
+    const resp = await HttpClient.postJson('/api/mall/iap/verify', JSON.stringify(body));
+    if (resp.body.length === 0) {
+      throw new Error('恢复失败');
+    }
+    const parsed: JeecgMallOrderResp = JSON.parse(resp.body) as JeecgMallOrderResp;
+    this.ensureOk(parsed.success, parsed.message, resp.ok, '恢复失败');
+    if (parsed.result === undefined) {
+      throw new Error('恢复失败');
+    }
+    return copyMallOrder(parsed.result);
   }
 
   async cancel(id: string): Promise<MallOrder> {

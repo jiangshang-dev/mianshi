@@ -95,6 +95,7 @@ export interface BlogComment {
   dislikeCount?: number;
   myVote?: number;
   replyCount?: number;
+  mine?: boolean;
   replies?: BlogComment[];
 }
 
@@ -206,6 +207,7 @@ export function copyBlogComment(raw: BlogComment): BlogComment {
     dislikeCount: mallNum(raw.dislikeCount),
     myVote: mallNum(raw.myVote),
     replyCount: mallNum(raw.replyCount),
+    mine: mallBool(raw.mine),
     replies: replies
   };
   return item;

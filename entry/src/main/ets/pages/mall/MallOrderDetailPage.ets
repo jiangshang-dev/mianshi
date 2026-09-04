@@ -1,6 +1,8 @@
+import { common } from '@kit.AbilityKit';
 import { pasteboard } from '@kit.BasicServicesKit';
 import { promptAction, router } from '@kit.ArkUI';
 import { I18n } from '../../common/i18n/I18n';
+import { IapService } from '../../common/utils/IapService';
 import {
   MallOrder,
   mallFenText,
@@ -152,6 +154,44 @@ struct MallOrderDetailPage {
   private orderLogisticsNo(): string {
     const o = this.order;
     return o === null ? '' : mallStr(o.logisticsNo);
+  }
+
+  private hostContext(): common.UIAbilityContext {
+    const host = this.getUIContext().getHostContext();
+    if (host) {
+      return host as common.UIAbilityContext;
+    }
+    return getContext(this) as common.UIAbilityContext;
+  }
+
+  private canPay(): boolean {
+    const o = this.order;
+    if (o === null) {
+      return false;
+    }
+    return o.status === 'pending_pay' && mallNum(o.payAmountFen) > 0;
+  }
+
+  private async doPay(): Promise<void> {
+    const o = this.order;
+    if (o === null || this.acting) {
+      return;
+    }
+    const iapId = mallStr(o.iapProductId);
+    if (iapId.length === 0) {
+      promptAction.showToast({ message: I18n.t('mall_need_iap', this.lang) });
+      return;
+    }
+    this.acting = true;
+    try {
+      const pay = await IapService.buyMall(this.hostContext(), iapId, mallStr(o.iapType), mallStr(o.id));
+      promptAction.showToast({ message: pay.message });
+      if (pay.ok) {
+        await this.reload();
+      }
+    } finally {
+      this.acting = false;
+    }
   }
 
   private canCancel(): boolean {
@@ -381,7 +421,7 @@ struct MallOrderDetailPage {
         .align(Alignment.Top)
         .scrollBar(BarState.Off)
 
-        if (this.canCancel() || this.canConfirm()) {
+        if (this.canPay() || this.canCancel() || this.canConfirm()) {
           Row({ space: 10 }) {
             if (this.canCancel()) {
               Button(I18n.t('mall_cancel', this.lang))
@@ -392,6 +432,16 @@ struct MallOrderDetailPage {
                 .enabled(!this.acting)
                 .onClick(() => {
                   this.askCancel();
+                })
+            }
+            if (this.canPay()) {
+              Button(this.acting ? I18n.t('mall_paying', this.lang) : I18n.t('mall_pay_now', this.lang))
+                .layoutWeight(1)
+                .height(42)
+                .backgroundColor('#CF0A2C')
+                .enabled(!this.acting)
+                .onClick(() => {
+                  this.doPay();
                 })
             }
             if (this.canConfirm()) {

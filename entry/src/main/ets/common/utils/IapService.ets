@@ -2,8 +2,10 @@ import { iap } from '@kit.IAPKit';
 import { BusinessError } from '@kit.BasicServicesKit';
 import { common } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
+import { MallIapVerifyBody } from '../models/MallTypes';
 import { IapPurchaseData, IapPurchaseOrder, IapVerifyBody, MemberPlan } from '../models/MemberTypes';
 import { JwsUtil } from './JwsUtil';
+import { MallRepository } from '../../data/repository/MallRepository';
 import { MemberRepository } from '../../data/repository/MemberRepository';
 
 const DOMAIN = 0x1A0;
@@ -16,6 +18,9 @@ export interface IapBuyResult {
 
 export class IapService {
   static productTypeOf(iapType: string): iap.ProductType {
+    if (iapType === 'consumable') {
+      return iap.ProductType.CONSUMABLE;
+    }
     if (iapType === 'nonconsumable') {
       return iap.ProductType.NONCONSUMABLE;
     }
@@ -77,7 +82,7 @@ export class IapService {
     };
     try {
       const result = await iap.createPurchase(context, param);
-      return await IapService.deliver(context, result.purchaseData, 'iap');
+      return await IapService.deliver(context, result.purchaseData, 'iap', '');
     } catch (err) {
       const e = err as BusinessError;
       hilog.error(DOMAIN, 'IAP', 'buy %{public}d %{public}s', e.code, e.message);
@@ -89,8 +94,40 @@ export class IapService {
     }
   }
 
+  static async buyMall(context: common.UIAbilityContext, iapProductId: string, iapType: string,
+    orderId: string): Promise<IapBuyResult> {
+    const env = await IapService.queryEnv(context);
+    if (env === ERR_ACCOUNT_NOT_LOGGED_IN) {
+      return { ok: false, message: '请先在系统设置中登录华为账号' };
+    }
+    if (env !== 0) {
+      return { ok: false, message: '当前设备暂不支持应用内购买' };
+    }
+    if (iapProductId.length === 0) {
+      return { ok: false, message: '该商品未配置华为支付' };
+    }
+    const param: iap.PurchaseParameter = {
+      productId: iapProductId,
+      productType: IapService.productTypeOf(iapType),
+      developerPayload: orderId
+    };
+    try {
+      const result = await iap.createPurchase(context, param);
+      return await IapService.deliver(context, result.purchaseData, 'iap', orderId);
+    } catch (err) {
+      const e = err as BusinessError;
+      hilog.error(DOMAIN, 'IAP', 'buyMall %{public}d %{public}s', e.code, e.message);
+      if (e.code === iap.IAPErrorCode.PRODUCT_OWNED || e.code === iap.IAPErrorCode.SYSTEM_ERROR) {
+        await IapService.restoreUnfinished(context);
+        return { ok: true, message: '已尝试恢复未完成订单' };
+      }
+      return { ok: false, message: e.message.length > 0 ? e.message : '支付失败' };
+    }
+  }
+
   static async restoreUnfinished(context: common.UIAbilityContext): Promise<void> {
     try {
+      await IapService.restoreType(context, iap.ProductType.CONSUMABLE);
       await IapService.restoreType(context, iap.ProductType.NONRENEWABLE);
       await IapService.restoreType(context, iap.ProductType.NONCONSUMABLE);
     } catch (err) {
@@ -111,7 +148,7 @@ export class IapService {
         return;
       }
       for (let i = 0; i < list.length; i++) {
-        await IapService.deliver(context, list[i], 'restore');
+        await IapService.deliver(context, list[i], 'restore', '');
       }
     } catch (err) {
       const e = err as BusinessError;
@@ -120,7 +157,7 @@ export class IapService {
   }
 
   private static async deliver(context: common.UIAbilityContext, purchaseData: string,
-    source: string): Promise<IapBuyResult> {
+    source: string, mallOrderId: string): Promise<IapBuyResult> {
     try {
       const parsed: IapPurchaseData = JSON.parse(purchaseData) as IapPurchaseData;
       const jws = parsed.jwsPurchaseOrder !== undefined ? parsed.jwsPurchaseOrder : '';
@@ -135,7 +172,7 @@ export class IapService {
         productId: order.productId,
         source: source
       };
-      await MemberRepository.getInstance().verify(body);
+      await IapService.verifyBackend(body, mallOrderId);
       if (order.finishStatus !== '1') {
         const finish: iap.FinishPurchaseParameter = {
           productType: Number(order.productType),
@@ -144,11 +181,37 @@ export class IapService {
         };
         await iap.finishPurchase(context, finish);
       }
-      return { ok: true, message: '开通成功' };
+      return { ok: true, message: mallOrderId.length > 0 ? '支付成功' : '开通成功' };
     } catch (err) {
       const msg = err instanceof Error ? err.message : '发货失败';
       hilog.error(DOMAIN, 'IAP', 'deliver %{public}s', msg);
       return { ok: false, message: msg };
+    }
+  }
+
+  private static async verifyBackend(body: IapVerifyBody, mallOrderId: string): Promise<void> {
+    const mallBody: MallIapVerifyBody = {
+      purchaseData: body.purchaseData,
+      jwsPurchaseOrder: body.jwsPurchaseOrder,
+      productId: body.productId,
+      source: body.source
+    };
+    if (mallOrderId.length > 0) {
+      await MallRepository.getInstance().verifyIap(mallOrderId, mallBody);
+      return;
+    }
+    try {
+      await MallRepository.getInstance().verifyIapRestore(mallBody);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '';
+      if (msg.indexOf('非商城商品') >= 0) {
+        await MemberRepository.getInstance().verify(body);
+        return;
+      }
+      if (err instanceof Error) {
+        throw err;
+      }
+      throw new Error(msg.length > 0 ? msg : '恢复验单失败');
     }
   }
 

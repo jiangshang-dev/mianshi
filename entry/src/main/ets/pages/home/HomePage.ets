@@ -18,14 +18,17 @@ export struct HomePage {
     toReview: 0
   };
   @State private loading: boolean = true;
+  @State private refreshing: boolean = false;
   private repo: QuestionRepository = QuestionRepository.getInstance();
 
   aboutToAppear(): void {
-    this.loadData();
+    this.loadData(false);
   }
 
-  private async loadData(): Promise<void> {
-    this.loading = true;
+  private async loadData(silent: boolean): Promise<void> {
+    if (!silent) {
+      this.loading = true;
+    }
     try {
       const ctx = getContext(this) as common.UIAbilityContext;
       await this.repo.init(ctx);
@@ -39,6 +42,15 @@ export struct HomePage {
     } finally {
       this.loading = false;
     }
+  }
+
+  private pullRefresh(): void {
+    this.refreshing = true;
+    this.loadData(true).then(() => {
+      this.refreshing = false;
+    }).catch(() => {
+      this.refreshing = false;
+    });
   }
 
   build() {
@@ -99,102 +111,81 @@ export struct HomePage {
         .layoutWeight(1)
         .justifyContent(FlexAlign.Center)
       } else {
-        Scroll() {
-          Column({ space: 16 }) {
-            Column({ space: 12 }) {
-              Row() {
-                Text(I18n.t('today_study', this.lang))
+        Refresh({ refreshing: this.refreshing }) {
+          List({ space: 16 }) {
+            ListItem() {
+              this.todayCard()
+            }
+            ListItem() {
+              Column({ space: 16 }) {
+                if (this.groups.length === 0) {
+                  Text(I18n.t('no_cat_home', this.lang))
+                    .fontSize(13)
+                    .fontColor($r('app.color.text_muted'))
+                    .width('100%')
+                }
+                ForEach(this.groups, (g: CategoryGroupSection) => {
+                  CategoryTagSection({
+                    title: I18n.sectionTitle(g.name, g.title, this.lang),
+                    items: g.items,
+                    textColor: g.textColor,
+                    chipColor: g.bgColor,
+                    onTagClick: (cat: Category) => this.openCategory(cat)
+                  })
+                }, (g: CategoryGroupSection) => g.name)
+                Text(I18n.t('all_more', this.lang))
+                  .fontSize(13)
+                  .fontColor($r('app.color.accent'))
+                  .width('100%')
+                  .onClick(() => {
+                    router.pushUrl({ url: 'pages/bank/CategoryAllPage' });
+                  })
+              }
+              .width('100%')
+              .padding(16)
+              .backgroundColor($r('app.color.card_bg'))
+              .borderRadius(16)
+            }
+            ListItem() {
+              Column({ space: 10 }) {
+                Text(I18n.t('hot_recommend', this.lang))
                   .fontSize(16)
                   .fontWeight(FontWeight.Bold)
                   .fontColor($r('app.color.text_primary'))
-                Blank()
-                Text(I18n.t('continue_study', this.lang))
-                  .fontSize(13)
-                  .fontColor($r('app.color.accent'))
-                  .onClick(() => this.continueStudy())
-              }
-              .width('100%')
-
-              Row() {
-                this.statCell(`${this.stats.questionCount}`, 'stat_q')
-                this.statCell(`${this.stats.minutes}`, 'stat_min')
-                this.statCell(`${this.stats.mastered}`, 'stat_master')
-                this.statCell(`${this.stats.toReview}`, 'stat_review')
-              }
-              .width('100%')
-              .justifyContent(FlexAlign.SpaceBetween)
-            }
-            .width('100%')
-            .padding(16)
-            .backgroundColor($r('app.color.card_bg'))
-            .borderRadius(16)
-
-            if (this.groups.length === 0) {
-              Text(I18n.t('no_cat_home', this.lang))
-                .fontSize(13)
-                .fontColor($r('app.color.text_muted'))
-                .width('100%')
-            }
-
-            Column({ space: 16 }) {
-              ForEach(this.groups, (g: CategoryGroupSection) => {
-                CategoryTagSection({
-                  title: I18n.sectionTitle(g.name, g.title, this.lang),
-                  items: g.items,
-                  textColor: g.textColor,
-                  chipColor: g.bgColor,
-                  onTagClick: (cat: Category) => this.openCategory(cat)
-                })
-              }, (g: CategoryGroupSection) => g.name)
-              Text(I18n.t('all_more', this.lang))
-                .fontSize(13)
-                .fontColor($r('app.color.accent'))
-                .width('100%')
-                .onClick(() => {
-                  router.pushUrl({ url: 'pages/bank/CategoryAllPage' });
-                })
-            }
-            .width('100%')
-            .padding(16)
-            .backgroundColor($r('app.color.card_bg'))
-            .borderRadius(16)
-
-            Column({ space: 10 }) {
-              Text(I18n.t('hot_recommend', this.lang))
-                .fontSize(16)
-                .fontWeight(FontWeight.Bold)
-                .fontColor($r('app.color.text_primary'))
-                .width('100%')
-
-              if (this.hotList.length === 0) {
-                Text(I18n.t('no_hot', this.lang))
-                  .fontSize(13)
-                  .fontColor($r('app.color.text_muted'))
                   .width('100%')
-                  .padding({ top: 8, bottom: 8 })
-              } else {
-                ForEach(this.hotList, (item: QuestionItem) => {
-                  QuestionListItem({
-                    item: item,
-                    onItemClick: (q: QuestionItem) => {
-                      router.pushUrl({
-                        url: 'pages/bank/QuestionDetailPage',
-                        params: { 'id': q.id }
-                      });
-                    }
-                  })
-                }, (item: QuestionItem) => item.id)
+                if (this.hotList.length === 0) {
+                  Text(I18n.t('no_hot', this.lang))
+                    .fontSize(13)
+                    .fontColor($r('app.color.text_muted'))
+                    .width('100%')
+                    .padding({ top: 8, bottom: 8 })
+                } else {
+                  ForEach(this.hotList, (item: QuestionItem) => {
+                    QuestionListItem({
+                      item: item,
+                      onItemClick: (q: QuestionItem) => {
+                        router.pushUrl({
+                          url: 'pages/bank/QuestionDetailPage',
+                          params: { 'id': q.id }
+                        });
+                      }
+                    })
+                  }, (item: QuestionItem) => item.id)
+                }
               }
+              .width('100%')
+              .padding({ bottom: 24 })
             }
-            .width('100%')
-            .padding({ bottom: 24 })
           }
-          .padding({ left: 16, right: 16, top: 16 })
           .width('100%')
+          .height('100%')
+          .padding({ left: 16, right: 16, top: 16, bottom: 8 })
+          .scrollBar(BarState.Off)
+          .edgeEffect(EdgeEffect.None)
         }
         .layoutWeight(1)
-        .scrollBar(BarState.Off)
-        .edgeEffect(EdgeEffect.Spring)
+        .width('100%')
+        .onRefreshing(() => this.pullRefresh())
       }
     }
     .width('100%')
@@ -222,6 +213,37 @@ export struct HomePage {
         'source': cat.source
       }
     });
+  }
+
+  @Builder
+  todayCard() {
+    Column({ space: 12 }) {
+      Row() {
+        Text(I18n.t('today_study', this.lang))
+          .fontSize(16)
+          .fontWeight(FontWeight.Bold)
+          .fontColor($r('app.color.text_primary'))
+        Blank()
+        Text(I18n.t('continue_study', this.lang))
+          .fontSize(13)
+          .fontColor($r('app.color.accent'))
+          .onClick(() => this.continueStudy())
+      }
+      .width('100%')
+
+      Row() {
+        this.statCell(`${this.stats.questionCount}`, 'stat_q')
+        this.statCell(`${this.stats.minutes}`, 'stat_min')
+        this.statCell(`${this.stats.mastered}`, 'stat_master')
+        this.statCell(`${this.stats.toReview}`, 'stat_review')
+      }
+      .width('100%')
+      .justifyContent(FlexAlign.SpaceBetween)
+    }
+    .width('100%')
+    .padding(16)
+    .backgroundColor($r('app.color.card_bg'))
+    .borderRadius(16)
   }
 
   @Builder

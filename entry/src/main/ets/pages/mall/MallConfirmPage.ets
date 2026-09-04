@@ -1,5 +1,7 @@
+import { common } from '@kit.AbilityKit';
 import { promptAction, router } from '@kit.ArkUI';
 import { I18n } from '../../common/i18n/I18n';
+import { IapService } from '../../common/utils/IapService';
 import {
   MallAddress,
   MallCreateBody,
@@ -201,6 +203,14 @@ struct MallConfirmPage {
     return I18n.t('mall_vip_hint', this.lang);
   }
 
+  private hostContext(): common.UIAbilityContext {
+    const host = this.getUIContext().getHostContext();
+    if (host) {
+      return host as common.UIAbilityContext;
+    }
+    return getContext(this) as common.UIAbilityContext;
+  }
+
   private goAddress(): void {
     router.pushUrl({
       url: 'pages/mall/MallAddressPage',
@@ -228,9 +238,17 @@ struct MallConfirmPage {
       const order = await this.repo.createOrder(body);
       const oid = mallStr(order.id);
       const waitCash = this.isCash() && mallNum(order.payAmountFen) > 0;
-      promptAction.showToast({
-        message: waitCash ? I18n.t('mall_wait_pay', this.lang) : I18n.t('mall_order_ok', this.lang)
-      });
+      if (waitCash && oid.length > 0) {
+        const iapId = mallStr(this.product.iapProductId);
+        if (iapId.length === 0) {
+          promptAction.showToast({ message: I18n.t('mall_need_iap', this.lang) });
+        } else {
+          const pay = await IapService.buyMall(this.hostContext(), iapId, mallStr(this.product.iapType), oid);
+          promptAction.showToast({ message: pay.message });
+        }
+      } else {
+        promptAction.showToast({ message: I18n.t('mall_order_ok', this.lang) });
+      }
       if (oid.length > 0) {
         router.pushUrl({
           url: 'pages/mall/MallOrderDetailPage',
@@ -437,7 +455,8 @@ struct MallConfirmPage {
             .fontWeight(FontWeight.Bold)
             .fontColor('#CF0A2C')
             .layoutWeight(1)
-          Button(this.submitting ? I18n.t('mall_submitting', this.lang) : I18n.t('mall_submit', this.lang))
+          Button(this.submitting ? I18n.t('mall_submitting', this.lang) :
+            (this.isCash() && this.needCashHint() ? I18n.t('mall_pay_now', this.lang) : I18n.t('mall_submit', this.lang)))
             .height(42)
             .width(140)
             .backgroundColor('#CF0A2C')

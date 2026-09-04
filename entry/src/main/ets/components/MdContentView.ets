@@ -29,6 +29,7 @@ struct MdInlineText {
 struct MdImageBlock {
   @StorageLink('appLang') lang: string = I18n.HANS;
   @Prop src: string = '';
+  @Prop lockHalf: boolean = false;
   @State private failed: boolean = false;
   @State private previewOpen: boolean = false;
   @State private zoomScale: number = 1;
@@ -146,6 +147,28 @@ struct MdImageBlock {
           .fontSize(12)
           .fontColor($r('app.color.text_secondary'))
           .width('100%')
+      } else if (this.lockHalf) {
+        Stack({ alignContent: Alignment.Bottom }) {
+          Image(this.resolved())
+            .width('100%')
+            .height(168)
+            .objectFit(ImageFit.Cover)
+            .borderRadius(8)
+            .onError(() => {
+              this.failed = true;
+            })
+          Column()
+            .width('100%')
+            .height(88)
+            .linearGradient({
+              angle: 180,
+              colors: [['#00FFFFFF', 0], ['#FFFFFFFF', 1]]
+            })
+        }
+        .width('100%')
+        .height(168)
+        .clip(true)
+        .borderRadius(8)
       } else {
         Image(this.resolved())
           .width('100%')
@@ -238,6 +261,7 @@ struct MdTableBlock {
 export struct MdContentView {
   @Prop content: string = '';
   @Prop compact: boolean = false;
+  @Prop lockHalf: boolean = false;
 
   build() {
     Column({ space: this.compact ? 6 : 8 }) {
@@ -255,7 +279,7 @@ export struct MdContentView {
         } else if (block.kind === 'hr') {
           Divider().color($r('app.color.divider')).strokeWidth(1).margin({ top: 4, bottom: 4 })
         } else if (block.kind === 'img') {
-          MdImageBlock({ src: block.src })
+          MdImageBlock({ src: block.src, lockHalf: this.lockHalf })
         } else if (block.kind === 'table') {
           MdTableBlock({ rows: block.rows, compact: this.compact })
         } else if (block.kind === 'li') {

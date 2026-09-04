@@ -1,5 +1,7 @@
+import { common } from '@kit.AbilityKit';
 import { promptAction, router } from '@kit.ArkUI';
 import { I18n } from '../../common/i18n/I18n';
+import { IapService } from '../../common/utils/IapService';
 import {
   MallOrder,
   mallFenText,
@@ -25,9 +27,18 @@ struct MallOrdersPage {
     this.reload();
   }
 
+  private hostContext(): common.UIAbilityContext {
+    const host = this.getUIContext().getHostContext();
+    if (host) {
+      return host as common.UIAbilityContext;
+    }
+    return getContext(this) as common.UIAbilityContext;
+  }
+
   private async reload(): Promise<void> {
     this.loading = true;
     try {
+      await IapService.restoreUnfinished(this.hostContext());
       this.items = await this.repo.orders();
     } catch (err) {
       this.items = [];

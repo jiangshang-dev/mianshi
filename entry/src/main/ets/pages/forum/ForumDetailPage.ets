@@ -474,35 +474,38 @@ struct ForumDetailPage {
           .justifyContent(FlexAlign.Center)
         } else {
           Refresh({ refreshing: this.refreshing }) {
-            Scroll() {
-              Column() {
+            List({ space: 0 }) {
+              ListItem() {
                 this.postBody()
+              }
+              ListItem() {
                 this.commentHeader()
-                if (this.threadList.length === 0) {
+              }
+              if (this.threadList.length === 0) {
+                ListItem() {
                   Text(I18n.t('forum_reply_empty', this.lang))
                     .fontSize(13)
                     .fontColor($r('app.color.text_muted'))
                     .width('100%')
                     .padding({ left: 12, right: 12, top: 16, bottom: 16 })
-                } else {
-                  Column({ space: 10 }) {
-                    ForEach(this.threadList, (thread: ForumReplyThread) => {
-                      this.threadCard(thread)
-                    }, (thread: ForumReplyThread) =>
-                      `${this.replyTick}-${mallStr(thread.root.id)}-${thread.floor}-${mallNum(thread.root.likeCount)}-${thread.children.length}`)
-                  }
-                  .width('100%')
-                  .padding({ left: 12, right: 12, bottom: 20 })
                 }
+              } else {
+                ForEach(this.threadList, (thread: ForumReplyThread) => {
+                  ListItem() {
+                    this.threadCard(thread)
+                  }
+                  .margin({ left: 12, right: 12, bottom: 10 })
+                }, (thread: ForumReplyThread) =>
+                  `${this.replyTick}-${mallStr(thread.root.id)}-${thread.floor}-${mallNum(thread.root.likeCount)}-${thread.children.length}-${mallBool(thread.root.pending) ? 1 : 0}-${mallStr(thread.root.rejectHint)}`)
               }
-              .width('100%')
-              .alignItems(HorizontalAlign.Start)
+              ListItem() {
+                Row().width('100%').height(12)
+              }
             }
-            .align(Alignment.TopStart)
-            .layoutWeight(1)
             .width('100%')
+            .height('100%')
             .scrollBar(BarState.Off)
-            .edgeEffect(EdgeEffect.Spring)
+            .edgeEffect(EdgeEffect.None)
           }
           .layoutWeight(1)
           .width('100%')

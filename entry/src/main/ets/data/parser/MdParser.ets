@@ -322,6 +322,11 @@ export class MdBlocks {
       if (close > rb + 2 && close === t.length - 1) {
         return MdBlocks.cleanImageSrc(t.substring(rb + 2, close));
       }
+      const raw = t.substring(rb + 2);
+      const src = MdBlocks.cleanImageSrc(raw.endsWith(')') ? raw.substring(0, raw.length - 1) : raw);
+      if (src.indexOf('http://') === 0 || src.indexOf('https://') === 0) {
+        return src;
+      }
     }
     const lower = t.toLowerCase();
     if (lower.startsWith('<img')) {
@@ -442,6 +447,14 @@ export class MdBlocks {
               flushText();
               out.push({ kind: 'img', text: '', src: src });
               i = close + 1;
+              continue;
+            }
+          } else {
+            const src = MdBlocks.cleanImageSrc(text.substring(rb + 2).trim());
+            if (src.indexOf('http://') === 0 || src.indexOf('https://') === 0) {
+              flushText();
+              out.push({ kind: 'img', text: '', src: src });
+              i = text.length;
               continue;
             }
           }

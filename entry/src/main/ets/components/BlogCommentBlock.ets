@@ -1,11 +1,20 @@
 import { promptAction } from '@kit.ArkUI';
 import { I18n } from '../common/i18n/I18n';
-import { BlogComment, copyBlogComment } from '../common/models/BlogTypes';
+import { BlogComment, copyBlogComment, mallBool } from '../common/models/BlogTypes';
 import { mallNum, mallStr } from '../common/models/MallTypes';
 import { BlogRepository } from '../data/repository/BlogRepository';
 import { CommentEmojis } from '../common/utils/CommentEmojis';
 import { ForumUi } from '../common/utils/ForumUi';
 import { LoginGate } from '../common/utils/LoginGate';
+
+interface DialogResult {
+  index: number;
+}
+
+interface FlatBlogReply {
+  item: BlogComment;
+  depth: number;
+}
 
 @Component
 export struct BlogCommentBlock {
@@ -15,6 +24,7 @@ export struct BlogCommentBlock {
   @Prop authorName: string = '';
   @State private comments: BlogComment[] = [];
   @State private loading: boolean = false;
+  @State private commentTick: number = 0;
   @State private replyText: string = '';
   @State private replyToId: string = '';
   @State private replyToName: string = '';
@@ -46,8 +56,10 @@ export struct BlogCommentBlock {
     this.loading = true;
     try {
       this.comments = await this.repo.comments(this.articleId);
+      this.commentTick = this.commentTick + 1;
     } catch (_e) {
       this.comments = [];
+      this.commentTick = this.commentTick + 1;
     } finally {
       this.loading = false;
     }
@@ -56,17 +68,33 @@ export struct BlogCommentBlock {
   private totalCount(): number {
     let n = this.comments.length;
     for (let i = 0; i < this.comments.length; i++) {
-      n += mallNum(this.comments[i].replyCount);
+      n += this.flatReplies(this.comments[i]).length;
     }
     return n;
   }
 
-  private childReplies(item: BlogComment): BlogComment[] {
-    if (item.replies === undefined) {
-      const empty: BlogComment[] = [];
-      return empty;
+  private flatReplies(item: BlogComment): FlatBlogReply[] {
+    const out: FlatBlogReply[] = [];
+    this.collectFlat(item.replies, 1, out);
+    return out;
+  }
+
+  private collectFlat(src: BlogComment[] | undefined, depth: number, out: FlatBlogReply[]): void {
+    if (src === undefined) {
+      return;
     }
-    return item.replies;
+    for (let i = 0; i < src.length; i++) {
+      const row: FlatBlogReply = {
+        item: src[i],
+        depth: depth
+      };
+      out.push(row);
+      this.collectFlat(src[i].replies, depth + 1, out);
+    }
+  }
+
+  private commentKey(item: BlogComment): string {
+    return `${this.commentTick}-${mallStr(item.id)}-${mallNum(item.status)}-${mallStr(item.hint)}-${mallNum(item.likeCount)}-${mallStr(item.content)}-${mallBool(item.mine) ? 1 : 0}`;
   }
 
   private startReply(item: BlogComment): void {
@@ -138,6 +166,40 @@ export struct BlogCommentBlock {
     return next;
   }
 
+  private isMine(item: BlogComment): boolean {
+    return mallBool(item.mine);
+  }
+
+  private confirmDelete(item: BlogComment): void {
+    const id = mallStr(item.id);
+    if (id.length === 0) {
+      return;
+    }
+    promptAction.showDialog({
+      title: I18n.t('delete', this.lang),
+      message: I18n.t('blog_comment_delete_msg', this.lang),
+      buttons: [
+        { text: I18n.t('cancel', this.lang), color: '#6B7280' },
+        { text: I18n.t('delete', this.lang), color: '#DC2626' }
+      ]
+    }).then((res: DialogResult) => {
+      if (res.index !== 1) {
+        return;
+      }
+      this.repo.deleteComment(id).then(() => {
+        promptAction.showToast({ message: I18n.t('blog_comment_deleted', this.lang) });
+        BlogRepository.bumpList();
+        this.onPosted();
+        this.reload();
+      }).catch((err: Error) => {
+        promptAction.showToast({
+          message: err.message.length > 0 ? err.message : I18n.t('forum_delete_fail', this.lang)
+        });
+      });
+    }).catch(() => {
+    });
+  }
+
   private vote(item: BlogComment, action: number): void {
     LoginGate.ensure(I18n.t('blog_like', this.lang), () => {
       this.repo.voteComment(mallStr(item.id), action).then(() => {
@@ -173,11 +235,11 @@ export struct BlogCommentBlock {
           .fontWeight(FontWeight.Bold)
           .fontColor($r('app.color.text_primary'))
           .layoutWeight(1)
-        Text(I18n.t('blog_toc', this.lang))
-          .fontSize(13)
-          .fontColor('#2563EB')
-          .padding({ right: 12 })
-          .onClick(() => this.onOpenToc())
+        // Text(I18n.t('blog_toc', this.lang))
+        //   .fontSize(13)
+        //   .fontColor('#2563EB')
+        //   .padding({ right: 12 })
+        //   .onClick(() => this.onOpenToc())
         Row({ space: 2 }) {
           Text(I18n.t('blog_hot', this.lang))
             .fontSize(13)
@@ -201,8 +263,29 @@ export struct BlogCommentBlock {
           .padding({ top: 8, bottom: 8 })
       } else {
         ForEach(this.comments, (item: BlogComment) => {
-          this.rootCard(item)
-        }, (item: BlogComment) => mallStr(item.id))
+          Column({ space: 8 }) {
+            this.commentBody(item, false)
+            if (this.flatReplies(item).length > 0) {
+              Column({ space: 8 }) {
+                ForEach(this.flatReplies(item), (child: FlatBlogReply) => {
+                  Column() {
+                    this.commentBody(child.item, true)
+                  }
+                  .width('100%')
+                  .padding({ left: (child.depth - 1) * 12 })
+                }, (child: FlatBlogReply) => `${this.commentKey(child.item)}-${child.depth}`)
+              }
+              .width('100%')
+              .alignItems(HorizontalAlign.Start)
+              .padding({ left: 10, right: 8, top: 8, bottom: 8 })
+              .backgroundColor('#F8FAFC')
+              .borderRadius(8)
+            }
+          }
+          .width('100%')
+          .alignItems(HorizontalAlign.Start)
+          .padding({ top: 4, bottom: 8 })
+        }, (item: BlogComment) => this.commentKey(item))
       }
 
       if (this.replyToName.length > 0) {
@@ -268,28 +351,6 @@ export struct BlogCommentBlock {
   }
 
   @Builder
-  rootCard(item: BlogComment) {
-    Column({ space: 8 }) {
-      this.commentBody(item, false)
-      if (this.childReplies(item).length > 0) {
-        Column({ space: 8 }) {
-          ForEach(this.childReplies(item), (child: BlogComment) => {
-            this.commentBody(child, true)
-          }, (child: BlogComment) => mallStr(child.id))
-        }
-        .width('100%')
-        .alignItems(HorizontalAlign.Start)
-        .padding({ left: 10, right: 8, top: 8, bottom: 8 })
-        .backgroundColor('#F8FAFC')
-        .borderRadius(8)
-      }
-    }
-    .width('100%')
-    .alignItems(HorizontalAlign.Start)
-    .padding({ top: 4, bottom: 8 })
-  }
-
-  @Builder
   commentBody(item: BlogComment, nested: boolean) {
     Row({ space: 10 }) {
       if (!nested) {
@@ -344,6 +405,12 @@ export struct BlogCommentBlock {
             .fontSize(12)
             .fontColor('#2563EB')
             .onClick(() => this.startReply(item))
+          if (this.isMine(item)) {
+            Text(I18n.t('delete', this.lang))
+              .fontSize(12)
+              .fontColor('#DC2626')
+              .onClick(() => this.confirmDelete(item))
+          }
           Blank()
           Row({ space: 4 }) {
             Image($r('app.media.ic_comment_like'))

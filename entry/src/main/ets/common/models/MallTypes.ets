@@ -13,6 +13,8 @@ export interface MallProduct {
   freightFen?: number;
   stock?: number;
   soldCount?: number;
+  iapProductId?: string;
+  iapType?: string;
   virtualHint?: string;
   status?: number;
   memberDays?: number;
@@ -52,6 +54,8 @@ export interface MallOrder {
   payAmountFen?: number;
   status?: string;
   payChannel?: string;
+  iapProductId?: string;
+  iapType?: string;
   receiverName?: string;
   receiverPhone?: string;
   receiverRegion?: string;
@@ -143,6 +147,13 @@ export interface MallCreateBody {
   payType: string;
 }
 
+export interface MallIapVerifyBody {
+  purchaseData: string;
+  jwsPurchaseOrder: string;
+  productId: string;
+  source: string;
+}
+
 export interface MallAddressBody {
   id: string;
   receiverName: string;
@@ -200,6 +211,8 @@ export function copyMallProduct(raw: MallProduct): MallProduct {
       freightFen: mallNum(raw.freightFen),
       stock: mallNum(raw.stock, -1),
       soldCount: mallNum(raw.soldCount),
+      iapProductId: mallStr(raw.iapProductId),
+      iapType: mallStr(raw.iapType),
       virtualHint: mallStr(raw.virtualHint),
       status: mallNum(raw.status, 1),
       memberDays: mallNum(raw.memberDays),
@@ -255,6 +268,8 @@ export function copyMallOrder(raw: MallOrder): MallOrder {
       payAmountFen: mallNum(raw.payAmountFen),
       status: mallStr(raw.status),
       payChannel: mallStr(raw.payChannel),
+      iapProductId: mallStr(raw.iapProductId),
+      iapType: mallStr(raw.iapType),
       receiverName: mallStr(raw.receiverName),
       receiverPhone: mallStr(raw.receiverPhone),
       receiverRegion: mallStr(raw.receiverRegion),

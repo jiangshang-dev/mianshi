@@ -309,6 +309,7 @@ export struct BlogPage {
           .height('100%')
           .padding({ left: 12, right: 12, top: 8, bottom: 12 })
           .scrollBar(BarState.Off)
+          .edgeEffect(EdgeEffect.None)
           .onReachEnd(() => {
             if (this.finished || this.loading) {
               return;

@@ -1,7 +1,7 @@
 import { promptAction, router } from '@kit.ArkUI';
 import { pasteboard } from '@kit.BasicServicesKit';
 import { I18n } from '../../common/i18n/I18n';
-import { BlogArticle, mallBool } from '../../common/models/BlogTypes';
+import { BlogArticle, copyBlogArticle, mallBool } from '../../common/models/BlogTypes';
 import { mallNum, mallStr } from '../../common/models/MallTypes';
 import { MdContentView } from '../../components/MdContentView';
 import { BlogCommentBlock } from '../../components/BlogCommentBlock';
@@ -69,7 +69,7 @@ struct BlogDetailPage {
       this.loading = true;
     }
     try {
-      const detail = await this.repo.detail(this.articleId);
+      const detail = copyBlogArticle(await this.repo.detail(this.articleId));
       this.article = detail;
       this.sections = MdParser.splitSections(mallStr(detail.content));
       const pts = mallNum(detail.readPoints);
@@ -189,6 +189,10 @@ struct BlogDetailPage {
     return this.article === null ? false : mallBool(this.article.vipLocked);
   }
 
+  private articleVipOnly(): boolean {
+    return this.article === null ? false : mallBool(this.article.vipOnly);
+  }
+
   private articleViewCount(): number {
     return this.article === null ? 0 : mallNum(this.article.viewCount);
   }
@@ -298,7 +302,7 @@ struct BlogDetailPage {
               if (this.sections.length === 0) {
                 ListItem() {
                   Column() {
-                    MdContentView({ content: this.articleContent() })
+                    MdContentView({ content: this.articleContent(), lockHalf: this.articleVipLocked() })
                   }
                   .padding({ left: 16, right: 16, top: 4 })
                 }
@@ -311,7 +315,7 @@ struct BlogDetailPage {
                         .fontWeight(FontWeight.Bold)
                         .fontColor($r('app.color.text_primary'))
                         .width('100%')
-                      MdContentView({ content: sec.content })
+                      MdContentView({ content: sec.content, lockHalf: this.articleVipLocked() })
                     }
                     .padding({ left: 16, right: 16, top: 10 })
                   }
@@ -339,21 +343,27 @@ struct BlogDetailPage {
 
               if (this.articleVipLocked()) {
                 ListItem() {
-                  Column({ space: 10 }) {
-                    Text(I18n.t('blog_vip_lock', this.lang))
-                      .fontSize(14)
-                      .fontColor($r('app.color.text_secondary'))
-                    Button(I18n.t('blog_open_vip', this.lang))
-                      .width('100%')
-                      .height(42)
-                      .backgroundColor($r('app.color.accent'))
-                      .onClick(() => this.openMember())
+                  Column() {
+                    Column({ space: 10 }) {
+                      Text(I18n.t('blog_vip_lock', this.lang))
+                        .fontSize(14)
+                        .fontColor($r('app.color.text_secondary'))
+                        .width('100%')
+                        .textAlign(TextAlign.Center)
+                      Button(I18n.t('blog_open_vip', this.lang))
+                        .width('100%')
+                        .height(42)
+                        .backgroundColor($r('app.color.accent'))
+                        .onClick(() => this.openMember())
+                    }
+                    .width('100%')
+                    .alignItems(HorizontalAlign.Center)
+                    .padding({ left: 16, right: 16, top: 16, bottom: 16 })
+                    .backgroundColor('#FFF7ED')
+                    .borderRadius(12)
                   }
                   .width('100%')
-                  .padding(16)
-                  .margin({ left: 16, right: 16, bottom: 12 })
-                  .backgroundColor('#FFF7ED')
-                  .borderRadius(12)
+                  .padding({ left: 16, right: 16, bottom: 12 })
                 }
               }
 
@@ -380,7 +390,9 @@ struct BlogDetailPage {
             }
             .layoutWeight(1)
             .width('100%')
+            .height('100%')
             .scrollBar(BarState.Off)
+            .edgeEffect(EdgeEffect.None)
           }
           .layoutWeight(1)
           .width('100%')
@@ -431,11 +443,25 @@ struct BlogDetailPage {
   @Builder
   articleHeader() {
     Column({ space: 12 }) {
-      Text(this.articleTitle())
-        .fontSize(22)
-        .fontWeight(FontWeight.Bold)
-        .fontColor($r('app.color.text_primary'))
-        .width('100%')
+      Row({ space: 8 }) {
+        Text(this.articleTitle())
+          .fontSize(22)
+          .fontWeight(FontWeight.Bold)
+          .fontColor($r('app.color.text_primary'))
+          .layoutWeight(1)
+        if (this.articleVipOnly()) {
+          Text('VIP')
+            .fontSize(11)
+            .fontWeight(FontWeight.Medium)
+            .fontColor('#FFFFFF')
+            .backgroundColor('#D97706')
+            .padding({ left: 7, right: 7, top: 2, bottom: 2 })
+            .borderRadius(4)
+            .margin({ top: 4 })
+        }
+      }
+      .width('100%')
+      .alignItems(VerticalAlign.Top)
 
       Row() {
         Column() {
@@ -463,6 +489,14 @@ struct BlogDetailPage {
               .backgroundColor('#2563EB')
               .padding({ left: 5, right: 5, top: 1, bottom: 1 })
               .borderRadius(4)
+            if (this.articleVipOnly()) {
+              Text('VIP')
+                .fontSize(10)
+                .fontColor('#FFFFFF')
+                .backgroundColor('#D97706')
+                .padding({ left: 5, right: 5, top: 1, bottom: 1 })
+                .borderRadius(4)
+            }
           }
           .alignItems(VerticalAlign.Center)
           Text(`${ForumUi.relativeTime(this.articleTime(), this.lang)}${this.articleCategory().length > 0 ?
