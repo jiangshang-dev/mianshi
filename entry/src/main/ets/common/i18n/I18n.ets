@@ -706,6 +706,7 @@ export class I18n {
     I18n.put('forum_untitled', '未命名帖子', '未命名帖子', 'Untitled post');
     I18n.put('forum_share', '分享', '分享', 'Share');
     I18n.put('forum_search_ph', '搜索帖子', '搜尋帖子', 'Search posts');
+    I18n.put('forum_search_idle', '输入关键词，搜索广场帖子', '輸入關鍵詞，搜尋廣場帖子', 'Type a keyword to search posts');
     I18n.put('forum_search_empty', '没有找到相关帖子', '沒有找到相關帖子', 'No matching posts');
     I18n.put('forum_soon', '即将开放', '即將開放', 'Coming soon');
     I18n.put('forum_copied', '已复制', '已複製', 'Copied');
@@ -754,6 +755,7 @@ export class I18n {
     I18n.put('blog_comment_delete_msg', '确定删除这条评论吗？其下回复也会一起删除。', '確定刪除這條評論嗎？其下回覆也會一起刪除。', 'Delete this comment and its replies?');
     I18n.put('blog_comment_deleted', '评论已删除', '評論已刪除', 'Comment deleted');
     I18n.put('blog_search_ph', '搜索专栏', '搜尋專欄', 'Search columns');
+    I18n.put('blog_search_idle', '输入关键词，搜索专栏文章', '輸入關鍵詞，搜尋專欄文章', 'Type a keyword to search columns');
     I18n.put('blog_search_empty', '没有找到相关文章', '沒有找到相關文章', 'No matching articles');
     I18n.put('blog_topic', '专题', '專題', 'Topic');
     I18n.put('blog_view_topic', '查看专题', '查看專題', 'Open topic');

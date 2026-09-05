@@ -27,6 +27,8 @@
     "pages/mall/MallOrdersPage",
     "pages/mall/MallOrderDetailPage",
     "pages/blog/BlogDetailPage",
+    "pages/blog/BlogSearchPage",
+    "pages/forum/ForumSearchPage",
     "pages/forum/ForumDetailPage",
     "pages/forum/ForumRepliesPage",
     "pages/forum/ForumComposePage"

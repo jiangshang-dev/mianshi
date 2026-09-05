@@ -16,9 +16,6 @@ export struct BlogPage {
   @State private refreshing: boolean = false;
   @State private pageNo: number = 1;
   @State private finished: boolean = false;
-  @State private keyword: string = '';
-  @State private keywordDraft: string = '';
-  @State private searchOpen: boolean = false;
   private repo: BlogRepository = BlogRepository.getInstance();
   private lastTick: number = 0;
 
@@ -61,7 +58,7 @@ export struct BlogPage {
   }
 
   private async loadPage(reset: boolean): Promise<void> {
-    const page = await this.repo.articles(this.tabId, this.pageNo, this.keyword);
+    const page = await this.repo.articles(this.tabId, this.pageNo, '');
     const records = page.records !== undefined ? page.records : [];
     if (reset) {
       this.articles = records;
@@ -106,18 +103,8 @@ export struct BlogPage {
     this.refreshList();
   }
 
-  private applySearch(): void {
-    this.keyword = this.keywordDraft.trim();
-    this.refreshList();
-  }
-
-  private toggleSearch(): void {
-    this.searchOpen = !this.searchOpen;
-    if (!this.searchOpen && this.keyword.length > 0) {
-      this.keyword = '';
-      this.keywordDraft = '';
-      this.refreshList();
-    }
+  private openSearch(): void {
+    router.pushUrl({ url: 'pages/blog/BlogSearchPage' });
   }
 
   private filterSoon(): void {
@@ -136,16 +123,13 @@ export struct BlogPage {
   }
 
   private topicItem(): BlogArticle | null {
-    if (this.keyword.length > 0 || this.tabId !== 'recommend' || this.articles.length === 0) {
+    if (this.tabId !== 'recommend' || this.articles.length === 0) {
       return null;
     }
     return this.articles[0];
   }
 
   private featuredItem(): BlogArticle | null {
-    if (this.keyword.length > 0) {
-      return null;
-    }
     const start = this.topicItem() !== null ? 1 : 0;
     if (this.articles.length <= start) {
       return null;
@@ -191,9 +175,6 @@ export struct BlogPage {
   }
 
   private emptyText(): string {
-    if (this.keyword.length > 0) {
-      return I18n.t('blog_search_empty', this.lang);
-    }
     return I18n.t('blog_empty', this.lang);
   }
 
@@ -210,7 +191,7 @@ export struct BlogPage {
           .height(22)
           .objectFit(ImageFit.Contain)
           .fillColor('#111827')
-          .onClick(() => this.toggleSearch())
+          .onClick(() => this.openSearch())
         Image($r('app.media.ic_blog_filter'))
           .width(22)
           .height(22)
@@ -221,30 +202,6 @@ export struct BlogPage {
       .width('100%')
       .padding({ left: 16, right: 16, top: 8, bottom: 2 })
       .alignItems(VerticalAlign.Center)
-
-      if (this.searchOpen) {
-        Row({ space: 8 }) {
-          TextInput({ placeholder: I18n.t('blog_search_ph', this.lang), text: this.keywordDraft })
-            .layoutWeight(1)
-            .height(36)
-            .backgroundColor('#FFFFFF')
-            .fontColor($r('app.color.text_primary'))
-            .placeholderColor($r('app.color.text_muted'))
-            .borderRadius(18)
-            .padding({ left: 12, right: 12 })
-            .onChange((v: string) => {
-              this.keywordDraft = v;
-            })
-            .onSubmit(() => this.applySearch())
-          Text(I18n.t('search', this.lang))
-            .fontSize(14)
-            .fontColor($r('app.color.accent'))
-            .onClick(() => this.applySearch())
-        }
-        .width('100%')
-        .height(44)
-        .padding({ left: 16, right: 16, top: 4, bottom: 4 })
-      }
 
       Scroll() {
         Row({ space: 18 }) {

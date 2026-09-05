@@ -6,25 +6,29 @@ const KEY = 'search_history';
 const MAX = 10;
 const SEP = '\n';
 
+export const BLOG_SEARCH_HISTORY = 'blog_search_history';
+export const FORUM_SEARCH_HISTORY = 'forum_search_history';
+
 /** 搜索历史：本地 Preferences 缓存 */
 export class SearchHistoryStore {
-  static async load(ctx: common.UIAbilityContext): Promise<string[]> {
+
+  static async load(ctx: common.UIAbilityContext, key: string = KEY): Promise<string[]> {
     try {
       const pref = await preferences.getPreferences(ctx, PREF);
-      const raw = await pref.get(KEY, '') as string;
+      const raw = await pref.get(key, '') as string;
       return SearchHistoryStore.split(raw);
     } catch (_e) {
       return [];
     }
   }
 
-  static async add(ctx: common.UIAbilityContext, keyword: string): Promise<string[]> {
+  static async add(ctx: common.UIAbilityContext, keyword: string, key: string = KEY): Promise<string[]> {
     const word = keyword.trim();
     if (word.length === 0) {
-      return SearchHistoryStore.load(ctx);
+      return SearchHistoryStore.load(ctx, key);
     }
     const next: string[] = [word];
-    const prev = await SearchHistoryStore.load(ctx);
+    const prev = await SearchHistoryStore.load(ctx, key);
     for (let i = 0; i < prev.length; i++) {
       if (prev[i] !== word) {
         next.push(prev[i]);
@@ -33,18 +37,18 @@ export class SearchHistoryStore {
     if (next.length > MAX) {
       next.length = MAX;
     }
-    await SearchHistoryStore.save(ctx, next);
+    await SearchHistoryStore.save(ctx, next, key);
     return next;
   }
 
-  static async clear(ctx: common.UIAbilityContext): Promise<void> {
-    await SearchHistoryStore.save(ctx, []);
+  static async clear(ctx: common.UIAbilityContext, key: string = KEY): Promise<void> {
+    await SearchHistoryStore.save(ctx, [], key);
   }
 
-  private static async save(ctx: common.UIAbilityContext, items: string[]): Promise<void> {
+  private static async save(ctx: common.UIAbilityContext, items: string[], key: string): Promise<void> {
     try {
       const pref = await preferences.getPreferences(ctx, PREF);
-      await pref.put(KEY, items.join(SEP));
+      await pref.put(key, items.join(SEP));
       await pref.flush();
     } catch (_e) {
     }
