@@ -721,6 +721,8 @@ export class I18n {
     I18n.put('forum_delete_msg', '确定删除这条帖子吗？', '確定刪除這條帖子嗎？', 'Delete this post?');
     I18n.put('forum_delete_fail', '删除失败', '刪除失敗', 'Could not delete');
     I18n.put('forum_deleted', '已删除', '已刪除', 'Deleted');
+    I18n.put('forum_reply_delete_msg', '确定删除这条评论吗？其下回复也会一起删除。', '確定刪除這條評論嗎？其下回覆也會一起刪除。', 'Delete this comment and its replies?');
+    I18n.put('forum_reply_deleted', '评论已删除', '評論已刪除', 'Comment deleted');
     I18n.put('forum_detail', '帖子详情', '帖子詳情', 'Post');
     I18n.put('forum_not_found', '帖子不存在', '帖子不存在', 'Post not found');
     I18n.put('forum_all_replies', '全部回复', '全部回覆', 'All replies');

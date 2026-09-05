@@ -18,6 +18,8 @@ export struct ForumReplyBlock {
   };
   onToggleContent: (item: ForumReply) => void = (_item: ForumReply) => {
   };
+  onDelete: (item: ForumReply) => void = (_item: ForumReply) => {
+  };
 
   private likeColor(on: boolean): string {
     return on ? '#2563EB' : '#9CA3AF';
@@ -118,6 +120,12 @@ export struct ForumReplyBlock {
             .fontColor('#2563EB')
         }
         .onClick(() => this.onReply(this.reply))
+        if (mallBool(this.reply.mine)) {
+          Text(I18n.t('delete', this.lang))
+            .fontSize(12)
+            .fontColor('#DC2626')
+            .onClick(() => this.onDelete(this.reply))
+        }
       }
       .width('100%')
       .alignItems(VerticalAlign.Center)
@@ -163,6 +171,13 @@ export struct ForumReplyBlock {
         }
         .layoutWeight(1)
         .alignItems(VerticalAlign.Center)
+        if (mallBool(this.reply.mine)) {
+          Text(I18n.t('delete', this.lang))
+            .fontSize(12)
+            .fontColor('#DC2626')
+            .margin({ right: 10 })
+            .onClick(() => this.onDelete(this.reply))
+        }
         Text(I18n.t('forum_reply_action', this.lang))
           .fontSize(12)
           .fontColor('#2563EB')
@@ -178,31 +193,25 @@ export struct ForumReplyBlock {
 
   @Builder
   bodyBlock() {
-    if (mallBool(this.reply.rejected)) {
-      Text(mallStr(this.reply.rejectHint).length > 0 ? mallStr(this.reply.rejectHint) : I18n.t('forum_rejected', this.lang))
+    if (mallBool(this.reply.rejected) || mallBool(this.reply.pending)) {
+      Text(mallStr(this.reply.rejectHint).length > 0 ? mallStr(this.reply.rejectHint) :
+        (mallBool(this.reply.pending) ? I18n.t('forum_pending', this.lang) : I18n.t('forum_rejected', this.lang)))
         .fontSize(12)
         .fontColor('#B45309')
         .width('100%')
-    } else {
-      if (mallBool(this.reply.pending)) {
-        Text(mallStr(this.reply.rejectHint).length > 0 ? mallStr(this.reply.rejectHint) : I18n.t('forum_pending', this.lang))
-          .fontSize(12)
-          .fontColor('#B45309')
-          .width('100%')
-      }
-      Text(this.bodyText())
-        .fontSize(14)
-        .fontColor($r('app.color.text_primary'))
-        .lineHeight(22)
-        .maxLines(this.needExpand() ? 3 : 20)
-        .width('100%')
-      if (this.needExpand()) {
-        Text(I18n.t('forum_expand', this.lang))
-          .fontSize(13)
-          .fontColor('#2563EB')
-          .padding({ top: 2, bottom: 2 })
-          .onClick(() => this.onToggleContent(this.reply))
-      }
+    }
+    Text(this.bodyText())
+      .fontSize(14)
+      .fontColor($r('app.color.text_primary'))
+      .lineHeight(22)
+      .maxLines(this.needExpand() ? 3 : 20)
+      .width('100%')
+    if (this.needExpand()) {
+      Text(I18n.t('forum_expand', this.lang))
+        .fontSize(13)
+        .fontColor('#2563EB')
+        .padding({ top: 2, bottom: 2 })
+        .onClick(() => this.onToggleContent(this.reply))
     }
   }
 

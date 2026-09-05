@@ -52,6 +52,7 @@ export interface ForumReply {
   featured?: boolean;
   rejectHint?: string;
   liked?: boolean;
+  mine?: boolean;
   likeCount?: number;
   createTime?: string;
 }
@@ -183,6 +184,7 @@ export function copyForumReply(raw: ForumReply): ForumReply {
     featured: mallBool(raw.featured),
     rejectHint: mallStr(raw.rejectHint),
     liked: mallBool(raw.liked),
+    mine: mallBool(raw.mine),
     likeCount: mallNum(raw.likeCount),
     createTime: mallStr(raw.createTime)
   };

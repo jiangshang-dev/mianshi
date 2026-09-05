@@ -390,6 +390,38 @@ struct ForumDetailPage {
     });
   }
 
+  private confirmDeleteReply(item: ForumReply): void {
+    const id = mallStr(item.id);
+    if (id.length === 0) {
+      return;
+    }
+    promptAction.showDialog({
+      title: I18n.t('delete', this.lang),
+      message: I18n.t('forum_reply_delete_msg', this.lang),
+      buttons: [
+        { text: I18n.t('cancel', this.lang), color: '#6B7280' },
+        { text: I18n.t('delete', this.lang), color: '#DC2626' }
+      ]
+    }).then((res: DialogResult) => {
+      if (res.index !== 1) {
+        return;
+      }
+      this.repo.deleteReply(id).then(() => {
+        promptAction.showToast({ message: I18n.t('forum_reply_deleted', this.lang) });
+        if (this.replyToId === id) {
+          this.clearReplyTarget();
+        }
+        ForumRepository.bumpList();
+        this.load(true);
+      }).catch((err: Error) => {
+        promptAction.showToast({
+          message: err.message.length > 0 ? err.message : I18n.t('forum_delete_fail', this.lang)
+        });
+      });
+    }).catch(() => {
+    });
+  }
+
   private pullRefresh(): void {
     this.refreshing = true;
     this.load(true).then(() => {
@@ -862,6 +894,9 @@ struct ForumDetailPage {
         },
         onToggleContent: (item: ForumReply) => {
           this.toggleContent(item);
+        },
+        onDelete: (item: ForumReply) => {
+          this.confirmDeleteReply(item);
         }
       })
       if (this.previewChildren(thread).length > 0) {
@@ -881,6 +916,9 @@ struct ForumDetailPage {
               },
               onToggleContent: (child: ForumReply) => {
                 this.toggleContent(child);
+              },
+              onDelete: (child: ForumReply) => {
+                this.confirmDeleteReply(child);
               }
             })
           }, (item: ForumReplyRow) =>

@@ -14,6 +14,10 @@ interface ForumRepliesParams {
   rootId?: string;
 }
 
+interface DialogResult {
+  index: number;
+}
+
 @Entry
 @Component
 struct ForumRepliesPage {
@@ -210,6 +214,38 @@ struct ForumRepliesPage {
       return I18n.tf('forum_reply_to_ph', this.replyToName, this.lang);
     }
     return I18n.t('forum_write_reply', this.lang);
+  }
+
+  private confirmDeleteReply(item: ForumReply): void {
+    const id = mallStr(item.id);
+    if (id.length === 0) {
+      return;
+    }
+    promptAction.showDialog({
+      title: I18n.t('delete', this.lang),
+      message: I18n.t('forum_reply_delete_msg', this.lang),
+      buttons: [
+        { text: I18n.t('cancel', this.lang), color: '#6B7280' },
+        { text: I18n.t('delete', this.lang), color: '#DC2626' }
+      ]
+    }).then((res: DialogResult) => {
+      if (res.index !== 1) {
+        return;
+      }
+      this.repo.deleteReply(id).then(() => {
+        promptAction.showToast({ message: I18n.t('forum_reply_deleted', this.lang) });
+        if (this.replyToId === id) {
+          this.clearReplyTarget();
+        }
+        ForumRepository.bumpList();
+        this.load(true);
+      }).catch((err: Error) => {
+        promptAction.showToast({
+          message: err.message.length > 0 ? err.message : I18n.t('forum_delete_fail', this.lang)
+        });
+      });
+    }).catch(() => {
+    });
   }
 
   private likeReply(item: ForumReply): void {
@@ -472,6 +508,9 @@ struct ForumRepliesPage {
         },
         onToggleContent: (item: ForumReply) => {
           this.toggleContent(item);
+        },
+        onDelete: (item: ForumReply) => {
+          this.confirmDeleteReply(item);
         }
       })
       if (thread.children.length > 0) {
@@ -491,6 +530,9 @@ struct ForumRepliesPage {
               },
               onToggleContent: (child: ForumReply) => {
                 this.toggleContent(child);
+              },
+              onDelete: (child: ForumReply) => {
+                this.confirmDeleteReply(child);
               }
             })
           }, (item: ForumReplyRow) =>

@@ -150,6 +150,12 @@ export class ForumRepository {
     return copyForumReply(parsed.result);
   }
 
+  async deleteReply(id: string): Promise<void> {
+    const resp = await HttpClient.postJson(`/api/forum/replies/${id}/delete`, '{}');
+    const parsed: JeecgForumMsgResp = JSON.parse(resp.body) as JeecgForumMsgResp;
+    this.ensureOk(parsed.success, parsed.message, resp.ok, '删除失败');
+  }
+
   async toggleLike(targetType: string, targetId: string): Promise<ForumToggle> {
     const resp = await HttpClient.postJson(`/api/forum/like?targetType=${targetType}&targetId=${targetId}`, '{}');
     const parsed: JeecgForumToggleResp = JSON.parse(resp.body) as JeecgForumToggleResp;
