@@ -7,6 +7,7 @@ import { MdContentView } from '../../components/MdContentView';
 import { BlogCommentBlock } from '../../components/BlogCommentBlock';
 import { MdParser, MdSection } from '../../data/parser/MdParser';
 import { BlogRepository } from '../../data/repository/BlogRepository';
+import { ContentReportNav } from '../../common/utils/ContentReportNav';
 import { ForumUi } from '../../common/utils/ForumUi';
 import { LoginGate } from '../../common/utils/LoginGate';
 
@@ -173,6 +174,14 @@ struct BlogDetailPage {
     return this.article === null ? '' : mallStr(this.article.categoryName);
   }
 
+  private articleIp(): string {
+    return this.article === null ? '' : ForumUi.ipLabel(mallStr(this.article.ipAddress));
+  }
+
+  private reportArticle(): void {
+    ContentReportNav.open(this.lang, 'BLOG_ARTICLE', this.articleId, this.articleTitle());
+  }
+
   private articleTime(): string {
     return this.article === null ? '' : mallStr(this.article.publishTime);
   }
@@ -240,6 +249,11 @@ struct BlogDetailPage {
             .fillColor('#111827')
             .padding({ left: 6, right: 4 })
             .onClick(() => this.shareArticle())
+          Text(I18n.t('content_report', this.lang))
+            .fontSize(14)
+            .fontColor('#6B7280')
+            .padding({ left: 8, top: 6, bottom: 6 })
+            .onClick(() => this.reportArticle())
         }
         .width('100%')
         .padding({ left: 16, right: 16, top: 8, bottom: 8 })
@@ -500,7 +514,7 @@ struct BlogDetailPage {
           }
           .alignItems(VerticalAlign.Center)
           Text(`${ForumUi.relativeTime(this.articleTime(), this.lang)}${this.articleCategory().length > 0 ?
-            ' · ' + this.articleCategory() : ''}`)
+            ' · ' + this.articleCategory() : ''}${this.articleIp().length > 0 ? ' · ' + this.articleIp() : ''}`)
             .fontSize(12)
             .fontColor('#9CA3AF')
         }

@@ -69,6 +69,14 @@ export class ForumUi {
     return raw.substring(0, 10);
   }
 
+  static ipLabel(ip: string): string {
+    const text = mallStr(ip).trim();
+    if (text.length === 0) {
+      return '';
+    }
+    return `IP ${text}`;
+  }
+
   static formatCount(n: number): string {
     if (n >= 10000) {
       return `${(n / 10000).toFixed(1)}w`;

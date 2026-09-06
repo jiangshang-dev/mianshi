@@ -2,6 +2,8 @@ import { promptAction } from '@kit.ArkUI';
 import { I18n } from '../common/i18n/I18n';
 import { LoginGate } from '../common/utils/LoginGate';
 import { CommentUi } from '../common/utils/CommentUi';
+import { ContentReportNav } from '../common/utils/ContentReportNav';
+import { ForumUi } from '../common/utils/ForumUi';
 import { CommentRepository, emptyQuestionComment, QuestionComment } from '../data/repository/CommentRepository';
 
 @Component
@@ -128,10 +130,15 @@ export struct CommentItemRow {
           }
 
           Row() {
-            Text(CommentUi.shortTime(this.item.createTime,
-              I18n.t('comment_month', this.lang),
-              I18n.t('comment_day', this.lang),
-              I18n.t('comment_today', this.lang)))
+            Text(ForumUi.ipLabel(this.item.ipAddress).length > 0 ?
+              `${CommentUi.shortTime(this.item.createTime,
+                I18n.t('comment_month', this.lang),
+                I18n.t('comment_day', this.lang),
+                I18n.t('comment_today', this.lang))} · ${ForumUi.ipLabel(this.item.ipAddress)}` :
+              CommentUi.shortTime(this.item.createTime,
+                I18n.t('comment_month', this.lang),
+                I18n.t('comment_day', this.lang),
+                I18n.t('comment_today', this.lang)))
               .fontSize(12)
               .fontColor($r('app.color.text_muted'))
             if (this.item.status !== 0) {
@@ -144,6 +151,16 @@ export struct CommentItemRow {
                   LoginGate.ensure(I18n.t('comment_feature', this.lang), () => {
                     CommentUi.openCompose(this.item.id, this.item.nickname);
                   });
+                })
+            }
+            if (LoginGate.currentUserId() !== this.item.userId) {
+              Text(I18n.t('content_report', this.lang))
+                .fontSize(12)
+                .fontColor($r('app.color.text_muted'))
+                .margin({ left: 8 })
+                .padding({ left: 2, right: 6, top: 8, bottom: 8 })
+                .onClick(() => {
+                  ContentReportNav.open(this.lang, 'QUESTION_COMMENT', this.item.id, this.item.content);
                 })
             }
             Blank()

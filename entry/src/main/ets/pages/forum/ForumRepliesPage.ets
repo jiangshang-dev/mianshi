@@ -6,6 +6,7 @@ import { mallNum, mallStr } from '../../common/models/MallTypes';
 import { ForumReplyBlock } from '../../components/ForumReplyBlock';
 import { ForumRepository } from '../../data/repository/ForumRepository';
 import { CommentEmojis } from '../../common/utils/CommentEmojis';
+import { ContentReportNav } from '../../common/utils/ContentReportNav';
 import { ForumUi } from '../../common/utils/ForumUi';
 import { LoginGate } from '../../common/utils/LoginGate';
 
@@ -511,6 +512,9 @@ struct ForumRepliesPage {
         },
         onDelete: (item: ForumReply) => {
           this.confirmDeleteReply(item);
+        },
+        onReport: (item: ForumReply) => {
+          ContentReportNav.open(this.lang, 'FORUM_REPLY', mallStr(item.id), mallStr(item.content));
         }
       })
       if (thread.children.length > 0) {
@@ -533,6 +537,9 @@ struct ForumRepliesPage {
               },
               onDelete: (child: ForumReply) => {
                 this.confirmDeleteReply(child);
+              },
+              onReport: (child: ForumReply) => {
+                ContentReportNav.open(this.lang, 'FORUM_REPLY', mallStr(child.id), mallStr(child.content));
               }
             })
           }, (item: ForumReplyRow) =>

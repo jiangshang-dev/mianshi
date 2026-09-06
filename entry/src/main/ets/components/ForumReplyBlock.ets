@@ -20,6 +20,8 @@ export struct ForumReplyBlock {
   };
   onDelete: (item: ForumReply) => void = (_item: ForumReply) => {
   };
+  onReport: (item: ForumReply) => void = (_item: ForumReply) => {
+  };
 
   private likeColor(on: boolean): string {
     return on ? '#2563EB' : '#9CA3AF';
@@ -95,7 +97,9 @@ export struct ForumReplyBlock {
       this.bodyBlock()
 
       Row({ space: 16 }) {
-        Text(ForumUi.relativeTime(mallStr(this.reply.createTime), this.lang))
+        Text(ForumUi.ipLabel(mallStr(this.reply.ipAddress)).length > 0 ?
+          `${ForumUi.relativeTime(mallStr(this.reply.createTime), this.lang)} · ${ForumUi.ipLabel(mallStr(this.reply.ipAddress))}` :
+          ForumUi.relativeTime(mallStr(this.reply.createTime), this.lang))
           .fontSize(12)
           .fontColor('#9CA3AF')
         Row({ space: 4 }) {
@@ -125,6 +129,11 @@ export struct ForumReplyBlock {
             .fontSize(12)
             .fontColor('#DC2626')
             .onClick(() => this.onDelete(this.reply))
+        } else {
+          Text(I18n.t('content_report', this.lang))
+            .fontSize(12)
+            .fontColor('#9CA3AF')
+            .onClick(() => this.onReport(this.reply))
         }
       }
       .width('100%')
@@ -177,6 +186,12 @@ export struct ForumReplyBlock {
             .fontColor('#DC2626')
             .margin({ right: 10 })
             .onClick(() => this.onDelete(this.reply))
+        } else {
+          Text(I18n.t('content_report', this.lang))
+            .fontSize(12)
+            .fontColor('#9CA3AF')
+            .margin({ right: 10 })
+            .onClick(() => this.onReport(this.reply))
         }
         Text(I18n.t('forum_reply_action', this.lang))
           .fontSize(12)
@@ -186,6 +201,11 @@ export struct ForumReplyBlock {
       .width('100%')
       .alignItems(VerticalAlign.Center)
       this.bodyBlock()
+      if (ForumUi.ipLabel(mallStr(this.reply.ipAddress)).length > 0) {
+        Text(ForumUi.ipLabel(mallStr(this.reply.ipAddress)))
+          .fontSize(11)
+          .fontColor('#9CA3AF')
+      }
     }
     .width('100%')
     .alignItems(HorizontalAlign.Start)

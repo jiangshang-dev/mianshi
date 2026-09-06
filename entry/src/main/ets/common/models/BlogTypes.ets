@@ -26,6 +26,7 @@ export interface BlogArticle {
   favoriteCount?: number;
   readPoints?: number;
   publishTime?: string;
+  ipAddress?: string;
 }
 
 export interface BlogArticlePage {
@@ -96,6 +97,7 @@ export interface BlogComment {
   myVote?: number;
   replyCount?: number;
   mine?: boolean;
+  ipAddress?: string;
   replies?: BlogComment[];
 }
 
@@ -178,7 +180,8 @@ export function copyBlogArticle(raw: BlogArticle): BlogArticle {
     commentCount: mallNum(raw.commentCount),
     favoriteCount: mallNum(raw.favoriteCount),
     readPoints: mallNum(raw.readPoints),
-    publishTime: mallStr(raw.publishTime)
+    publishTime: mallStr(raw.publishTime),
+    ipAddress: mallStr(raw.ipAddress)
   };
   return item;
 }
@@ -208,6 +211,7 @@ export function copyBlogComment(raw: BlogComment): BlogComment {
     myVote: mallNum(raw.myVote),
     replyCount: mallNum(raw.replyCount),
     mine: mallBool(raw.mine),
+    ipAddress: mallStr(raw.ipAddress),
     replies: replies
   };
   return item;

@@ -34,6 +34,7 @@ export interface ForumPost {
   favoriteCount?: number;
   postPoints?: number;
   createTime?: string;
+  ipAddress?: string;
   replies?: ForumReply[];
 }
 
@@ -55,6 +56,7 @@ export interface ForumReply {
   mine?: boolean;
   likeCount?: number;
   createTime?: string;
+  ipAddress?: string;
 }
 
 export interface ForumReplyRow {
@@ -186,7 +188,8 @@ export function copyForumReply(raw: ForumReply): ForumReply {
     liked: mallBool(raw.liked),
     mine: mallBool(raw.mine),
     likeCount: mallNum(raw.likeCount),
-    createTime: mallStr(raw.createTime)
+    createTime: mallStr(raw.createTime),
+    ipAddress: mallStr(raw.ipAddress)
   };
   return item;
 }
@@ -226,6 +229,7 @@ export function copyForumPost(raw: ForumPost): ForumPost {
     favoriteCount: mallNum(raw.favoriteCount),
     postPoints: mallNum(raw.postPoints),
     createTime: mallStr(raw.createTime),
+    ipAddress: mallStr(raw.ipAddress),
     replies: replies
   };
   return item;

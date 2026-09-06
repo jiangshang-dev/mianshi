@@ -368,6 +368,17 @@ export class I18n {
     I18n.put('uploading', '上传中…', '上傳中…', 'Uploading…');
     I18n.put('replace_resume', '更换简历', '更換履歷', 'Replace');
     I18n.put('delete', '删除', '刪除', 'Delete');
+    I18n.put('content_report', '举报', '舉報', 'Report');
+    I18n.put('content_report_title', '举报', '舉報', 'Report');
+    I18n.put('content_report_target', '举报对象', '舉報對象', 'Target');
+    I18n.put('content_report_hint', '请说明举报原因', '請說明舉報原因', 'Describe the reason');
+    I18n.put('content_report_ok', '已收到，我们会尽快处理', '已收到，我們會盡快處理', 'Thanks, we will review it');
+    I18n.put('content_report_fail', '提交失败，请稍后重试', '提交失敗，請稍後重試', 'Submit failed, try again later');
+    I18n.put('content_report_ty_spam', '垃圾广告', '垃圾廣告', 'Spam');
+    I18n.put('content_report_ty_porn', '色情低俗', '色情低俗', 'Porn');
+    I18n.put('content_report_ty_abuse', '辱骂攻击', '辱罵攻擊', 'Abuse');
+    I18n.put('content_report_ty_illegal', '违法违规', '違法違規', 'Illegal');
+    I18n.put('content_report_ty_other', '其他', '其他', 'Other');
     I18n.put('picking', '选择文件中…', '選擇檔案中…', 'Choosing file…');
     I18n.put('upload_resume', '上传简历（PDF / Word / TXT）', '上傳履歷（PDF / Word / TXT）', 'Upload resume (PDF / Word / TXT)');
     I18n.put('upload_after_login', '登录后上传简历', '登入後上傳履歷', 'Sign in to upload');

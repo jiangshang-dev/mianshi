@@ -16,6 +16,7 @@
     "pages/profile/AiHistoryPage",
     "pages/profile/AiHistoryDetailPage",
     "pages/profile/FeedbackPage",
+    "pages/profile/ContentReportPage",
     "pages/profile/InboxPage",
     "pages/profile/InboxDetailPage",
     "pages/profile/MemberPage",

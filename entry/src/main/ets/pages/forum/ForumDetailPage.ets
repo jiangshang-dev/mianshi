@@ -6,6 +6,7 @@ import { mallNum, mallStr } from '../../common/models/MallTypes';
 import { ForumReplyBlock } from '../../components/ForumReplyBlock';
 import { ForumRepository } from '../../data/repository/ForumRepository';
 import { CommentEmojis } from '../../common/utils/CommentEmojis';
+import { ContentReportNav } from '../../common/utils/ContentReportNav';
 import { ForumUi } from '../../common/utils/ForumUi';
 import { LoginGate } from '../../common/utils/LoginGate';
 
@@ -218,6 +219,14 @@ struct ForumDetailPage {
 
   private postTime(): string {
     return this.post === null ? '' : mallStr(this.post.createTime);
+  }
+
+  private postIp(): string {
+    return this.post === null ? '' : ForumUi.ipLabel(mallStr(this.post.ipAddress));
+  }
+
+  private reportPost(): void {
+    ContentReportNav.open(this.lang, 'FORUM_POST', this.postId, this.postTitle().length > 0 ? this.postTitle() : this.postContent());
   }
 
   private postHint(): string {
@@ -485,6 +494,12 @@ struct ForumDetailPage {
               .fontColor('#DC2626')
               .padding({ left: 8, top: 6, bottom: 6 })
               .onClick(() => this.confirmDelete())
+          } else if (this.post !== null) {
+            Text(I18n.t('content_report', this.lang))
+              .fontSize(14)
+              .fontColor('#6B7280')
+              .padding({ left: 8, top: 6, bottom: 6 })
+              .onClick(() => this.reportPost())
           }
         }
         .width('100%')
@@ -666,7 +681,9 @@ struct ForumDetailPage {
             }
           }
           .alignItems(VerticalAlign.Center)
-          Text(ForumUi.relativeTime(this.postTime(), this.lang))
+          Text(this.postIp().length > 0 ?
+            `${ForumUi.relativeTime(this.postTime(), this.lang)} · ${this.postIp()}` :
+            ForumUi.relativeTime(this.postTime(), this.lang))
             .fontSize(12)
             .fontColor('#9CA3AF')
         }
@@ -897,6 +914,9 @@ struct ForumDetailPage {
         },
         onDelete: (item: ForumReply) => {
           this.confirmDeleteReply(item);
+        },
+        onReport: (item: ForumReply) => {
+          ContentReportNav.open(this.lang, 'FORUM_REPLY', mallStr(item.id), mallStr(item.content));
         }
       })
       if (this.previewChildren(thread).length > 0) {
@@ -919,6 +939,9 @@ struct ForumDetailPage {
               },
               onDelete: (child: ForumReply) => {
                 this.confirmDeleteReply(child);
+              },
+              onReport: (child: ForumReply) => {
+                ContentReportNav.open(this.lang, 'FORUM_REPLY', mallStr(child.id), mallStr(child.content));
               }
             })
           }, (item: ForumReplyRow) =>

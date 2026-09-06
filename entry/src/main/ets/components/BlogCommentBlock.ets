@@ -4,6 +4,7 @@ import { BlogComment, copyBlogComment, mallBool } from '../common/models/BlogTyp
 import { mallNum, mallStr } from '../common/models/MallTypes';
 import { BlogRepository } from '../data/repository/BlogRepository';
 import { CommentEmojis } from '../common/utils/CommentEmojis';
+import { ContentReportNav } from '../common/utils/ContentReportNav';
 import { ForumUi } from '../common/utils/ForumUi';
 import { LoginGate } from '../common/utils/LoginGate';
 
@@ -398,7 +399,9 @@ export struct BlogCommentBlock {
           .fontColor($r('app.color.text_primary'))
           .width('100%')
         Row({ space: 14 }) {
-          Text(ForumUi.relativeTime(mallStr(item.createTime), this.lang))
+          Text(ForumUi.ipLabel(mallStr(item.ipAddress)).length > 0 ?
+            `${ForumUi.relativeTime(mallStr(item.createTime), this.lang)} · ${ForumUi.ipLabel(mallStr(item.ipAddress))}` :
+            ForumUi.relativeTime(mallStr(item.createTime), this.lang))
             .fontSize(11)
             .fontColor('#9CA3AF')
           Text(I18n.t('blog_reply', this.lang))
@@ -410,6 +413,11 @@ export struct BlogCommentBlock {
               .fontSize(12)
               .fontColor('#DC2626')
               .onClick(() => this.confirmDelete(item))
+          } else {
+            Text(I18n.t('content_report', this.lang))
+              .fontSize(12)
+              .fontColor('#9CA3AF')
+              .onClick(() => ContentReportNav.open(this.lang, 'BLOG_COMMENT', mallStr(item.id), mallStr(item.content)))
           }
           Blank()
           Row({ space: 4 }) {

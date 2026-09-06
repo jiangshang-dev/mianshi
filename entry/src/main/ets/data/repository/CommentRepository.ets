@@ -19,6 +19,7 @@ export interface QuestionComment {
   dislikeCount: number;
   myVote: number;
   replyCount: number;
+  ipAddress: string;
   replies: QuestionComment[];
 }
 
@@ -54,6 +55,7 @@ export function emptyQuestionComment(): QuestionComment {
     dislikeCount: 0,
     myVote: 0,
     replyCount: 0,
+    ipAddress: '',
     replies: []
   };
   return item;
@@ -212,6 +214,7 @@ export class CommentRepository {
       dislikeCount: item.dislikeCount ?? 0,
       myVote: item.myVote ?? 0,
       replyCount: item.replyCount ?? replies.length,
+      ipAddress: item.ipAddress ?? '',
       replies: replies
     };
     return result;
