@@ -244,7 +244,7 @@ export struct InterviewPage {
                 .fontSize(13)
                 .fontColor($r('app.color.accent'))
                 .onClick(() => {
-                  AppStorage.setOrCreate('mainTabIndex', 5);
+                  AppStorage.setOrCreate('mainTabIndex', 4);
                 })
             }
             Text(I18n.t('iv_support', this.lang))

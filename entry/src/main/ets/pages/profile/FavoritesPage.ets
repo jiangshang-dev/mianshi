@@ -5,6 +5,7 @@ import { mallStr } from '../../common/models/MallTypes';
 import { FavoriteItem, FavoriteRepository } from '../../data/repository/FavoriteRepository';
 import { BlogRepository } from '../../data/repository/BlogRepository';
 import { ForumRepository } from '../../data/repository/ForumRepository';
+import { NavBackButton } from '../../components/NavBackButton';
 import { LoginGate } from '../../common/utils/LoginGate';
 import { I18n } from '../../common/i18n/I18n';
 
@@ -194,11 +195,16 @@ struct FavoritesPage {
   build() {
     Column() {
       Row() {
-        Text('‹').fontSize(28).fontColor($r('app.color.text_primary')).padding({ right: 8 }).onClick(() => router.back())
-        Text(I18n.t('favorites', this.lang)).fontSize(18).fontWeight(FontWeight.Bold).fontColor($r('app.color.text_primary')).layoutWeight(1)
+        NavBackButton({ onBack: () => router.back() })
+        Text(I18n.t('favorites', this.lang))
+          .fontSize(20)
+          .fontWeight(FontWeight.Bold)
+          .fontColor($r('app.color.text_primary'))
+          .layoutWeight(1)
       }
       .width('100%')
       .padding({ left: 16, right: 16, top: 12, bottom: 8 })
+      .alignItems(VerticalAlign.Center)
 
       Row({ space: 24 }) {
         ForEach(this.tabs, (tab: ForumTab) => {

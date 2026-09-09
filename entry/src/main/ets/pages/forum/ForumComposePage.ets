@@ -241,24 +241,26 @@ struct ForumComposePage {
           .fontColor($r('app.color.text_primary'))
           .layoutWeight(1)
           .textAlign(TextAlign.Center)
-        if (this.sending) {
-          Row({ space: 4 }) {
-            LoadingProgress().width(14).height(14).color(Color.White)
-            Text(I18n.t('forum_publishing', this.lang))
+        Column() {
+          if (this.sending) {
+            Row({ space: 4 }) {
+              LoadingProgress().width(14).height(14).color(Color.White)
+              Text(I18n.t('forum_publishing', this.lang))
+                .fontSize(14)
+                .fontColor(Color.White)
+            }
+            .padding({ left: 12, right: 12, top: 6, bottom: 6 })
+            .backgroundColor('#93C5FD')
+            .borderRadius(16)
+          } else {
+            Text(I18n.t('forum_publish', this.lang))
               .fontSize(14)
               .fontColor(Color.White)
+              .backgroundColor($r('app.color.accent'))
+              .padding({ left: 16, right: 16, top: 6, bottom: 6 })
+              .borderRadius(16)
+              .onClick(() => this.publish())
           }
-          .padding({ left: 12, right: 12, top: 6, bottom: 6 })
-          .backgroundColor('#93C5FD')
-          .borderRadius(16)
-        } else {
-          Text(I18n.t('forum_publish', this.lang))
-            .fontSize(14)
-            .fontColor(Color.White)
-            .backgroundColor($r('app.color.accent'))
-            .padding({ left: 16, right: 16, top: 6, bottom: 6 })
-            .borderRadius(16)
-            .onClick(() => this.publish())
         }
       }
       .width('100%')

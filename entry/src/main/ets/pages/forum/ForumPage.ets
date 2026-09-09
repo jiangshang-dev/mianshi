@@ -11,6 +11,7 @@ import {
   copyForumPost
 } from '../../common/models/ForumTypes';
 import { mallNum, mallStr } from '../../common/models/MallTypes';
+import { NavBackButton } from '../../components/NavBackButton';
 import { ForumRepository } from '../../data/repository/ForumRepository';
 import { LoginGate } from '../../common/utils/LoginGate';
 
@@ -21,6 +22,7 @@ interface DialogResult {
 @Component
 export struct ForumPage {
   @StorageLink('appLang') @Watch('onLangChange') lang: string = I18n.HANS;
+  @Prop showNavBack: boolean = false;
   @StorageLink('forumListTick') @Watch('onForumListTick') forumListTick: number = 0;
   @State private tabs: ForumTab[] = [];
   @State private filters: ForumFilter[] = [];
@@ -397,8 +399,11 @@ export struct ForumPage {
     Stack({ alignContent: Alignment.BottomEnd }) {
       Column() {
         Row() {
+          if (this.showNavBack) {
+            NavBackButton({ onBack: () => router.back() })
+          }
           Text(I18n.t('tab_forum', this.lang))
-            .fontSize(22)
+            .fontSize(20)
             .fontWeight(FontWeight.Bold)
             .fontColor($r('app.color.text_primary'))
             .layoutWeight(1)

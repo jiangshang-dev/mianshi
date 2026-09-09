@@ -2,12 +2,14 @@ import { promptAction, router } from '@kit.ArkUI';
 import { I18n } from '../../common/i18n/I18n';
 import { BlogArticle, BlogCategory, BlogTab, mallBool } from '../../common/models/BlogTypes';
 import { mallNum, mallStr } from '../../common/models/MallTypes';
+import { NavBackButton } from '../../components/NavBackButton';
 import { BlogRepository } from '../../data/repository/BlogRepository';
 import { ForumUi } from '../../common/utils/ForumUi';
 
 @Component
 export struct BlogPage {
   @StorageLink('appLang') lang: string = I18n.HANS;
+  @Prop showNavBack: boolean = false;
   @StorageLink('blogListTick') @Watch('onBlogListTick') blogListTick: number = 0;
   @State private tabs: BlogTab[] = [];
   @State private tabId: string = 'recommend';
@@ -180,9 +182,12 @@ export struct BlogPage {
 
   build() {
     Column() {
-      Row({ space: 12 }) {
+      Row() {
+        if (this.showNavBack) {
+          NavBackButton({ onBack: () => router.back() })
+        }
         Text(I18n.t('tab_blog', this.lang))
-          .fontSize(22)
+          .fontSize(20)
           .fontWeight(FontWeight.Bold)
           .fontColor($r('app.color.text_primary'))
           .layoutWeight(1)

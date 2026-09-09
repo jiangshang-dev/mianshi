@@ -1,262 +1,224 @@
-import { common } from '@kit.AbilityKit';
 import { router } from '@kit.ArkUI';
-import { Category, CategoryGroupSection, QuestionItem, TodayStudyStats } from '../../common/models/Types';
-import { CategoryTagSection } from '../../components/CategoryTagSection';
-import { QuestionListItem } from '../../components/QuestionListItem';
-import { QuestionRepository } from '../../data/repository/QuestionRepository';
 import { I18n } from '../../common/i18n/I18n';
+import { BookCategory } from '../../common/models/BookTypes';
+import { mallStr } from '../../common/models/MallTypes';
+import { BookRepository } from '../../data/repository/BookRepository';
 
 @Component
 export struct HomePage {
   @StorageLink('appLang') lang: string = I18n.HANS;
-  @State private groups: CategoryGroupSection[] = [];
-  @State private hotList: QuestionItem[] = [];
-  @State private stats: TodayStudyStats = {
-    questionCount: 0,
-    minutes: 0,
-    mastered: 0,
-    toReview: 0
-  };
+  @State private cats: BookCategory[] = [];
   @State private loading: boolean = true;
-  @State private refreshing: boolean = false;
-  private repo: QuestionRepository = QuestionRepository.getInstance();
+  private repo: BookRepository = BookRepository.getInstance();
 
   aboutToAppear(): void {
-    this.loadData(false);
+    this.load();
   }
 
-  private async loadData(silent: boolean): Promise<void> {
-    if (!silent) {
-      this.loading = true;
-    }
+  private async load(): Promise<void> {
+    this.loading = true;
     try {
-      const ctx = getContext(this) as common.UIAbilityContext;
-      await this.repo.init(ctx);
-      this.groups = await this.repo.getCategoryGroups(ctx);
-      this.hotList = await this.repo.getHot(ctx);
-      this.stats = await this.repo.getTodayStudyStats();
+      this.cats = await this.repo.categories();
     } catch (_e) {
-      this.groups = [];
-      this.hotList = [];
-      this.stats = { questionCount: 0, minutes: 0, mastered: 0, toReview: 0 };
+      this.cats = [];
     } finally {
       this.loading = false;
     }
   }
 
-  private pullRefresh(): void {
-    this.refreshing = true;
-    this.loadData(true).then(() => {
-      this.refreshing = false;
-    }).catch(() => {
-      this.refreshing = false;
+  private openSearch(): void {
+    router.pushUrl({ url: 'pages/search/SearchPage' });
+  }
+
+  private openCat(cat: BookCategory): void {
+    const id = mallStr(cat.id);
+    if (id.length === 0) {
+      return;
+    }
+    router.pushUrl({
+      url: 'pages/book/BookCategoryPage',
+      params: {
+        'categoryId': id,
+        'title': mallStr(cat.name),
+        'intro': mallStr(cat.intro),
+        'icon': mallStr(cat.icon)
+      }
     });
+  }
+
+  private catIntro(cat: BookCategory): string {
+    const intro = mallStr(cat.intro);
+    if (intro.length > 0) {
+      return intro;
+    }
+    return I18n.t('book_cat_default', this.lang);
+  }
+
+  private catIcon(cat: BookCategory): string {
+    const icon = mallStr(cat.icon);
+    return icon.length > 0 ? icon : '📘';
+  }
+
+  private catBg(index: number): string {
+    const colors: string[] = ['#FEE2E2', '#DBEAFE', '#EDE9FE', '#D1FAE5', '#FFEDD5', '#FCE7F3', '#E0F2FE', '#E9D5FF'];
+    return colors[index % colors.length];
   }
 
   build() {
     Column() {
-      Column({ space: 12 }) {
+      Column({ space: 14 }) {
         Row() {
           Column({ space: 4 }) {
-            Text(I18n.t('hello_candidate', this.lang))
+            Text(`${I18n.t('hello_candidate', this.lang)}👋`)
               .fontSize(14)
-              .fontColor('#E0E7FF')
+              .fontColor('#64748B')
             Text(I18n.t('app_name', this.lang))
-              .fontSize(24)
+              .fontSize(28)
               .fontWeight(FontWeight.Bold)
-              .fontColor($r('app.color.text_on_color'))
+              .fontColor('#2563EB')
+            Text(I18n.t('home_slogan_book', this.lang))
+              .fontSize(12)
+              .fontColor('#64748B')
           }
           .alignItems(HorizontalAlign.Start)
           .layoutWeight(1)
-
-          Text('🔍')
-            .fontSize(22)
-            .padding(8)
-            .onClick(() => {
-              router.pushUrl({ url: 'pages/search/SearchPage' });
-            })
+          Column({ space: 4 }) {
+            Text(I18n.t('home_keep_short', this.lang))
+              .fontSize(10)
+              .fontColor('#93C5FD')
+              .textAlign(TextAlign.End)
+            Text('📚💻')
+              .fontSize(28)
+          }
+          .alignItems(HorizontalAlign.End)
         }
         .width('100%')
 
         Row({ space: 8 }) {
-          Text('🔍')
+          Text('🔍').fontSize(14)
+          Text(I18n.t('home_search_ph', this.lang))
             .fontSize(14)
-          Text(I18n.t('search_home', this.lang))
-            .fontSize(14)
-            .fontColor($r('app.color.header_search_text'))
+            .fontColor('#94A3B8')
             .layoutWeight(1)
         }
         .width('100%')
-        .height(40)
+        .height(42)
         .padding({ left: 14, right: 14 })
-        .backgroundColor($r('app.color.header_search_bg'))
-        .borderRadius(20)
-        .onClick(() => {
-          router.pushUrl({ url: 'pages/search/SearchPage' });
-        })
+        .backgroundColor('#FFFFFF')
+        .borderRadius(21)
+        .onClick(() => this.openSearch())
       }
       .width('100%')
-      .padding({ left: 20, right: 20, top: 16, bottom: 20 })
+      .padding({ left: 20, right: 20, top: 16, bottom: 12 })
       .linearGradient({
-        angle: 135,
-        colors: [['#1E3A8A', 0], ['#2563EB', 0.55], ['#0EA5E9', 1]]
+        angle: 180,
+        colors: [['#E8F1FF', 0], ['#F3F4F6', 1]]
       })
 
       if (this.loading) {
         Column() {
-          LoadingProgress().width(40).height(40).color('#2563EB')
-          Text(I18n.t('loading', this.lang)).fontSize(13).fontColor($r('app.color.text_muted')).margin({ top: 8 })
+          LoadingProgress().width(36).height(36).color('#2563EB')
         }
         .width('100%')
         .layoutWeight(1)
         .justifyContent(FlexAlign.Center)
       } else {
-        Refresh({ refreshing: $$this.refreshing }) {
-          List({ space: 16 }) {
-            ListItem() {
-              this.todayCard()
-            }
-            ListItem() {
-              Column({ space: 16 }) {
-                if (this.groups.length === 0) {
-                  Text(I18n.t('no_cat_home', this.lang))
-                    .fontSize(13)
-                    .fontColor($r('app.color.text_muted'))
-                    .width('100%')
-                }
-                ForEach(this.groups, (g: CategoryGroupSection) => {
-                  CategoryTagSection({
-                    title: I18n.sectionTitle(g.name, g.title, this.lang),
-                    items: g.items,
-                    textColor: g.textColor,
-                    chipColor: g.bgColor,
-                    onTagClick: (cat: Category) => this.openCategory(cat)
-                  })
-                }, (g: CategoryGroupSection) => g.name)
-                Text(I18n.t('all_more', this.lang))
-                  .fontSize(13)
-                  .fontColor($r('app.color.accent'))
-                  .width('100%')
-                  .onClick(() => {
-                    router.pushUrl({ url: 'pages/bank/CategoryAllPage' });
-                  })
-              }
-              .width('100%')
-              .padding(16)
-              .backgroundColor($r('app.color.card_bg'))
-              .borderRadius(16)
-            }
-            ListItem() {
-              Column({ space: 10 }) {
-                Text(I18n.t('hot_recommend', this.lang))
-                  .fontSize(16)
+        Scroll() {
+          Column({ space: 14 }) {
+            Row() {
+              Column({ space: 4 }) {
+                Text(I18n.t('book_all_cat', this.lang))
+                  .fontSize(18)
                   .fontWeight(FontWeight.Bold)
-                  .fontColor($r('app.color.text_primary'))
-                  .width('100%')
-                if (this.hotList.length === 0) {
-                  Text(I18n.t('no_hot', this.lang))
-                    .fontSize(13)
-                    .fontColor($r('app.color.text_muted'))
-                    .width('100%')
-                    .padding({ top: 8, bottom: 8 })
-                } else {
-                  ForEach(this.hotList, (item: QuestionItem) => {
-                    QuestionListItem({
-                      item: item,
-                      onItemClick: (q: QuestionItem) => {
-                        router.pushUrl({
-                          url: 'pages/bank/QuestionDetailPage',
-                          params: { 'id': q.id }
-                        });
-                      }
-                    })
-                  }, (item: QuestionItem) => item.id)
-                }
+                  .fontColor('#0F172A')
+                Text(I18n.t('home_cat_sub', this.lang))
+                  .fontSize(12)
+                  .fontColor('#94A3B8')
+              }
+              .alignItems(HorizontalAlign.Start)
+              .layoutWeight(1)
+              Text(I18n.t('home_cat_go', this.lang))
+                .fontSize(11)
+                .fontColor('#94A3B8')
+            }
+            .width('100%')
+
+            if (this.cats.length === 0) {
+              Text(I18n.t('book_empty', this.lang))
+                .fontSize(13)
+                .fontColor('#94A3B8')
+                .padding({ top: 40 })
+                .width('100%')
+                .textAlign(TextAlign.Center)
+            } else {
+              Flex({ wrap: FlexWrap.Wrap, justifyContent: FlexAlign.SpaceBetween }) {
+                ForEach(this.cats, (cat: BookCategory, index: number) => {
+                  Row({ space: 10 }) {
+                    Text(this.catIcon(cat))
+                      .fontSize(22)
+                      .width(42)
+                      .height(42)
+                      .textAlign(TextAlign.Center)
+                      .borderRadius(12)
+                      .backgroundColor(this.catBg(index))
+                    Column({ space: 2 }) {
+                      Text(mallStr(cat.name))
+                        .fontSize(15)
+                        .fontWeight(FontWeight.Medium)
+                        .fontColor('#0F172A')
+                      Text(this.catIntro(cat))
+                        .fontSize(11)
+                        .fontColor('#94A3B8')
+                        .maxLines(1)
+                        .textOverflow({ overflow: TextOverflow.Ellipsis })
+                    }
+                    .alignItems(HorizontalAlign.Start)
+                    .layoutWeight(1)
+                    Text('›')
+                      .fontSize(18)
+                      .fontColor('#CBD5E1')
+                  }
+                  .width('48%')
+                  .padding(12)
+                  .margin({ bottom: 10 })
+                  .backgroundColor('#FFFFFF')
+                  .borderRadius(14)
+                  .shadow({ radius: 8, color: '#0F000000', offsetY: 2 })
+                  .onClick(() => this.openCat(cat))
+                }, (cat: BookCategory) => mallStr(cat.id))
               }
               .width('100%')
-              .padding({ bottom: 24 })
             }
+
+            Row() {
+              Text('🎓')
+                .fontSize(16)
+                .margin({ right: 6 })
+              Text(I18n.t('home_banner', this.lang))
+                .fontSize(12)
+                .fontColor('#1E40AF')
+                .layoutWeight(1)
+              Text(I18n.t('app_name', this.lang))
+                .fontSize(10)
+                .fontColor('#93C5FD')
+            }
+            .width('100%')
+            .padding(12)
+            .backgroundColor('#DBEAFE')
+            .borderRadius(12)
+            .margin({ top: 4, bottom: 20 })
           }
+          .padding({ left: 16, right: 16, top: 8, bottom: 8 })
           .width('100%')
-          .height('100%')
-          .padding({ left: 16, right: 16, top: 16, bottom: 8 })
-          .scrollBar(BarState.Off)
-          .edgeEffect(EdgeEffect.Spring)
         }
         .layoutWeight(1)
         .width('100%')
-        .onRefreshing(() => this.pullRefresh())
+        .scrollBar(BarState.Off)
+        .edgeEffect(EdgeEffect.Spring)
       }
     }
     .width('100%')
     .height('100%')
-    .backgroundColor($r('app.color.page_bg'))
-  }
-
-  private continueStudy(): void {
-    if (this.hotList.length > 0) {
-      router.pushUrl({
-        url: 'pages/bank/QuestionDetailPage',
-        params: { 'id': this.hotList[0].id }
-      });
-      return;
-    }
-    AppStorage.setOrCreate('mainTabIndex', 1);
-  }
-
-  private openCategory(cat: Category): void {
-    router.pushUrl({
-      url: 'pages/bank/QuestionListPage',
-      params: {
-        'categoryId': cat.id,
-        'title': cat.name,
-        'source': cat.source
-      }
-    });
-  }
-
-  @Builder
-  todayCard() {
-    Column({ space: 12 }) {
-      Row() {
-        Text(I18n.t('today_study', this.lang))
-          .fontSize(16)
-          .fontWeight(FontWeight.Bold)
-          .fontColor($r('app.color.text_primary'))
-        Blank()
-        Text(I18n.t('continue_study', this.lang))
-          .fontSize(13)
-          .fontColor($r('app.color.accent'))
-          .onClick(() => this.continueStudy())
-      }
-      .width('100%')
-
-      Row() {
-        this.statCell(`${this.stats.questionCount}`, 'stat_q')
-        this.statCell(`${this.stats.minutes}`, 'stat_min')
-        this.statCell(`${this.stats.mastered}`, 'stat_master')
-        this.statCell(`${this.stats.toReview}`, 'stat_review')
-      }
-      .width('100%')
-      .justifyContent(FlexAlign.SpaceBetween)
-    }
-    .width('100%')
-    .padding(16)
-    .backgroundColor($r('app.color.card_bg'))
-    .borderRadius(16)
-  }
-
-  @Builder
-  statCell(value: string, labelKey: string) {
-    Column({ space: 4 }) {
-      Text(value)
-        .fontSize(20)
-        .fontWeight(FontWeight.Bold)
-        .fontColor($r('app.color.stat_value'))
-      Text(I18n.t(labelKey, this.lang))
-        .fontSize(12)
-        .fontColor($r('app.color.text_muted'))
-    }
-    .layoutWeight(1)
+    .backgroundColor('#F3F4F6')
   }
 }

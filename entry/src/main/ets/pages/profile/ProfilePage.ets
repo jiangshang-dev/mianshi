@@ -415,9 +415,6 @@ export struct ProfilePage {
           this.menuRow('mall_title', 'mall_sub', () => {
             this.openNeedLogin(I18n.t('mall_title', this.lang), 'pages/mall/MallPage');
           })
-          this.menuRow('favorites', 'fav_sub', () => {
-            this.openNeedLogin(I18n.t('favorites', this.lang), 'pages/profile/FavoritesPage');
-          })
           if (this.questionAiEnabled) {
             this.menuRow('ai_qa', 'ai_qa_sub', () => {
               this.openNeedLogin(I18n.t('ai_qa_title', this.lang), 'pages/profile/AiHistoryPage', 'chat',

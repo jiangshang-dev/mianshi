@@ -1,4 +1,5 @@
 import { http } from '@kit.NetworkKit';
+import { fileIo } from '@kit.CoreFileKit';
 import { util } from '@kit.ArkTS';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { AppConfig } from '../constants/AppConfig';
@@ -56,6 +57,12 @@ interface HttpSseHeader {
   'Content-Type': string;
   'Accept': string;
   'Cache-Control': string;
+  'Authorization': string;
+  'X-Login-Device': string;
+}
+
+interface HttpDownloadHeader {
+  'Accept': string;
   'Authorization': string;
   'X-Login-Device': string;
 }
@@ -187,6 +194,46 @@ export class HttpClient {
     } catch (err) {
       hilog.warn(DOMAIN, 'HttpClient', 'UPLOAD failed %{public}s %{public}s', url, JSON.stringify(err));
       return { ok: false, code: -1, body: '', message: JSON.stringify(err) };
+    } finally {
+      client.destroy();
+    }
+  }
+
+  private static downloadHeaders(): HttpDownloadHeader {
+    const header: HttpDownloadHeader = {
+      'Accept': '*/*',
+      'Authorization': HttpClient.authValue(),
+      'X-Login-Device': DeviceProfile.loginDevice()
+    };
+    return header;
+  }
+
+  static async downloadToFile(url: string, filePath: string): Promise<boolean> {
+    const client = http.createHttp();
+    try {
+      const resp = await client.request(url, {
+        method: http.RequestMethod.GET,
+        connectTimeout: AppConfig.UPLOAD_TIMEOUT_MS,
+        readTimeout: 120000,
+        expectDataType: http.HttpDataType.ARRAY_BUFFER,
+        usingCache: false,
+        header: HttpClient.downloadHeaders()
+      });
+      if (resp.responseCode < 200 || resp.responseCode >= 300 || resp.result === undefined) {
+        return false;
+      }
+      const buffer = resp.result as ArrayBuffer;
+      const file = fileIo.openSync(filePath,
+        fileIo.OpenMode.READ_WRITE | fileIo.OpenMode.CREATE | fileIo.OpenMode.TRUNC);
+      try {
+        fileIo.writeSync(file.fd, buffer);
+      } finally {
+        fileIo.closeSync(file);
+      }
+      return true;
+    } catch (err) {
+      hilog.warn(DOMAIN, 'HttpClient', 'DOWNLOAD failed %{public}s %{public}s', url, JSON.stringify(err));
+      return false;
     } finally {
       client.destroy();
     }

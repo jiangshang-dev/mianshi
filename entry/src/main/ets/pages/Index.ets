@@ -1,9 +1,8 @@
 import { common } from '@kit.AbilityKit';
 import { HomePage } from './home/HomePage';
-import { BankPage } from './bank/BankPage';
+import { BookPage } from './book/BookPage';
+import { StudyPage } from './study/StudyPage';
 import { InterviewPage } from './interview/InterviewPage';
-import { BlogPage } from './blog/BlogPage';
-import { ForumPage } from './forum/ForumPage';
 import { ProfilePage } from './profile/ProfilePage';
 import { AuthRepository } from '../data/repository/AuthRepository';
 import { AppFeatureRepository } from '../data/repository/AppFeatureRepository';
@@ -17,8 +16,6 @@ struct Index {
   @StorageLink('mainTabIndex') currentIndex: number = 0;
   @StorageLink('appLang') lang: string = I18n.HANS;
   @StorageLink('interviewAiEnabled') @Watch('onFeatureFlag') interviewAiEnabled: boolean = true;
-  @StorageLink('blogEnabled') @Watch('onFeatureFlag') blogEnabled: boolean = true;
-  @StorageLink('forumEnabled') @Watch('onFeatureFlag') forumEnabled: boolean = true;
 
   aboutToAppear(): void {
     const ctx = getContext(this) as common.UIAbilityContext;
@@ -49,13 +46,7 @@ struct Index {
   }
 
   private normalizeIndex(): void {
-    if (!this.interviewAiEnabled && this.currentIndex === 2) {
-      this.currentIndex = 0;
-    }
-    if (!this.blogEnabled && this.currentIndex === 3) {
-      this.currentIndex = 0;
-    }
-    if (!this.forumEnabled && this.currentIndex === 4) {
+    if (!this.interviewAiEnabled && this.currentIndex === 3) {
       this.currentIndex = 0;
     }
   }
@@ -65,13 +56,7 @@ struct Index {
   }
 
   private openTab(tabIndex: number): void {
-    if (!this.interviewAiEnabled && tabIndex === 2) {
-      return;
-    }
-    if (!this.blogEnabled && tabIndex === 3) {
-      return;
-    }
-    if (!this.forumEnabled && tabIndex === 4) {
+    if (!this.interviewAiEnabled && tabIndex === 3) {
       return;
     }
     this.currentIndex = tabIndex;
@@ -103,22 +88,17 @@ struct Index {
         .tabBar('')
 
         TabContent() {
-          BankPage()
+          BookPage()
+        }
+        .tabBar('')
+
+        TabContent() {
+          StudyPage()
         }
         .tabBar('')
 
         TabContent() {
           InterviewPage()
-        }
-        .tabBar('')
-
-        TabContent() {
-          BlogPage()
-        }
-        .tabBar('')
-
-        TabContent() {
-          ForumPage()
         }
         .tabBar('')
 
@@ -131,15 +111,7 @@ struct Index {
       .width('100%')
       .barHeight(0)
       .onChange((index: number) => {
-        if (!this.interviewAiEnabled && index === 2) {
-          this.currentIndex = 0;
-          return;
-        }
-        if (!this.blogEnabled && index === 3) {
-          this.currentIndex = 0;
-          return;
-        }
-        if (!this.forumEnabled && index === 4) {
+        if (!this.interviewAiEnabled && index === 3) {
           this.currentIndex = 0;
           return;
         }
@@ -150,17 +122,12 @@ struct Index {
 
       Row() {
         this.navItem('tab_home', 0, '🏠')
-        this.navItem('tab_bank', 1, '📚')
+        this.navItem('tab_book', 1, '📕')
+        this.navItem('tab_study', 2, '📋')
         if (this.interviewAiEnabled) {
-          this.navItem('tab_interview', 2, '🤖')
+          this.navItem('tab_interview', 3, '🤖')
         }
-        if (this.blogEnabled) {
-          this.navItem('tab_blog', 3, '📖')
-        }
-        if (this.forumEnabled) {
-          this.navItem('tab_forum', 4, '💬')
-        }
-        this.navItem('tab_profile', 5, '👤')
+        this.navItem('tab_profile', 4, '👤')
       }
       .width('100%')
       .height(58)

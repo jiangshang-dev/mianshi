@@ -2,6 +2,7 @@
   "src": [
     "pages/Index",
     "pages/bank/QuestionListPage",
+    "pages/bank/BankHubPage",
     "pages/bank/QuestionDetailPage",
     "pages/bank/QuestionReportPage",
     "pages/bank/CategoryAllPage",
@@ -29,7 +30,11 @@
     "pages/mall/MallOrderDetailPage",
     "pages/blog/BlogDetailPage",
     "pages/blog/BlogSearchPage",
+    "pages/blog/BlogHubPage",
+    "pages/book/BookReaderPage",
+    "pages/book/BookCategoryPage",
     "pages/forum/ForumSearchPage",
+    "pages/forum/ForumHubPage",
     "pages/forum/ForumDetailPage",
     "pages/forum/ForumRepliesPage",
     "pages/forum/ForumComposePage"

@@ -8,6 +8,7 @@ import { I18n } from '../../common/i18n/I18n';
 @Component
 export struct BankPage {
   @StorageLink('appLang') lang: string = I18n.HANS;
+  @Prop showNavBack: boolean = false;
   @State private groups: CategoryGroupSection[] = [];
   @State private loading: boolean = true;
   private repo: QuestionRepository = QuestionRepository.getInstance();
@@ -44,91 +45,114 @@ export struct BankPage {
   }
 
   build() {
-    if (this.loading) {
-      Column() {
-        LoadingProgress().width(36).height(36)
-      }
-      .width('100%')
-      .height('100%')
-      .justifyContent(FlexAlign.Center)
-      .backgroundColor($r('app.color.page_bg'))
-    } else {
-      Scroll() {
-        Column({ space: 16 }) {
-          Row() {
-            Text(I18n.t('bank_title', this.lang))
-              .fontSize(20)
-              .fontWeight(FontWeight.Bold)
-              .fontColor($r('app.color.text_primary'))
-              .layoutWeight(1)
-            Text(I18n.t('all_cats', this.lang))
-              .fontSize(13)
-              .fontColor($r('app.color.accent'))
-              .onClick(() => {
-                router.pushUrl({ url: 'pages/bank/CategoryAllPage' });
-              })
+    Column() {
+      if (this.loading) {
+        Column() {
+          if (this.showNavBack) {
+            Row() {
+              Text('‹')
+                .fontSize(28)
+                .fontColor($r('app.color.text_primary'))
+                .onClick(() => router.back())
+            }
+            .width('100%')
+            .padding({ left: 16, top: 8 })
           }
-          .width('100%')
-
-          if (this.isEmpty()) {
-            Text(I18n.t('no_cat_bank', this.lang))
-              .fontSize(13)
-              .fontColor($r('app.color.text_muted'))
-              .margin({ top: 40 })
-              .width('100%')
-          } else {
-            ForEach(this.groups, (g: CategoryGroupSection) => {
-              this.groupBlock(I18n.sectionTitle(g.name, g.title, this.lang), g.items)
-            }, (g: CategoryGroupSection) => g.name)
-          }
+          LoadingProgress().width(36).height(36)
         }
-        .padding({ left: 16, right: 16, top: 8, bottom: 24 })
         .width('100%')
+        .layoutWeight(1)
+        .justifyContent(FlexAlign.Center)
+        .backgroundColor($r('app.color.page_bg'))
+      } else {
+        Scroll() {
+          Column({ space: 16 }) {
+            Row() {
+              if (this.showNavBack) {
+                Text('‹')
+                  .fontSize(28)
+                  .fontColor($r('app.color.text_primary'))
+                  .padding({ right: 8 })
+                  .onClick(() => router.back())
+              }
+              Text(I18n.t('bank_title', this.lang))
+                .fontSize(20)
+                .fontWeight(FontWeight.Bold)
+                .fontColor($r('app.color.text_primary'))
+                .layoutWeight(1)
+              Text(I18n.t('all_cats', this.lang))
+                .fontSize(13)
+                .fontColor($r('app.color.accent'))
+                .onClick(() => {
+                  router.pushUrl({ url: 'pages/bank/CategoryAllPage' });
+                })
+            }
+            .width('100%')
+
+            if (this.isEmpty()) {
+              Text(I18n.t('no_cat_bank', this.lang))
+                .fontSize(13)
+                .fontColor($r('app.color.text_muted'))
+                .margin({ top: 40 })
+                .width('100%')
+            } else {
+              ForEach(this.groups, (g: CategoryGroupSection) => {
+                this.groupBlock(I18n.sectionTitle(g.name, g.title, this.lang), g.items)
+              }, (g: CategoryGroupSection) => g.name)
+            }
+          }
+          .padding({ left: 16, right: 16, top: 8, bottom: 24 })
+          .width('100%')
+        }
+        .width('100%')
+        .layoutWeight(1)
+        .backgroundColor($r('app.color.page_bg'))
+        .scrollBar(BarState.Off)
+        .align(Alignment.Top)
       }
-      .width('100%')
-      .height('100%')
-      .backgroundColor($r('app.color.page_bg'))
-      .scrollBar(BarState.Off)
-      .align(Alignment.Top)
     }
+    .width('100%')
+    .height('100%')
+    .backgroundColor($r('app.color.page_bg'))
   }
 
   @Builder
   groupBlock(title: string, list: Category[]) {
-    if (list.length === 0) {
-      Column().width(0).height(0)
-    } else {
-      Column({ space: 10 }) {
-        Text(title)
-          .fontSize(15)
-          .fontWeight(FontWeight.Medium)
-          .fontColor($r('app.color.text_secondary'))
-          .width('100%')
-        ForEach(list, (cat: Category) => {
-          Row() {
-            CategoryIcon({ icon: cat.icon, iconSize: 26 })
-              .margin({ right: 12 })
-            Column({ space: 4 }) {
-              Text(cat.name)
-                .fontSize(16)
-                .fontWeight(FontWeight.Medium)
-                .fontColor($r('app.color.text_primary'))
-              Text(I18n.tf('q_count', `${cat.articleCount}`, this.lang))
-                .fontSize(12)
-                .fontColor($r('app.color.text_muted'))
+    Column() {
+      if (list.length > 0) {
+        Column({ space: 10 }) {
+          Text(title)
+            .fontSize(15)
+            .fontWeight(FontWeight.Medium)
+            .fontColor($r('app.color.text_secondary'))
+            .width('100%')
+          ForEach(list, (cat: Category) => {
+            Row() {
+              CategoryIcon({ icon: cat.icon, iconSize: 26 })
+                .margin({ right: 12 })
+              Column({ space: 4 }) {
+                Text(cat.name)
+                  .fontSize(16)
+                  .fontWeight(FontWeight.Medium)
+                  .fontColor($r('app.color.text_primary'))
+                Text(I18n.tf('q_count', `${cat.articleCount}`, this.lang))
+                  .fontSize(12)
+                  .fontColor($r('app.color.text_muted'))
+              }
+              .alignItems(HorizontalAlign.Start)
+              .layoutWeight(1)
+              Text('›').fontSize(20).fontColor($r('app.color.chevron'))
             }
-            .alignItems(HorizontalAlign.Start)
-            .layoutWeight(1)
-            Text('›').fontSize(20).fontColor($r('app.color.chevron'))
-          }
-          .width('100%')
-          .padding(14)
-          .backgroundColor($r('app.color.card_bg'))
-          .borderRadius(12)
-          .onClick(() => this.openCategory(cat))
-        }, (cat: Category) => cat.id)
+            .width('100%')
+            .padding(14)
+            .backgroundColor($r('app.color.card_bg'))
+            .borderRadius(12)
+            .onClick(() => this.openCategory(cat))
+          }, (cat: Category) => cat.id)
+        }
+        .width('100%')
       }
-      .width('100%')
     }
+    .width('100%')
   }
 }
