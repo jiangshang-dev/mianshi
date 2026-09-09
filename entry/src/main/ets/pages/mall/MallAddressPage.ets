@@ -34,12 +34,14 @@ struct MallAddressPage {
   @State private detail: string = '';
   @State private isDefault: number = 0;
   @State private defaultOn: boolean = false;
+  @State private provinceOpts: SelectOption[] = [];
+  @State private cityOpts: SelectOption[] = [];
+  @State private districtOpts: SelectOption[] = [];
   @State private provinceIndex: number = 0;
   @State private cityIndex: number = 0;
   @State private districtIndex: number = 0;
-  @State private provinceOptions: SelectOption[] = [];
-  @State private cityOptions: SelectOption[] = [];
-  @State private districtOptions: SelectOption[] = [];
+  @State private citySelectKey: number = 0;
+  @State private districtSelectKey: number = 0;
   private repo: MallRepository = MallRepository.getInstance();
   private pickMode: boolean = false;
 
@@ -61,6 +63,55 @@ struct MallAddressPage {
     }
   }
 
+  private placeholder(): string {
+    return I18n.t('mall_please_select', this.lang);
+  }
+
+  private toOptions(names: string[]): SelectOption[] {
+    const opts: SelectOption[] = [];
+    const head: SelectOption = { value: this.placeholder() };
+    opts.push(head);
+    for (let i = 0; i < names.length; i++) {
+      const opt: SelectOption = { value: names[i] };
+      opts.push(opt);
+    }
+    return opts;
+  }
+
+  private indexOfName(opts: SelectOption[], name: string): number {
+    if (name.length === 0) {
+      return 0;
+    }
+    for (let i = 0; i < opts.length; i++) {
+      if (`${opts[i].value}` === name) {
+        return i;
+      }
+    }
+    return 0;
+  }
+
+  private selectedName(text: string, index: number, opts: SelectOption[]): string {
+    let name: string = text;
+    if (name === undefined || name.length === 0) {
+      if (index >= 0 && index < opts.length) {
+        name = `${opts[index].value}`;
+      }
+    }
+    if (name === this.placeholder()) {
+      return '';
+    }
+    return name;
+  }
+
+  private rebuildRegionOpts(): void {
+    this.provinceOpts = this.toOptions(ChinaRegion.provinces());
+    this.provinceIndex = this.indexOfName(this.provinceOpts, this.province);
+    this.cityOpts = this.toOptions(ChinaRegion.cities(this.province));
+    this.cityIndex = this.indexOfName(this.cityOpts, this.city);
+    this.districtOpts = this.toOptions(ChinaRegion.districts(this.province, this.city));
+    this.districtIndex = this.indexOfName(this.districtOpts, this.district);
+  }
+
   private startAdd(): void {
     this.editId = '';
     this.receiverName = '';
@@ -71,7 +122,7 @@ struct MallAddressPage {
     this.detail = '';
     this.isDefault = this.list.length === 0 ? 1 : 0;
     this.defaultOn = this.isDefault === 1;
-    this.refreshRegionOptions();
+    this.rebuildRegionOpts();
     this.showForm = true;
   }
 
@@ -85,7 +136,7 @@ struct MallAddressPage {
     this.detail = mallStr(item.detail);
     this.isDefault = item.isDefault === 1 ? 1 : 0;
     this.defaultOn = this.isDefault === 1;
-    this.refreshRegionOptions();
+    this.rebuildRegionOpts();
     this.showForm = true;
   }
 
@@ -100,71 +151,34 @@ struct MallAddressPage {
     }
   }
 
-  private optionValue(options: SelectOption[], index: number): string {
-    if (index <= 0 || index >= options.length) {
-      return '';
-    }
-    return `${options[index].value}`;
-  }
-
-  private toSelectOptions(names: string[], current: string): SelectOption[] {
-    const list: SelectOption[] = [];
-    const placeholder: SelectOption = { value: I18n.t('mall_please_select', this.lang) };
-    list.push(placeholder);
-    let hasCurrent: boolean = current.length === 0;
-    for (let i = 0; i < names.length; i++) {
-      if (names[i] === current) {
-        hasCurrent = true;
-      }
-    }
-    if (current.length > 0 && !hasCurrent) {
-      const extra: SelectOption = { value: current };
-      list.push(extra);
-    }
-    for (let i = 0; i < names.length; i++) {
-      const opt: SelectOption = { value: names[i] };
-      list.push(opt);
-    }
-    return list;
-  }
-
-  private selectedIndex(options: SelectOption[], current: string): number {
-    if (current.length === 0) {
-      return 0;
-    }
-    for (let i = 0; i < options.length; i++) {
-      if (`${options[i].value}` === current) {
-        return i;
-      }
-    }
-    return 0;
-  }
-
-  private refreshRegionOptions(): void {
-    this.provinceOptions = this.toSelectOptions(ChinaRegion.provinces(), this.province);
-    this.provinceIndex = this.selectedIndex(this.provinceOptions, this.province);
-    this.cityOptions = this.toSelectOptions(ChinaRegion.cities(this.province), this.city);
-    this.cityIndex = this.selectedIndex(this.cityOptions, this.city);
-    this.districtOptions = this.toSelectOptions(ChinaRegion.districts(this.province, this.city), this.district);
-    this.districtIndex = this.selectedIndex(this.districtOptions, this.district);
-  }
-
-  private onProvinceSelect(index: number): void {
-    this.province = this.optionValue(this.provinceOptions, index);
+  private onProvinceSelect(index: number, text: string): void {
+    const name: string = this.selectedName(text, index, this.provinceOpts);
+    this.province = name;
+    this.provinceIndex = this.indexOfName(this.provinceOpts, name);
     this.city = '';
     this.district = '';
-    this.refreshRegionOptions();
+    this.cityOpts = this.toOptions(ChinaRegion.cities(name));
+    this.cityIndex = 0;
+    this.districtOpts = this.toOptions([]);
+    this.districtIndex = 0;
+    this.citySelectKey = this.citySelectKey + 1;
+    this.districtSelectKey = this.districtSelectKey + 1;
   }
 
-  private onCitySelect(index: number): void {
-    this.city = this.optionValue(this.cityOptions, index);
+  private onCitySelect(index: number, text: string): void {
+    const name: string = this.selectedName(text, index, this.cityOpts);
+    this.city = name;
+    this.cityIndex = this.indexOfName(this.cityOpts, name);
     this.district = '';
-    this.refreshRegionOptions();
+    this.districtOpts = this.toOptions(ChinaRegion.districts(this.province, name));
+    this.districtIndex = 0;
+    this.districtSelectKey = this.districtSelectKey + 1;
   }
 
-  private onDistrictSelect(index: number): void {
-    this.district = this.optionValue(this.districtOptions, index);
-    this.districtIndex = index;
+  private onDistrictSelect(index: number, text: string): void {
+    const name: string = this.selectedName(text, index, this.districtOpts);
+    this.district = name;
+    this.districtIndex = this.indexOfName(this.districtOpts, name);
   }
 
   private regionReady(): boolean {
@@ -281,15 +295,90 @@ struct MallAddressPage {
             this.field(I18n.t('mall_recv_phone', this.lang), this.receiverPhone, (v: string) => {
               this.receiverPhone = v;
             })
-            this.selectField(I18n.t('mall_province', this.lang), this.provinceOptions, this.provinceIndex, (index: number) => {
-              this.onProvinceSelect(index);
-            })
-            this.selectField(I18n.t('mall_city', this.lang), this.cityOptions, this.cityIndex, (index: number) => {
-              this.onCitySelect(index);
-            })
-            this.selectField(I18n.t('mall_district', this.lang), this.districtOptions, this.districtIndex, (index: number) => {
-              this.onDistrictSelect(index);
-            })
+
+            Text(I18n.t('mall_province', this.lang))
+              .fontSize(13)
+              .fontColor($r('app.color.text_muted'))
+              .width('100%')
+            Select(this.provinceOpts)
+              .selected(this.provinceIndex)
+              .value(this.province.length > 0 ? this.province : this.placeholder())
+              .font({ size: 16 })
+              .fontColor($r('app.color.text_primary'))
+              .selectedOptionFont({ size: 16 })
+              .optionFont({ size: 16 })
+              .width('100%')
+              .height(44)
+              .backgroundColor($r('app.color.card_bg'))
+              .borderRadius(8)
+              .onSelect((index: number, text?: string) => {
+                this.onProvinceSelect(index, text === undefined ? '' : text);
+              })
+
+            Text(I18n.t('mall_city', this.lang))
+              .fontSize(13)
+              .fontColor($r('app.color.text_muted'))
+              .width('100%')
+            if (this.province.length > 0) {
+              Select(this.cityOpts)
+                .id(`city-select-${this.citySelectKey}`)
+                .selected(this.cityIndex)
+                .value(this.city.length > 0 ? this.city : this.placeholder())
+                .font({ size: 16 })
+                .fontColor($r('app.color.text_primary'))
+                .selectedOptionFont({ size: 16 })
+                .optionFont({ size: 16 })
+                .width('100%')
+                .height(44)
+                .backgroundColor($r('app.color.card_bg'))
+                .borderRadius(8)
+                .onSelect((index: number, text?: string) => {
+                  this.onCitySelect(index, text === undefined ? '' : text);
+                })
+            } else {
+              Text(I18n.t('mall_select_province_first', this.lang))
+                .fontSize(16)
+                .fontColor($r('app.color.text_muted'))
+                .width('100%')
+                .height(44)
+                .padding({ left: 12 })
+                .textAlign(TextAlign.Start)
+                .backgroundColor($r('app.color.card_bg'))
+                .borderRadius(8)
+            }
+
+            Text(I18n.t('mall_district', this.lang))
+              .fontSize(13)
+              .fontColor($r('app.color.text_muted'))
+              .width('100%')
+            if (this.city.length > 0) {
+              Select(this.districtOpts)
+                .id(`district-select-${this.districtSelectKey}`)
+                .selected(this.districtIndex)
+                .value(this.district.length > 0 ? this.district : this.placeholder())
+                .font({ size: 16 })
+                .fontColor($r('app.color.text_primary'))
+                .selectedOptionFont({ size: 16 })
+                .optionFont({ size: 16 })
+                .width('100%')
+                .height(44)
+                .backgroundColor($r('app.color.card_bg'))
+                .borderRadius(8)
+                .onSelect((index: number, text?: string) => {
+                  this.onDistrictSelect(index, text === undefined ? '' : text);
+                })
+            } else {
+              Text(I18n.t('mall_select_city_first', this.lang))
+                .fontSize(16)
+                .fontColor($r('app.color.text_muted'))
+                .width('100%')
+                .height(44)
+                .padding({ left: 12 })
+                .textAlign(TextAlign.Start)
+                .backgroundColor($r('app.color.card_bg'))
+                .borderRadius(8)
+            }
+
             this.field(I18n.t('mall_detail_addr', this.lang), this.detail, (v: string) => {
               this.detail = v;
             })
@@ -415,28 +504,6 @@ struct MallAddressPage {
         .placeholderColor($r('app.color.text_muted'))
         .onChange((v: string) => {
           onChange(v);
-        })
-    }
-    .width('100%')
-  }
-
-  @Builder
-  selectField(label: string, options: SelectOption[], selected: number, onSelect: (index: number) => void) {
-    Column({ space: 4 }) {
-      Text(label).fontSize(13).fontColor($r('app.color.text_muted')).width('100%')
-      Select(options)
-        .selected(selected)
-        .value(this.optionValue(options, selected).length > 0 ? this.optionValue(options, selected) : I18n.t('mall_please_select', this.lang))
-        .font({ size: 16 })
-        .fontColor($r('app.color.text_primary'))
-        .selectedOptionFont({ size: 16 })
-        .optionFont({ size: 16 })
-        .width('100%')
-        .height(44)
-        .backgroundColor($r('app.color.card_bg'))
-        .borderRadius(8)
-        .onSelect((index: number) => {
-          onSelect(index);
         })
     }
     .width('100%')

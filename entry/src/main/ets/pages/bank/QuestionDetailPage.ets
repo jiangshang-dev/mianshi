@@ -476,7 +476,7 @@ struct QuestionDetailPage {
             Text(I18n.t('not_found', this.lang)).fontSize(15).fontColor($r('app.color.text_muted'))
           }.layoutWeight(1).width('100%').justifyContent(FlexAlign.Center)
         } else {
-          Refresh({ refreshing: this.refreshing }) {
+          Refresh({ refreshing: $$this.refreshing }) {
           Scroll() {
             Column({ space: 14 }) {
               Row({ space: 6 }) {

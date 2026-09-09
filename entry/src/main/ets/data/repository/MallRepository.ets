@@ -2,6 +2,7 @@ import { HttpClient } from '../../common/network/HttpClient';
 import {
   JeecgMallAddressListResp,
   JeecgMallAddressResp,
+  JeecgMallCategoryListResp,
   JeecgMallMeResp,
   JeecgMallMsgResp,
   JeecgMallOrderPageResp,
@@ -10,12 +11,14 @@ import {
   JeecgMallProductResp,
   MallAddress,
   MallAddressBody,
+  MallCategory,
   MallCreateBody,
   MallIapVerifyBody,
   MallMe,
   MallOrder,
   MallProduct,
   copyMallAddress,
+  copyMallCategory,
   copyMallMe,
   copyMallOrder,
   copyMallProduct,
@@ -31,6 +34,28 @@ export class MallRepository {
       MallRepository.instance = new MallRepository();
     }
     return MallRepository.instance;
+  }
+
+  async categories(): Promise<MallCategory[]> {
+    const resp = await HttpClient.get('/api/mall/categories', '');
+    if (resp.body.length === 0) {
+      return [];
+    }
+    const parsed: JeecgMallCategoryListResp = JSON.parse(resp.body) as JeecgMallCategoryListResp;
+    if (parsed.success === false) {
+      return [];
+    }
+    const list: MallCategory[] = [];
+    const rawList = parsed.result;
+    if (rawList !== undefined) {
+      for (let i = 0; i < rawList.length; i++) {
+        const item = copyMallCategory(rawList[i]);
+        if (mallStr(item.id).length > 0) {
+          list.push(item);
+        }
+      }
+    }
+    return list;
   }
 
   async products(): Promise<MallProduct[]> {

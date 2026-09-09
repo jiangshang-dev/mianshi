@@ -46,6 +46,8 @@ export class SseAbort {
 interface HttpJsonHeader {
   'Content-Type': string;
   'Accept': string;
+  'Cache-Control': string;
+  'Pragma': string;
   'Authorization': string;
   'X-Login-Device': string;
 }
@@ -86,6 +88,8 @@ export class HttpClient {
     const header: HttpJsonHeader = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache',
       'Authorization': HttpClient.authValue(),
       'X-Login-Device': DeviceProfile.loginDevice()
     };
@@ -115,6 +119,7 @@ export class HttpClient {
         connectTimeout: AppConfig.REQUEST_TIMEOUT_MS,
         readTimeout: AppConfig.REQUEST_TIMEOUT_MS,
         expectDataType: http.HttpDataType.STRING,
+        usingCache: false,
         header: HttpClient.jsonHeaders()
       });
       const body = typeof resp.result === 'string' ? resp.result : JSON.stringify(resp.result);

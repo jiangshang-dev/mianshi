@@ -520,7 +520,7 @@ struct ForumDetailPage {
           .layoutWeight(1)
           .justifyContent(FlexAlign.Center)
         } else {
-          Refresh({ refreshing: this.refreshing }) {
+          Refresh({ refreshing: $$this.refreshing }) {
             List({ space: 0 }) {
               ListItem() {
                 this.postBody()
@@ -552,7 +552,7 @@ struct ForumDetailPage {
             .width('100%')
             .height('100%')
             .scrollBar(BarState.Off)
-            .edgeEffect(EdgeEffect.None)
+            .edgeEffect(EdgeEffect.Spring)
           }
           .layoutWeight(1)
           .width('100%')

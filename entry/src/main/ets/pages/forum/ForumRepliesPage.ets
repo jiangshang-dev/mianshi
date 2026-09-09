@@ -394,7 +394,7 @@ struct ForumRepliesPage {
         .padding({ left: 16, right: 16 })
         .backgroundColor($r('app.color.card_bg'))
 
-        Refresh({ refreshing: this.refreshing }) {
+        Refresh({ refreshing: $$this.refreshing }) {
           List({ space: 10 }) {
             if (this.threadList.length === 0) {
               ListItem() {
@@ -418,7 +418,7 @@ struct ForumRepliesPage {
           .height('100%')
           .padding({ left: 12, right: 12, top: 10, bottom: 16 })
           .scrollBar(BarState.Off)
-          .edgeEffect(EdgeEffect.None)
+          .edgeEffect(EdgeEffect.Spring)
         }
         .layoutWeight(1)
         .width('100%')

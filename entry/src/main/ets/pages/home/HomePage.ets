@@ -111,7 +111,7 @@ export struct HomePage {
         .layoutWeight(1)
         .justifyContent(FlexAlign.Center)
       } else {
-        Refresh({ refreshing: this.refreshing }) {
+        Refresh({ refreshing: $$this.refreshing }) {
           List({ space: 16 }) {
             ListItem() {
               this.todayCard()
@@ -181,7 +181,7 @@ export struct HomePage {
           .height('100%')
           .padding({ left: 16, right: 16, top: 16, bottom: 8 })
           .scrollBar(BarState.Off)
-          .edgeEffect(EdgeEffect.None)
+          .edgeEffect(EdgeEffect.Spring)
         }
         .layoutWeight(1)
         .width('100%')

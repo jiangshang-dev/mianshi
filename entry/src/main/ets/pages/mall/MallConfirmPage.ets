@@ -16,6 +16,7 @@ import {
   mallStr
 } from '../../common/models/MallTypes';
 import { MallRepository } from '../../data/repository/MallRepository';
+import { PointsRepository } from '../../data/repository/PointsRepository';
 
 interface MallConfirmNav {
   productId?: string;
@@ -32,7 +33,7 @@ struct MallConfirmPage {
   @State private selectedId: string = '';
   @State private quantity: number = 1;
   @State private remark: string = '';
-  @State private points: number = 0;
+  @StorageLink('userPoints') userPoints: number = 0;
   @State private payChoice: string = 'points';
   private repo: MallRepository = MallRepository.getInstance();
   private productId: string = '';
@@ -56,8 +57,10 @@ struct MallConfirmPage {
       } else {
         this.payChoice = 'points';
       }
-      const me = await this.repo.me();
-      this.points = mallNum(me.points);
+      try {
+        await PointsRepository.getInstance().me();
+      } catch (_e) {
+      }
       await this.loadAddresses();
     } catch (err) {
       promptAction.showToast({ message: err instanceof Error ? err.message : I18n.t('mall_load_fail', this.lang) });
@@ -431,7 +434,7 @@ struct MallConfirmPage {
                 .width('100%')
             }
             if (!this.isCash()) {
-              Text(I18n.tf('mall_points', `${this.points}`, this.lang))
+              Text(I18n.tf('mall_points', `${this.userPoints}`, this.lang))
                 .fontSize(13)
                 .fontColor($r('app.color.text_muted'))
                 .width('100%')

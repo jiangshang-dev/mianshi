@@ -75,6 +75,8 @@ struct BlogDetailPage {
       this.sections = MdParser.splitSections(mallStr(detail.content));
       const pts = mallNum(detail.readPoints);
       if (!silent && pts > 0) {
+        const cur = mallNum(AppStorage.get('userPoints') as number);
+        AppStorage.setOrCreate('userPoints', cur + pts);
         promptAction.showToast({ message: I18n.tf('blog_read_pts', `${pts}`, this.lang) });
       }
     } catch (err) {
@@ -274,7 +276,7 @@ struct BlogDetailPage {
           .width('100%')
           .justifyContent(FlexAlign.Center)
         } else {
-          Refresh({ refreshing: this.refreshing }) {
+          Refresh({ refreshing: $$this.refreshing }) {
             List({ scroller: this.scroller, space: 0 }) {
               ListItem() {
                 this.articleHeader()
@@ -406,7 +408,7 @@ struct BlogDetailPage {
             .width('100%')
             .height('100%')
             .scrollBar(BarState.Off)
-            .edgeEffect(EdgeEffect.None)
+            .edgeEffect(EdgeEffect.Spring)
           }
           .layoutWeight(1)
           .width('100%')

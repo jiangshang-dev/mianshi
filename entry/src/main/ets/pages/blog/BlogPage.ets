@@ -229,23 +229,27 @@ export struct BlogPage {
       .width('100%')
       .height(36)
 
-      Refresh({ refreshing: this.refreshing }) {
-        if (this.loading && this.articles.length === 0) {
-          Column() {
-            LoadingProgress().width(36).height(36)
-          }
-          .width('100%')
-          .height('100%')
-          .justifyContent(FlexAlign.Center)
-        } else if (this.articles.length === 0) {
-          Column() {
-            Text(this.emptyText()).fontSize(14).fontColor($r('app.color.text_muted'))
-          }
-          .width('100%')
-          .height('100%')
-          .justifyContent(FlexAlign.Center)
-        } else {
-          List({ space: 10 }) {
+      Refresh({ refreshing: $$this.refreshing }) {
+        List({ space: 10 }) {
+          if (this.loading && this.articles.length === 0) {
+            ListItem() {
+              Column() {
+                LoadingProgress().width(36).height(36)
+              }
+              .width('100%')
+              .height(280)
+              .justifyContent(FlexAlign.Center)
+            }
+          } else if (this.articles.length === 0) {
+            ListItem() {
+              Column() {
+                Text(this.emptyText()).fontSize(14).fontColor($r('app.color.text_muted'))
+              }
+              .width('100%')
+              .height(280)
+              .justifyContent(FlexAlign.Center)
+            }
+          } else {
             ForEach(this.topicList(), (item: BlogArticle) => {
               ListItem() {
                 this.topicCard(item)
@@ -262,21 +266,21 @@ export struct BlogPage {
               }
             }, (item: BlogArticle) => mallStr(item.id))
           }
-          .width('100%')
-          .height('100%')
-          .padding({ left: 12, right: 12, top: 8, bottom: 12 })
-          .scrollBar(BarState.Off)
-          .edgeEffect(EdgeEffect.None)
-          .onReachEnd(() => {
-            if (this.finished || this.loading) {
-              return;
-            }
-            this.pageNo = this.pageNo + 1;
-            this.loadPage(false).catch(() => {
-              this.pageNo = this.pageNo - 1;
-            });
-          })
         }
+        .width('100%')
+        .height('100%')
+        .padding({ left: 12, right: 12, top: 8, bottom: 12 })
+        .scrollBar(BarState.Off)
+        .edgeEffect(EdgeEffect.Spring)
+        .onReachEnd(() => {
+          if (this.finished || this.loading || this.articles.length === 0) {
+            return;
+          }
+          this.pageNo = this.pageNo + 1;
+          this.loadPage(false).catch(() => {
+            this.pageNo = this.pageNo - 1;
+          });
+        })
       }
       .layoutWeight(1)
       .width('100%')

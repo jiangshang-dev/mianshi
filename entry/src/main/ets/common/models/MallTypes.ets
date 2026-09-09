@@ -6,6 +6,8 @@ export interface MallProduct {
   images?: string;
   detail?: string;
   goodsType?: string;
+  categoryId?: string;
+  categoryName?: string;
   payType?: string;
   pointsPrice?: number;
   priceFen?: number;
@@ -82,6 +84,20 @@ export interface MallMe {
 export interface JeecgMallMsgResp {
   success?: boolean;
   message?: string;
+  code?: number;
+}
+
+export interface MallCategory {
+  id?: string;
+  name?: string;
+  icon?: string;
+  sortNo?: number;
+}
+
+export interface JeecgMallCategoryListResp {
+  success?: boolean;
+  message?: string;
+  result?: MallCategory[];
   code?: number;
 }
 
@@ -181,10 +197,18 @@ export function mallNum(value?: number, fallback: number = 0): number {
     return fallback;
   }
   try {
-    if (value + 0 === value) {
+    if (typeof value === 'number' && value + 0 === value) {
       return value;
     }
   } catch (_e) {
+  }
+  const text = `${value}`.trim();
+  if (text.length === 0) {
+    return fallback;
+  }
+  const parsed = Number(text);
+  if (parsed === parsed) {
+    return parsed;
   }
   return fallback;
 }
@@ -192,6 +216,21 @@ export function mallNum(value?: number, fallback: number = 0): number {
 export function mallFenText(fen?: number): string {
   const v = mallNum(fen);
   return `¥${(v / 100).toFixed(2)}`;
+}
+
+export function copyMallCategory(raw: MallCategory): MallCategory {
+  try {
+    const item: MallCategory = {
+      id: mallStr(raw.id),
+      name: mallStr(raw.name),
+      icon: mallStr(raw.icon),
+      sortNo: mallNum(raw.sortNo)
+    };
+    return item;
+  } catch (_e) {
+    const empty: MallCategory = { id: '', name: '' };
+    return empty;
+  }
 }
 
 export function copyMallProduct(raw: MallProduct): MallProduct {
@@ -204,6 +243,8 @@ export function copyMallProduct(raw: MallProduct): MallProduct {
       images: mallStr(raw.images),
       detail: mallStr(raw.detail),
       goodsType: mallStr(raw.goodsType),
+      categoryId: mallStr(raw.categoryId),
+      categoryName: mallStr(raw.categoryName),
       payType: mallStr(raw.payType),
       pointsPrice: mallNum(raw.pointsPrice),
       priceFen: mallNum(raw.priceFen),
