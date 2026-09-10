@@ -150,7 +150,7 @@ export class I18n {
     I18n.put('home_slogan_book', '学技术 · 读好书 · 拿 Offer', '學技術 · 讀好書 · 拿 Offer', 'Learn · Read · Offer');
     I18n.put('home_keep', 'Keep Learning, Get Offer.', 'Keep Learning, Get Offer.', 'Keep Learning, Get Offer.');
     I18n.put('home_keep_short', '更好的技术自己，遇见更好的你', '更好的技術自己，遇見更好的你', 'A better tech self');
-    I18n.put('home_search_ph', '搜索技术分类 / 面试题', '搜尋技術分類 / 面試題', 'Search topics / questions');
+    I18n.put('home_search_ph', '搜索图书 / 专栏 / 题目 / 广场', '搜尋圖書 / 專欄 / 題目 / 廣場', 'Search books / columns / questions / square');
     I18n.put('home_cat_sub', '选择分类，直接进入对应书籍页面', '選擇分類，直接進入對應書籍頁面', 'Tap a topic to browse books');
     I18n.put('home_cat_go', '点击分类直接进入分类页 →', '點擊分類直接進入分類頁 →', 'Open topic →');
     I18n.put('home_banner', '技术改变未来，学习成就更好的你！', '技術改變未來，學習成就更好的你！', 'Tech changes the future');
@@ -269,9 +269,15 @@ export class I18n {
     I18n.put('report_ty_other', '其他', '其他', 'Other');
     I18n.put('ai_feature', 'AI 问答', 'AI 問答', 'AI Q&A');
     I18n.put('search', '搜索', '搜尋', 'Search');
-    I18n.put('search_ph', '搜题目 / 知识点 / 分类', '搜題目 / 知識點 / 分類', 'Search questions / topics');
-    I18n.put('search_idle', '输入关键词，搜索题目、知识点或分类', '輸入關鍵詞，搜尋題目、知識點或分類', 'Type a keyword to search questions and topics');
+    I18n.put('search_ph', '搜图书 / 专栏 / 题目 / 广场', '搜圖書 / 專欄 / 題目 / 廣場', 'Search books / columns / Qs / square');
+    I18n.put('search_idle', '输入关键词，搜索图书、专栏、题目或广场', '輸入關鍵詞，搜尋圖書、專欄、題目或廣場', 'Search books, columns, questions or square');
     I18n.put('search_empty', '没有找到相关题目', '沒有找到相關題目', 'No matching questions');
+    I18n.put('search_empty_all', '没有找到相关内容', '沒有找到相關內容', 'No matching results');
+    I18n.put('search_tab_all', '全部', '全部', 'All');
+    I18n.put('search_tab_q', '题目', '題目', 'Questions');
+    I18n.put('search_tab_book', '图书', '圖書', 'Books');
+    I18n.put('search_tab_blog', '专栏', '專欄', 'Columns');
+    I18n.put('search_tab_forum', '广场', '廣場', 'Square');
     I18n.put('hot_search', '热搜', '熱搜', 'Hot');
     I18n.put('search_history', '搜索历史', '搜尋紀錄', 'History');
     I18n.put('clear_history', '清空', '清空', 'Clear');

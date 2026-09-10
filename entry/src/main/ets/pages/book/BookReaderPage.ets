@@ -42,6 +42,8 @@ struct BookReaderPage {
   private flipDragging: boolean = false;
   private flipTarget: number = -1;
   private flipCaptured: boolean = false;
+  private flipToken: number = 0;
+  private flipApplied: boolean = false;
 
   aboutToAppear(): void {
     const params = router.getParams() as BookReaderParams;
@@ -200,26 +202,45 @@ struct BookReaderPage {
   }
 
   private releaseFlipMap(): void {
-    if (this.flipMap !== undefined) {
+    const map = this.flipMap;
+    this.flipMap = undefined;
+    if (map !== undefined) {
       try {
-        this.flipMap.release();
+        map.release();
       } catch (_e) {
       }
-      this.flipMap = undefined;
     }
   }
 
-  private clearFlip(force: boolean = false): void {
+  private clearFlip(_force: boolean = false): void {
+    this.flipToken += 1;
     this.flipOn = false;
     this.flipAngle = 0;
     this.flipBusy = false;
     this.flipDragging = false;
     this.flipCaptured = false;
     this.flipTarget = -1;
-    this.releaseFlipMap();
-    if (force) {
+    this.flipApplied = false;
+    // 先卸遮罩再释放位图，避免 Image 持有已释放 PixelMap 导致白屏
+    setTimeout(() => {
+      this.releaseFlipMap();
+    }, 32);
+  }
+
+  private refreshPdf(index: number): void {
+    if (index < 0) {
       return;
     }
+    if (this.pageCount > 0 && index >= this.pageCount) {
+      return;
+    }
+    try {
+      this.controller.goToPage(index);
+      this.controller.setPageFit(pdfService.PageFit.FIT_PAGE);
+    } catch (_e) {
+    }
+    this.pageIndex = index;
+    this.persist(false);
   }
 
   private beginFlip(next: boolean): boolean {
@@ -244,6 +265,7 @@ struct BookReaderPage {
     }
     this.flipNext = next;
     this.flipTarget = target;
+    this.flipApplied = false;
     this.flipOn = true;
     this.flipBusy = true;
     return true;
@@ -266,8 +288,8 @@ struct BookReaderPage {
     }
     const span = Math.max(this.viewW * 0.62, 180);
     const progress = Math.min(dist / span, 1);
-    // 卷页角度：跟手指走，最大约 78°，露出下方页的同时保持“纸张卷起”感
-    const angle = progress * 78;
+    // 最大约 70°，避免纸面完全立起盖住底层 PDF
+    const angle = progress * 70;
     this.flipAngle = this.flipNext ? -angle : angle;
   }
 
@@ -296,65 +318,91 @@ struct BookReaderPage {
 
   private commitFlip(): void {
     const target = this.flipTarget;
-    const endAngle = this.flipNext ? -92 : 92;
+    const token = ++this.flipToken;
+    const endAngle = this.flipNext ? -78 : 78;
+    this.flipDragging = false;
+    // 先切到目标页，卷起过程中露出真实内容；只切一次，避免 PdfView 白屏
+    if (!this.flipApplied) {
+      this.flipApplied = true;
+      this.refreshPdf(target);
+    }
     animateTo({
-      duration: 280,
+      duration: 260,
       curve: Curve.EaseOut,
       onFinish: () => {
-        this.applyPage(target);
-        this.clearFlip();
+        if (token !== this.flipToken) {
+          return;
+        }
+        this.finishCommit(target, token);
       }
     }, () => {
       this.flipAngle = endAngle;
     });
-    // 动画过半后切页，卷起时露出下一页
+    // animateTo onFinish 偶发不触发，兜底清遮罩
     setTimeout(() => {
-      if (this.flipTarget === target) {
-        this.applyPage(target);
+      if (token !== this.flipToken) {
+        return;
       }
-    }, 120);
+      this.finishCommit(target, token);
+    }, 360);
+  }
+
+  private finishCommit(target: number, token: number): void {
+    if (token !== this.flipToken) {
+      return;
+    }
+    this.flipToken += 1;
+    this.flipOn = false;
+    this.flipAngle = 0;
+    this.flipBusy = false;
+    this.flipDragging = false;
+    this.flipCaptured = false;
+    this.flipTarget = -1;
+    this.flipApplied = false;
+    this.refreshPdf(target);
+    setTimeout(() => {
+      this.releaseFlipMap();
+    }, 32);
   }
 
   private cancelFlip(): void {
+    const token = ++this.flipToken;
     animateTo({
-      duration: 220,
+      duration: 200,
       curve: Curve.EaseOut,
       onFinish: () => {
+        if (token !== this.flipToken) {
+          return;
+        }
         this.clearFlip();
       }
     }, () => {
       this.flipAngle = 0;
     });
+    setTimeout(() => {
+      if (token !== this.flipToken) {
+        return;
+      }
+      this.clearFlip();
+    }, 280);
   }
 
   private flipToNeighbor(next: boolean): void {
     if (!this.beginFlip(next)) {
-      // 截图失败时退回瞬时翻页
       if (next) {
-        this.applyPage(this.pageIndex + 1);
+        this.refreshPdf(this.pageIndex + 1);
       } else {
-        this.applyPage(this.pageIndex - 1);
+        this.refreshPdf(this.pageIndex - 1);
       }
       return;
     }
     this.flipDragging = false;
-    this.flipAngle = this.flipNext ? -8 : 8;
+    this.flipAngle = this.flipNext ? -6 : 6;
     this.commitFlip();
   }
 
   private applyPage(index: number): void {
-    if (index < 0) {
-      return;
-    }
-    if (this.pageCount > 0 && index >= this.pageCount) {
-      return;
-    }
-    try {
-      this.controller.goToPage(index);
-    } catch (_e) {
-    }
-    this.pageIndex = index;
-    this.persist(false);
+    this.refreshPdf(index);
   }
 
   private prevPage(): void {
@@ -507,30 +555,10 @@ struct BookReaderPage {
   private FlipOverlay() {
     if (this.flipOn && this.flipMap !== undefined) {
       Stack() {
-        // 纸背底色：卷到侧边时隐约可见
-        Column()
-          .width('100%')
-          .height('100%')
-          .linearGradient({
-            angle: this.flipNext ? 270 : 90,
-            colors: [['#F7F1E8', 0], ['#EDE4D6', 0.5], ['#D9CFBF', 1]]
-          })
-          .opacity(Math.min(1, Math.abs(this.flipAngle) / 55))
-          .rotate({
-            x: 0,
-            y: 1,
-            z: 0,
-            angle: this.flipAngle,
-            centerX: this.flipNext ? '0%' : '100%',
-            centerY: '50%',
-            perspective: 1200
-          })
-
         Image(this.flipMap)
           .width('100%')
           .height('100%')
           .objectFit(ImageFit.Fill)
-          .opacity(Math.max(0.15, 1 - Math.abs(this.flipAngle) / 110))
           .rotate({
             x: 0,
             y: 1,
@@ -542,30 +570,30 @@ struct BookReaderPage {
           })
           .shadow({
             radius: this.flipCurl(),
-            color: '#66000000',
-            offsetX: this.flipNext ? -12 : 12,
+            color: '#55000000',
+            offsetX: this.flipNext ? -10 : 10,
             offsetY: 0
           })
 
-        // 卷边阴影，增强手掀纸张感
+        // 仅卷边阴影，不再铺整页纸背（纸背会把底层 PDF 盖成白屏）
         Row() {
           if (this.flipNext) {
             Blank()
             Column()
-              .width(42)
+              .width(36)
               .height('100%')
               .linearGradient({
                 angle: 180,
-                colors: [['#99000000', 0], ['#33000000', 0.45], ['#00000000', 1]]
+                colors: [['#88000000', 0], ['#22000000', 0.4], ['#00000000', 1]]
               })
               .opacity(this.flipShadow())
           } else {
             Column()
-              .width(42)
+              .width(36)
               .height('100%')
               .linearGradient({
                 angle: 0,
-                colors: [['#99000000', 0], ['#33000000', 0.45], ['#00000000', 1]]
+                colors: [['#88000000', 0], ['#22000000', 0.4], ['#00000000', 1]]
               })
               .opacity(this.flipShadow())
             Blank()

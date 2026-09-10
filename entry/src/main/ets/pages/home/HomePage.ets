@@ -137,9 +137,9 @@ export struct HomePage {
               }
               .alignItems(HorizontalAlign.Start)
               .layoutWeight(1)
-              Text(I18n.t('home_cat_go', this.lang))
-                .fontSize(11)
-                .fontColor('#94A3B8')
+              // Text(I18n.t('home_cat_go', this.lang))
+              //   .fontSize(11)
+              //   .fontColor('#94A3B8')
             }
             .width('100%')
 
