@@ -1,7 +1,7 @@
 import { common } from '@kit.AbilityKit';
 import { HomePage } from './home/HomePage';
+import { BankPage } from './bank/BankPage';
 import { BookPage } from './book/BookPage';
-import { StudyPage } from './study/StudyPage';
 import { InterviewPage } from './interview/InterviewPage';
 import { ProfilePage } from './profile/ProfilePage';
 import { AuthRepository } from '../data/repository/AuthRepository';
@@ -45,8 +45,9 @@ struct Index {
     this.normalizeIndex();
   }
 
+  /** 0首页 1题库 2AI面试 3书库 4我的 */
   private normalizeIndex(): void {
-    if (!this.interviewAiEnabled && this.currentIndex === 3) {
+    if (!this.interviewAiEnabled && this.currentIndex === 2) {
       this.currentIndex = 0;
     }
   }
@@ -56,7 +57,7 @@ struct Index {
   }
 
   private openTab(tabIndex: number): void {
-    if (!this.interviewAiEnabled && tabIndex === 3) {
+    if (!this.interviewAiEnabled && tabIndex === 2) {
       return;
     }
     this.currentIndex = tabIndex;
@@ -88,17 +89,17 @@ struct Index {
         .tabBar('')
 
         TabContent() {
-          BookPage()
-        }
-        .tabBar('')
-
-        TabContent() {
-          StudyPage()
+          BankPage()
         }
         .tabBar('')
 
         TabContent() {
           InterviewPage()
+        }
+        .tabBar('')
+
+        TabContent() {
+          BookPage()
         }
         .tabBar('')
 
@@ -111,7 +112,7 @@ struct Index {
       .width('100%')
       .barHeight(0)
       .onChange((index: number) => {
-        if (!this.interviewAiEnabled && index === 3) {
+        if (!this.interviewAiEnabled && index === 2) {
           this.currentIndex = 0;
           return;
         }
@@ -122,11 +123,11 @@ struct Index {
 
       Row() {
         this.navItem('tab_home', 0, '🏠')
-        this.navItem('tab_book', 1, '📕')
-        this.navItem('tab_study', 2, '📋')
+        this.navItem('tab_bank', 1, '📋')
         if (this.interviewAiEnabled) {
-          this.navItem('tab_interview', 3, '🤖')
+          this.navItem('tab_interview', 2, '🤖')
         }
+        this.navItem('tab_book', 3, '📕')
         this.navItem('tab_profile', 4, '👤')
       }
       .width('100%')

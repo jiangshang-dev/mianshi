@@ -52,6 +52,7 @@ export interface QuestionItem {
   tags: string[];
   difficulty: string;
   hot: boolean;
+  viewCount?: number;
   source: DataSourceType;
   mdPath?: string;
   content?: string;
@@ -60,6 +61,14 @@ export interface QuestionItem {
   bilibiliUrls?: string[];
   mastery: number;
   favorited: boolean;
+}
+
+export interface QuestionPage {
+  records: QuestionItem[];
+  total: number;
+  pageNo: number;
+  pageSize: number;
+  finished: boolean;
 }
 
 export interface DocCatalog {

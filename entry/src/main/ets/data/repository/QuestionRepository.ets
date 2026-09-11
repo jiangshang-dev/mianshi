@@ -3,6 +3,7 @@ import {
   Category,
   CategoryGroupSection,
   QuestionItem,
+  QuestionPage,
   TodayStudyStats,
   AiStreamSnapshot
 } from '../../common/models/Types';
@@ -40,6 +41,20 @@ export class QuestionRepository {
       subCategoryId : categoryId;
     const list = await this.remote.listByCategory(id);
     return list.map((q: QuestionItem) => this.withLocalState(q));
+  }
+
+  async pageQuestions(categoryId: string, pageNo: number, pageSize: number = 30,
+    difficulty: string = ''): Promise<QuestionPage> {
+    const page = await this.remote.pageByCategory(categoryId, pageNo, pageSize, difficulty);
+    const records = page.records.map((q: QuestionItem) => this.withLocalState(q));
+    const out: QuestionPage = {
+      records: records,
+      total: page.total,
+      pageNo: pageNo,
+      pageSize: pageSize,
+      finished: page.finished
+    };
+    return out;
   }
 
   async getDetail(_context: common.UIAbilityContext, id: string): Promise<QuestionItem | null> {
@@ -102,6 +117,7 @@ export class QuestionRepository {
       tags: q.tags,
       difficulty: q.difficulty,
       hot: q.hot,
+      viewCount: q.viewCount,
       source: 'remote_api',
       content: q.content,
       interviewAnswer: q.interviewAnswer,

@@ -21,6 +21,8 @@ import { MemberRepository } from '../../data/repository/MemberRepository';
 
 interface DetailRouteParams {
   id?: string;
+  questionId?: string;
+  title?: string;
 }
 
 @Entry
@@ -58,7 +60,9 @@ struct QuestionDetailPage {
 
   aboutToAppear(): void {
     const params = router.getParams() as DetailRouteParams;
-    this.questionId = params.id ?? '';
+    const fromId = params.id !== undefined ? params.id : '';
+    const fromQid = params.questionId !== undefined ? params.questionId : '';
+    this.questionId = fromId.length > 0 ? fromId : fromQid;
     AppFeatureRepository.getInstance().refresh();
     MemberRepository.getInstance().refreshStatus();
     this.loadDetail();

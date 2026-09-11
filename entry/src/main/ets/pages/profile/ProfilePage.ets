@@ -209,11 +209,11 @@ export struct ProfilePage {
   build() {
     Scroll() {
       Column({ space: 10 }) {
-        Text(I18n.t('tab_profile', this.lang))
-          .fontSize(20)
-          .fontWeight(FontWeight.Bold)
-          .fontColor($r('app.color.text_primary'))
-          .width('100%')
+        // Text(I18n.t('tab_profile', this.lang))
+        //   .fontSize(20)
+        //   .fontWeight(FontWeight.Bold)
+        //   .fontColor($r('app.color.text_primary'))
+        //   .width('100%')
 
         Row({ space: 12 }) {
           if (this.isLoggedIn && this.avatarUrl.length > 0) {

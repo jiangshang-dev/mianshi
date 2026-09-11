@@ -1,9 +1,23 @@
 import { AppConfig } from '../../common/constants/AppConfig';
-import { Category, CategoryGroupSection, QuestionItem, SubCategory, AiStreamSnapshot, TodayStudyStats } from '../../common/models/Types';
+import {
+  Category,
+  CategoryGroupSection,
+  QuestionItem,
+  SubCategory,
+  AiStreamSnapshot,
+  TodayStudyStats
+} from '../../common/models/Types';
 import { CategoryGroupUtil } from '../../common/utils/CategoryGroupUtil';
 import { HttpClient, SseAbort } from '../../common/network/HttpClient';
 import { DeviceProfile } from '../../common/utils/DeviceProfile';
 import { LoginGate } from '../../common/utils/LoginGate';
+
+/** 远程分页中间结果（不含 pageNo/pageSize） */
+interface QuestionPageSlice {
+  records: QuestionItem[];
+  total: number;
+  finished: boolean;
+}
 
 interface RemoteQuestionDto {
   id: string;
@@ -13,13 +27,27 @@ interface RemoteQuestionDto {
   tags: string[];
   difficulty: string;
   hot: boolean;
+  viewCount?: number;
   answer: string;
   interviewAnswer?: string;
   knowledgePoints?: string[];
   bilibiliUrls?: string[];
 }
 
+interface RemoteQuestionPageDto {
+  records?: RemoteQuestionDto[];
+  total?: number;
+  current?: number;
+  size?: number;
+}
+
 interface RemoteListResponse {
+  code: number;
+  result?: RemoteQuestionDto[] | RemoteQuestionPageDto;
+  data?: RemoteQuestionDto[] | RemoteQuestionPageDto;
+}
+
+interface RemoteSearchResponse {
   code: number;
   result?: RemoteQuestionDto[];
   data?: RemoteQuestionDto[];
@@ -288,22 +316,62 @@ export class RemoteApiDataSource {
   }
 
   async listByCategory(categoryId: string): Promise<QuestionItem[]> {
-    const query = `categoryId=${encodeURIComponent(categoryId)}`;
+    const page = await this.pageByCategory(categoryId, 1, 200, '');
+    return page.records;
+  }
+
+  async pageByCategory(categoryId: string, pageNo: number, pageSize: number,
+    difficulty: string): Promise<QuestionPageSlice> {
+    const size = pageSize > 0 ? pageSize : 30;
+    const no = pageNo > 0 ? pageNo : 1;
+    let query = `pageNo=${no}&pageSize=${size}`;
+    if (categoryId.length > 0) {
+      query += `&categoryId=${encodeURIComponent(categoryId)}`;
+    }
+    if (difficulty.length > 0 && difficulty !== 'all') {
+      query += `&difficulty=${encodeURIComponent(difficulty)}`;
+    }
     const resp = await HttpClient.get('/api/questions', query);
     if (resp.ok) {
       try {
         const parsed = JSON.parse(resp.body) as RemoteListResponse;
-        const list = parsed.result ?? parsed.data;
-        if (list) {
-          return list.map((d: RemoteQuestionDto) => this.toQuestion(d));
+        const payload = parsed.result ?? parsed.data;
+        if (payload !== undefined) {
+          const pageCandidate = payload as RemoteQuestionPageDto;
+          if (pageCandidate.records !== undefined) {
+            const raw = pageCandidate.records;
+            const records = raw.map((d: RemoteQuestionDto) => this.toQuestion(d));
+            const total = pageCandidate.total !== undefined ? pageCandidate.total : records.length;
+            const finished = records.length < size || no * size >= total;
+            const out: QuestionPageSlice = { records: records, total: total, finished: finished };
+            return out;
+          }
+          const listCandidate = payload as RemoteQuestionDto[];
+          if (listCandidate.length !== undefined) {
+            const records: QuestionItem[] = [];
+            for (let i = 0; i < listCandidate.length; i++) {
+              records.push(this.toQuestion(listCandidate[i]));
+            }
+            const out: QuestionPageSlice = { records: records, total: records.length, finished: true };
+            return out;
+          }
         }
       } catch (_e) {
       }
     }
     if (AppConfig.REMOTE_USE_MOCK_FALLBACK) {
-      return this.mockList(categoryId);
+      const all = this.mockList(categoryId.length > 0 ? categoryId : 'api.hot.java100');
+      const start = (no - 1) * size;
+      const slice = all.slice(start, start + size);
+      const out: QuestionPageSlice = {
+        records: slice,
+        total: all.length,
+        finished: start + slice.length >= all.length
+      };
+      return out;
     }
-    return [];
+    const empty: QuestionPageSlice = { records: [], total: 0, finished: true };
+    return empty;
   }
 
   async getDetail(questionId: string): Promise<QuestionItem | null> {
@@ -331,7 +399,7 @@ export class RemoteApiDataSource {
     const resp = await HttpClient.get('/api/questions/search', query);
     if (resp.ok) {
       try {
-        const parsed = JSON.parse(resp.body) as RemoteListResponse;
+        const parsed = JSON.parse(resp.body) as RemoteSearchResponse;
         const list = parsed.result ?? parsed.data;
         if (list) {
           return list.map((d: RemoteQuestionDto) => this.toQuestion(d));
@@ -433,6 +501,7 @@ export class RemoteApiDataSource {
       tags: d.tags ?? [],
       difficulty: d.difficulty || '中级',
       hot: d.hot,
+      viewCount: d.viewCount !== undefined ? d.viewCount : 0,
       source: 'remote_api',
       content: d.answer,
       interviewAnswer: d.interviewAnswer,
