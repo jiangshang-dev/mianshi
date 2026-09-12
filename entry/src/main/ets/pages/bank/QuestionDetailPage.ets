@@ -449,7 +449,7 @@ struct QuestionDetailPage {
   }
 
   build() {
-    Stack({ alignContent: Alignment.BottomEnd }) {
+    Stack({ alignContent: Alignment.Bottom }) {
       Column() {
         Row() {
           Text('‹').fontSize(28).fontColor($r('app.color.text_primary')).padding({ right: 8 }).onClick(() => router.back())
@@ -571,7 +571,11 @@ struct QuestionDetailPage {
                 })
               }
             }
-            .padding({ left: 16, right: 16, bottom: 96 }).width('100%')
+            .padding({
+              left: 16,
+              right: 16,
+              bottom: this.commentFeatureEnabled ? 88 : 28
+            }).width('100%')
           }.layoutWeight(1).scrollBar(BarState.Off).align(Alignment.Top)
           }
           .layoutWeight(1)
@@ -582,15 +586,23 @@ struct QuestionDetailPage {
       .width('100%').height('100%').backgroundColor($r('app.color.page_bg'))
 
       if (this.questionAiEnabled && !this.showAi && !this.videoFullScreen && !this.commentSheetOpen) {
-        Column() {
-          Text('AI').fontSize(16).fontWeight(FontWeight.Bold).fontColor($r('app.color.text_on_color'))
+        Stack({ alignContent: Alignment.BottomEnd }) {
+          Column() {
+            Text('AI').fontSize(16).fontWeight(FontWeight.Bold).fontColor($r('app.color.text_on_color'))
+          }
+          .width(56).height(56).borderRadius(28).justifyContent(FlexAlign.Center)
+          .linearGradient({ angle: 135, colors: [['#4F46E5', 0], ['#2563EB', 1]] })
+          .margin({
+            right: 20,
+            bottom: this.commentFeatureEnabled ? 108 : 28
+          })
+          .onClick(() => {
+            this.openAi();
+          })
         }
-        .width(56).height(56).borderRadius(28).justifyContent(FlexAlign.Center)
-        .linearGradient({ angle: 135, colors: [['#4F46E5', 0], ['#2563EB', 1]] })
-        .margin({ right: 20, bottom: 28 })
-        .onClick(() => {
-          this.openAi();
-        })
+        .width('100%')
+        .height('100%')
+        .hitTestBehavior(HitTestMode.Transparent)
       }
 
       if (this.questionAiEnabled && this.showAi) {

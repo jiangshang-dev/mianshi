@@ -168,18 +168,18 @@ export struct HomePage {
     const b: HomeGridItem = { titleKey: 'home_grid_book', subKey: 'home_grid_book_sub', action: 'book' };
     const c: HomeGridItem = { titleKey: 'home_grid_blog', subKey: 'home_grid_blog_sub', action: 'blog' };
     const d: HomeGridItem = { titleKey: 'home_grid_forum', subKey: 'home_grid_forum_sub', action: 'forum' };
-    const e: HomeGridItem = { titleKey: 'home_grid_ai', subKey: 'home_grid_ai_sub', action: 'ai' };
+    // const e: HomeGridItem = { titleKey: 'home_grid_ai', subKey: 'home_grid_ai_sub', action: 'ai' };
     const f: HomeGridItem = { titleKey: 'home_grid_fav', subKey: 'home_grid_fav_sub', action: 'fav' };
     const g: HomeGridItem = { titleKey: 'home_grid_mall', subKey: 'home_grid_mall_sub', action: 'mall' };
-    const h: HomeGridItem = { titleKey: 'home_grid_more', subKey: 'home_grid_more_sub', action: 'more' };
+    // const h: HomeGridItem = { titleKey: 'home_grid_more', subKey: 'home_grid_more_sub', action: 'more' };
     items.push(a);
     items.push(b);
     items.push(c);
     items.push(d);
-    items.push(e);
+    // items.push(e);
     items.push(f);
     items.push(g);
-    items.push(h);
+    // items.push(h);
     return items;
   }
 

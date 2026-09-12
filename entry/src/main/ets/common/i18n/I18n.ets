@@ -188,7 +188,7 @@ export class I18n {
     I18n.put('more', '更多 ›', '更多 ›', 'More ›');
     I18n.put('book_readers', '{0} 人在读', '{0} 人在讀', '{0} reading');
     I18n.put('bank_title_full', '面试题库', '面試題庫', 'Question Bank');
-    I18n.put('bank_search_ph', '搜索面试题 / 知识点', '搜尋面試題 / 知識點', 'Search questions');
+    I18n.put('bank_search_ph', '搜索面试题', '搜尋面試題', 'Search questions');
     I18n.put('bank_tab_rec', '推荐', '推薦', 'For you');
     I18n.put('bank_hero_rec', '精选面试题', '精選面試題', 'Featured questions');
     I18n.put('bank_hero_cat', '{0} 面试题', '{0} 面試題', '{0} questions');
@@ -296,7 +296,7 @@ export class I18n {
     I18n.put('comment_day', '日', '日', '');
     I18n.put('comment_vote_fail', '操作失败', '操作失敗', 'Failed');
     I18n.put('comment_sort_time', '按时间', '按時間', 'Latest');
-    I18n.put('comment_sort_hot', '按热度', '按熱度', 'Hot');
+    I18n.put('comment_sort_hot', '最热', '最熱', 'Hot');
     I18n.put('ai_helper', 'AI 面试助手', 'AI 面試助手', 'AI helper');
     I18n.put('stop', '停止', '停止', 'Stop');
     I18n.put('collapse', '收起', '收起', 'Hide');

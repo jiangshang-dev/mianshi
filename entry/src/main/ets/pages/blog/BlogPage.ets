@@ -109,9 +109,9 @@ export struct BlogPage {
     router.pushUrl({ url: 'pages/blog/BlogSearchPage' });
   }
 
-  private filterSoon(): void {
-    promptAction.showToast({ message: I18n.t('forum_soon', this.lang) });
-  }
+  // private filterSoon(): void {
+  //   promptAction.showToast({ message: I18n.t('forum_soon', this.lang) });
+  // }
 
   private openArticle(item: BlogArticle): void {
     const id = mallStr(item.id);
@@ -197,12 +197,12 @@ export struct BlogPage {
           .objectFit(ImageFit.Contain)
           .fillColor('#111827')
           .onClick(() => this.openSearch())
-        Image($r('app.media.ic_blog_filter'))
-          .width(22)
-          .height(22)
-          .objectFit(ImageFit.Contain)
-          .fillColor('#111827')
-          .onClick(() => this.filterSoon())
+        // Image($r('app.media.ic_blog_filter'))
+        //   .width(22)
+        //   .height(22)
+        //   .objectFit(ImageFit.Contain)
+        //   .fillColor('#111827')
+        //   .onClick(() => this.filterSoon())
       }
       .width('100%')
       .padding({ left: 16, right: 16, top: 8, bottom: 2 })

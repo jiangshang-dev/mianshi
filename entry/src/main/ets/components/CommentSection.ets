@@ -1,8 +1,10 @@
+import { promptAction } from '@kit.ArkUI';
 import { I18n } from '../common/i18n/I18n';
 import { LoginGate } from '../common/utils/LoginGate';
 import { CommentUi } from '../common/utils/CommentUi';
+import { CommentEmojis } from '../common/utils/CommentEmojis';
 import { CommentItemRow } from './CommentItemRow';
-import { CommentRepository, QuestionComment } from '../data/repository/CommentRepository';
+import { CommentFlatRow, CommentRepository, QuestionComment } from '../data/repository/CommentRepository';
 
 @Component
 export struct CommentSection {
@@ -12,8 +14,14 @@ export struct CommentSection {
   @Prop @Watch('onComposeChange') composeOpen: boolean = false;
   @State private comments: QuestionComment[] = [];
   @State private loading: boolean = false;
-  @State private sortHot: boolean = false;
+  @State private sortHot: boolean = true;
+  @State private replyText: string = '';
+  @State private replyToId: string = '';
+  @State private replyToName: string = '';
+  @State private sending: boolean = false;
+  @State private showEmoji: boolean = false;
   private repo: CommentRepository = CommentRepository.getInstance();
+  private emojis: string[] = CommentEmojis.all();
   private composeWasOpen: boolean = false;
   private onPostedReload: () => void = () => {
     this.reload();
@@ -32,6 +40,10 @@ export struct CommentSection {
 
   onQuestionIdChange(): void {
     CommentUi.setQuestionId(this.questionId);
+    this.replyText = '';
+    this.replyToId = '';
+    this.replyToName = '';
+    this.showEmoji = false;
     this.reload();
   }
 
@@ -65,9 +77,27 @@ export struct CommentSection {
   private totalCount(): number {
     let n = this.comments.length;
     for (let i = 0; i < this.comments.length; i++) {
-      n += this.comments[i].replyCount;
+      n += this.flatReplies(this.comments[i]).length;
     }
     return n;
+  }
+
+  private flatReplies(item: QuestionComment): CommentFlatRow[] {
+    const out: CommentFlatRow[] = [];
+    this.collectFlat(item.replies, 1, out);
+    return out;
+  }
+
+  private collectFlat(src: QuestionComment[], depth: number, out: CommentFlatRow[]): void {
+    for (let i = 0; i < src.length; i++) {
+      const row: CommentFlatRow = {
+        key: `${src[i].id}_${depth}_${i}`,
+        depth: depth,
+        item: src[i]
+      };
+      out.push(row);
+      this.collectFlat(src[i].replies, depth + 1, out);
+    }
   }
 
   private displayList(): QuestionComment[] {
@@ -87,77 +117,221 @@ export struct CommentSection {
     return copy;
   }
 
-  private openNew(): void {
+  private commentKey(c: QuestionComment): string {
+    return `${c.id}_${c.replyCount}_${c.likeCount}_${c.dislikeCount}_${c.content}_${c.myVote}`;
+  }
+
+  private startReply(id: string, name: string): void {
     LoginGate.ensure(I18n.t('comment_feature', this.lang), () => {
-      CommentUi.openCompose('', '');
+      this.replyToId = id;
+      this.replyToName = name;
+      this.showEmoji = false;
     });
   }
 
+  private insertEmoji(emoji: string): void {
+    this.replyText = `${this.replyText}${emoji}`;
+  }
+
+  private send(): void {
+    const text = this.replyText.trim();
+    if (text.length === 0) {
+      return;
+    }
+    LoginGate.ensure(I18n.t('comment_feature', this.lang), () => {
+      this.doSend(text);
+    });
+  }
+
+  private async doSend(text: string): Promise<void> {
+    if (this.sending) {
+      return;
+    }
+    if (text.length > 500) {
+      promptAction.showToast({ message: '评论最多 500 字' });
+      return;
+    }
+    this.sending = true;
+    try {
+      const result = await this.repo.post(this.questionId, text, this.replyToId);
+      if (typeof result === 'string') {
+        promptAction.showToast({ message: result });
+        return;
+      }
+      this.replyText = '';
+      this.replyToId = '';
+      this.replyToName = '';
+      this.showEmoji = false;
+      if (result.status === 0) {
+        const hint = result.hint.length > 0 ? result.hint : I18n.t('comment_rejected', this.lang);
+        promptAction.showToast({ message: hint });
+      } else if (result.status === 2) {
+        const hint = result.hint.length > 0 ? result.hint : I18n.t('forum_pending', this.lang);
+        promptAction.showToast({ message: hint });
+      } else {
+        promptAction.showToast({ message: I18n.t('comment_ok', this.lang) });
+      }
+      CommentUi.bumpReload();
+      await this.reload();
+    } catch (_e) {
+      promptAction.showToast({ message: I18n.t('comment_fail', this.lang) });
+    } finally {
+      this.sending = false;
+    }
+  }
+
   build() {
-    Column() {
+    Column({ space: 12 }) {
       Row() {
         Text(`${I18n.t('comment_title', this.lang)} ${this.totalCount()}`)
-          .fontSize(15)
-          .fontWeight(FontWeight.Medium)
-          .fontColor('#18191C')
+          .fontSize(16)
+          .fontWeight(FontWeight.Bold)
+          .fontColor($r('app.color.text_primary'))
           .layoutWeight(1)
-        Text(this.sortHot ? I18n.t('comment_sort_hot', this.lang) : I18n.t('comment_sort_time', this.lang))
-          .fontSize(12)
-          .fontColor('#9499A0')
-          .onClick(() => {
-            this.sortHot = !this.sortHot;
-          })
+        Row({ space: 2 }) {
+          Text(this.sortHot ? I18n.t('comment_sort_hot', this.lang) : I18n.t('comment_sort_time', this.lang))
+            .fontSize(13)
+            .fontColor('#6B7280')
+          Text('▾')
+            .fontSize(12)
+            .fontColor('#6B7280')
+        }
+        .onClick(() => {
+          this.sortHot = !this.sortHot;
+        })
       }
       .width('100%')
-      .padding({ bottom: 10 })
-
-      Row({ space: 8 }) {
-        Text(I18n.t('comment_ph', this.lang))
-          .fontSize(14)
-          .fontColor('#9499A0')
-          .layoutWeight(1)
-        Image($r('app.media.ic_comment_emoji'))
-          .width(22)
-          .height(22)
-          .objectFit(ImageFit.Contain)
-      }
-      .width('100%')
-      .height(36)
-      .padding({ left: 14, right: 12 })
-      .backgroundColor('#F1F2F3')
-      .borderRadius(18)
-      .onClick(() => {
-        this.openNew();
-      })
+      .alignItems(VerticalAlign.Center)
 
       if (this.loading && this.comments.length === 0) {
         Text(I18n.t('loading', this.lang))
           .fontSize(13)
           .fontColor($r('app.color.text_muted'))
           .width('100%')
-          .margin({ top: 16 })
       } else if (this.comments.length === 0) {
         Text(I18n.t('comment_empty', this.lang))
           .fontSize(13)
           .fontColor($r('app.color.text_muted'))
           .width('100%')
-          .margin({ top: 16, bottom: 8 })
+          .padding({ top: 8, bottom: 8 })
       } else {
         ForEach(this.displayList(), (c: QuestionComment) => {
-          Column() {
+          Column({ space: 8 }) {
             CommentItemRow({
               item: c,
-              inDetail: false,
-              showRepliesLink: true
+              nested: false,
+              showRepliesLink: false,
+              onReply: (id: string, name: string) => {
+                this.startReply(id, name);
+              }
             })
-            Divider().color($r('app.color.divider'))
+            if (this.flatReplies(c).length > 0) {
+              Column({ space: 8 }) {
+                ForEach(this.flatReplies(c), (child: CommentFlatRow) => {
+                  Column() {
+                    CommentItemRow({
+                      item: child.item,
+                      nested: true,
+                      showRepliesLink: false,
+                      onReply: (id: string, name: string) => {
+                        this.startReply(id, name);
+                      }
+                    })
+                  }
+                  .width('100%')
+                  .padding({ left: (child.depth - 1) * 12 })
+                }, (child: CommentFlatRow) => `${this.commentKey(child.item)}-${child.depth}`)
+              }
+              .width('100%')
+              .alignItems(HorizontalAlign.Start)
+              .padding({ left: 10, right: 8, top: 8, bottom: 8 })
+              .backgroundColor('#F8FAFC')
+              .borderRadius(8)
+            }
           }
           .width('100%')
-        }, (c: QuestionComment) => `${c.id}_${c.replyCount}_${c.likeCount}_${c.dislikeCount}_${c.content}`)
+          .alignItems(HorizontalAlign.Start)
+          .padding({ top: 4, bottom: 8 })
+        }, (c: QuestionComment) => this.commentKey(c))
       }
+
+      if (this.replyToName.length > 0) {
+        Row() {
+          Text(I18n.tf('forum_reply_to_ph', this.replyToName, this.lang))
+            .fontSize(12)
+            .fontColor('#2563EB')
+            .layoutWeight(1)
+          Text('×')
+            .fontSize(16)
+            .fontColor('#9CA3AF')
+            .onClick(() => {
+              this.replyToId = '';
+              this.replyToName = '';
+            })
+        }
+        .width('100%')
+      }
+
+      if (this.showEmoji) {
+        Flex({ wrap: FlexWrap.Wrap }) {
+          ForEach(this.emojis, (emoji: string) => {
+            Text(emoji)
+              .fontSize(22)
+              .padding(6)
+              .onClick(() => {
+                this.insertEmoji(emoji);
+              })
+          }, (emoji: string) => emoji)
+        }
+        .width('100%')
+      }
+
+      Row({ space: 8 }) {
+        Row({ space: 8 }) {
+          TextInput({
+            placeholder: I18n.t('blog_comment_ph', this.lang),
+            text: this.replyText
+          })
+            .layoutWeight(1)
+            .height(36)
+            .backgroundColor('#00000000')
+            .padding({ left: 0, right: 0 })
+            .onChange((v: string) => {
+              this.replyText = v;
+            })
+          Image($r('app.media.ic_comment_emoji_line'))
+            .width(22)
+            .height(22)
+            .objectFit(ImageFit.Contain)
+            .fillColor(this.showEmoji ? '#2563EB' : '#9CA3AF')
+            .flexShrink(0)
+            .onClick(() => {
+              this.showEmoji = !this.showEmoji;
+            })
+        }
+        .layoutWeight(1)
+        .height(40)
+        .padding({ left: 14, right: 12 })
+        .backgroundColor('#F3F4F6')
+        .borderRadius(20)
+        .alignItems(VerticalAlign.Center)
+
+        Button(this.sending ? I18n.t('comment_posting', this.lang) : I18n.t('forum_send', this.lang))
+          .height(36)
+          .padding({ left: 14, right: 14 })
+          .fontSize(14)
+          .enabled(!this.sending)
+          .backgroundColor(this.replyText.trim().length > 0 ? '#2563EB' : '#93C5FD')
+          .borderRadius(18)
+          .onClick(() => {
+            this.send();
+          })
+      }
+      .width('100%')
+      .alignItems(VerticalAlign.Center)
     }
     .width('100%')
-    .padding({ left: 12, right: 12, top: 12, bottom: 8 })
+    .padding({ left: 16, right: 16, top: 16, bottom: 16 })
     .backgroundColor('#FFFFFF')
     .borderRadius(12)
   }

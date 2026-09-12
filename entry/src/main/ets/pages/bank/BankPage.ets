@@ -232,21 +232,22 @@ export struct BankPage {
         }
         .width('100%')
 
-        Row({ space: 8 }) {
-          Text('🔍').fontSize(14)
-          Text(I18n.t('bank_search_ph', this.lang))
-            .fontSize(13)
-            .fontColor('#94A3B8')
-            .layoutWeight(1)
-        }
-        .width('100%')
-        .height(42)
-        .padding({ left: 14, right: 14 })
-        .backgroundColor('#FFFFFF')
-        .borderRadius(21)
-        .onClick(() => this.openSearch())
+        // Row({ space: 8 }) {
+        //   Text('🔍').fontSize(14)
+        //   Text(I18n.t('bank_search_ph', this.lang))
+        //     .fontSize(13)
+        //     .fontColor('#94A3B8')
+        //     .layoutWeight(1)
+        // }
+        // .width('100%')
+        // .height(42)
+        // .padding({ left: 14, right: 14 })
+        // .backgroundColor('#FFFFFF')
+        // .borderRadius(21)
+        // .onClick(() => this.openSearch())
 
         Row() {
+          // 分类
           Scroll() {
             Row({ space: 8 }) {
               ForEach(this.tabs, (tab: BankTab) => {
@@ -279,43 +280,43 @@ export struct BankPage {
       .padding({ left: 16, right: 16, top: 10, bottom: 8 })
 
       List() {
-        ListItem() {
-          Stack({ alignContent: Alignment.End }) {
-            Column({ space: 10 }) {
-              Text(this.heroTitle())
-                .fontSize(18)
-                .fontWeight(FontWeight.Bold)
-                .fontColor('#FFFFFF')
-              Text(I18n.t('bank_hero_sub', this.lang))
-                .fontSize(12)
-                .fontColor('#DBEAFE')
-              Row() {
-                Text(I18n.t('bank_start_learn', this.lang))
-                  .fontSize(13)
-                  .fontWeight(FontWeight.Medium)
-                  .fontColor('#2563EB')
-                  .padding({ left: 14, right: 14, top: 8, bottom: 8 })
-                  .backgroundColor('#FFFFFF')
-                  .borderRadius(16)
-              }
-              .onClick(() => this.startLearn())
-            }
-            .alignItems(HorizontalAlign.Start)
-            .width('100%')
-            .padding({ left: 18, right: 90, top: 18, bottom: 18 })
-
-            Text('☕')
-              .fontSize(48)
-              .margin({ right: 16 })
-          }
-          .width('100%')
-          .borderRadius(16)
-          .linearGradient({
-            angle: 135,
-            colors: [['#3B82F6', 0], ['#2563EB', 1]]
-          })
-        }
-        .padding({ left: 16, right: 16, top: 4, bottom: 8 })
+        // ListItem() {
+          // Stack({ alignContent: Alignment.End }) {
+          //   Column({ space: 10 }) {
+          //     Text(this.heroTitle())
+          //       .fontSize(18)
+          //       .fontWeight(FontWeight.Bold)
+          //       .fontColor('#FFFFFF')
+          //     Text(I18n.t('bank_hero_sub', this.lang))
+          //       .fontSize(12)
+          //       .fontColor('#DBEAFE')
+          //     Row() {
+          //       Text(I18n.t('bank_start_learn', this.lang))
+          //         .fontSize(13)
+          //         .fontWeight(FontWeight.Medium)
+          //         .fontColor('#2563EB')
+          //         .padding({ left: 14, right: 14, top: 8, bottom: 8 })
+          //         .backgroundColor('#FFFFFF')
+          //         .borderRadius(16)
+          //     }
+          //     .onClick(() => this.startLearn())
+          //   }
+          //   .alignItems(HorizontalAlign.Start)
+          //   .width('100%')
+          //   .padding({ left: 18, right: 90, top: 18, bottom: 18 })
+          //
+          //   Text('☕')
+          //     .fontSize(48)
+          //     .margin({ right: 16 })
+          // }
+          // .width('100%')
+          // .borderRadius(16)
+          // .linearGradient({
+          //   angle: 135,
+          //   colors: [['#3B82F6', 0], ['#2563EB', 1]]
+          // })
+        // }
+        // .padding({ left: 16, right: 16, top: 4, bottom: 8 })
 
         ListItem() {
           Row() {

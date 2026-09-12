@@ -6,15 +6,22 @@ import { ContentReportNav } from '../common/utils/ContentReportNav';
 import { ForumUi } from '../common/utils/ForumUi';
 import { CommentRepository, emptyQuestionComment, QuestionComment } from '../data/repository/CommentRepository';
 
+interface DialogResult {
+  index: number;
+}
+
 @Component
 export struct CommentItemRow {
   @StorageLink('appLang') lang: string = I18n.HANS;
   @Prop @Watch('syncFromItem') item: QuestionComment = emptyQuestionComment();
   @Prop inDetail: boolean = false;
   @Prop showRepliesLink: boolean = false;
+  @Prop nested: boolean = false;
   @Prop indent: number = 0;
+  onReply: (id: string, name: string) => void = (id: string, name: string) => {
+    CommentUi.openCompose(id, name);
+  };
   @State private likeCount: number = 0;
-  @State private dislikeCount: number = 0;
   @State private myVote: number = 0;
   @State private voting: boolean = false;
   private repo: CommentRepository = CommentRepository.getInstance();
@@ -25,13 +32,17 @@ export struct CommentItemRow {
 
   syncFromItem(): void {
     this.likeCount = this.item.likeCount;
-    this.dislikeCount = this.item.dislikeCount;
     this.myVote = this.item.myVote;
   }
 
   private indentLeft(): number {
     const level = this.indent > 4 ? 4 : this.indent;
-    return level * 16;
+    return level * 12;
+  }
+
+  private isMine(): boolean {
+    const uid = LoginGate.currentUserId();
+    return uid.length > 0 && uid === this.item.userId;
   }
 
   private vote(action: number): void {
@@ -47,8 +58,8 @@ export struct CommentItemRow {
     return this.item.replies.length;
   }
 
-  private voteColor(active: boolean): string {
-    return active ? '#FB7299' : '#9499A0';
+  private likeColor(active: boolean): string {
+    return active ? '#2563EB' : '#9CA3AF';
   }
 
   private async doVote(action: number): Promise<void> {
@@ -63,7 +74,6 @@ export struct CommentItemRow {
         return;
       }
       this.likeCount = result.likeCount;
-      this.dislikeCount = result.dislikeCount;
       this.myVote = result.myVote;
       CommentUi.bumpReload();
     } catch (_e) {
@@ -73,158 +83,157 @@ export struct CommentItemRow {
     }
   }
 
+  private confirmDelete(): void {
+    promptAction.showDialog({
+      title: I18n.t('delete', this.lang),
+      message: I18n.t('blog_comment_delete_msg', this.lang),
+      buttons: [
+        { text: I18n.t('cancel', this.lang), color: '#6B7280' },
+        { text: I18n.t('delete', this.lang), color: '#DC2626' }
+      ]
+    }).then((res: DialogResult) => {
+      if (res.index !== 1) {
+        return;
+      }
+      this.doDelete();
+    }).catch(() => {
+    });
+  }
+
+  private async doDelete(): Promise<void> {
+    const result = await this.repo.delete(this.item.id);
+    if (result !== true) {
+      promptAction.showToast({ message: typeof result === 'string' ? result : I18n.t('forum_delete_fail', this.lang) });
+      return;
+    }
+    promptAction.showToast({ message: I18n.t('blog_comment_deleted', this.lang) });
+    CommentUi.bumpReload();
+  }
+
   build() {
-    Column({ space: 0 }) {
-      Row({ space: 10 }) {
+    Row({ space: 10 }) {
+      if (!this.nested) {
         if (this.item.avatar.length > 0) {
           Image(this.item.avatar)
-            .width(34)
-            .height(34)
-            .borderRadius(17)
+            .width(32)
+            .height(32)
+            .borderRadius(16)
             .objectFit(ImageFit.Cover)
             .flexShrink(0)
         } else {
           Column() {
-            Text(this.item.nickname.length > 0 ? this.item.nickname.substring(0, 1) : '评')
-              .fontSize(13)
+            Text(ForumUi.nickInitial(this.item.nickname))
+              .fontSize(12)
               .fontColor('#FFFFFF')
           }
-          .width(34)
-          .height(34)
-          .borderRadius(17)
+          .width(32)
+          .height(32)
+          .borderRadius(16)
           .justifyContent(FlexAlign.Center)
-          .backgroundColor('#60A5FA')
+          .backgroundColor(ForumUi.avatarColor(this.item.nickname))
           .flexShrink(0)
         }
+      }
 
-        Column({ space: 5 }) {
+      Column({ space: 6 }) {
+        Row({ space: 6 }) {
           Text(this.item.nickname)
             .fontSize(13)
-            .fontColor('#FB7299')
-            .width('100%')
-
-          if (this.inDetail && this.item.replyToNickname.length > 0) {
-            Text() {
-              Span(`${I18n.t('comment_replying', this.lang)} @${this.item.replyToNickname}：`)
-                .fontColor('#00A1D6')
-              Span(this.item.content)
-                .fontColor($r('app.color.text_primary'))
-            }
-            .fontSize(15)
-            .width('100%')
-          } else {
-            Text(this.item.content)
-              .fontSize(15)
-              .fontColor($r('app.color.text_primary'))
-              .width('100%')
-          }
-
-          if (this.item.status === 0) {
-            Text(this.item.hint.length > 0 ? this.item.hint : I18n.t('comment_rejected', this.lang))
+            .fontWeight(FontWeight.Medium)
+            .fontColor($r('app.color.text_primary'))
+          if (this.item.replyToNickname.length > 0) {
+            Text(`${I18n.t('blog_reply', this.lang)} ${this.item.replyToNickname}`)
               .fontSize(12)
-              .fontColor('#B45309')
-              .width('100%')
-              .padding(8)
-              .backgroundColor('#FEF3C7')
-              .borderRadius(8)
-          }
-
-          Row() {
-            Text(ForumUi.ipLabel(this.item.ipAddress).length > 0 ?
-              `${CommentUi.shortTime(this.item.createTime,
-                I18n.t('comment_month', this.lang),
-                I18n.t('comment_day', this.lang),
-                I18n.t('comment_today', this.lang))} · ${ForumUi.ipLabel(this.item.ipAddress)}` :
-              CommentUi.shortTime(this.item.createTime,
-                I18n.t('comment_month', this.lang),
-                I18n.t('comment_day', this.lang),
-                I18n.t('comment_today', this.lang)))
-              .fontSize(12)
-              .fontColor($r('app.color.text_muted'))
-            if (this.item.status !== 0) {
-              Text(I18n.t('comment_reply', this.lang))
-                .fontSize(12)
-                .fontColor($r('app.color.text_muted'))
-                .margin({ left: 12 })
-                .padding({ left: 2, right: 6, top: 8, bottom: 8 })
-                .onClick(() => {
-                  LoginGate.ensure(I18n.t('comment_feature', this.lang), () => {
-                    CommentUi.openCompose(this.item.id, this.item.nickname);
-                  });
-                })
-            }
-            if (LoginGate.currentUserId() !== this.item.userId) {
-              Text(I18n.t('content_report', this.lang))
-                .fontSize(12)
-                .fontColor($r('app.color.text_muted'))
-                .margin({ left: 8 })
-                .padding({ left: 2, right: 6, top: 8, bottom: 8 })
-                .onClick(() => {
-                  ContentReportNav.open(this.lang, 'QUESTION_COMMENT', this.item.id, this.item.content);
-                })
-            }
-            Blank()
-            Row({ space: 16 }) {
-              Row({ space: 3 }) {
-                Image($r('app.media.ic_comment_like'))
-                  .width(16)
-                  .height(16)
-                  .objectFit(ImageFit.Contain)
-                  .fillColor(this.voteColor(this.myVote === 1))
-                if (this.likeCount > 0 || this.myVote === 1) {
-                  Text(`${this.likeCount}`)
-                    .fontSize(12)
-                    .fontColor(this.myVote === 1 ? '#FB7299' : '#9499A0')
-                }
-              }
-              .padding({ top: 8, bottom: 8, left: 2, right: 2 })
-              .onClick(() => {
-                this.vote(1);
-              })
-              Row({ space: 3 }) {
-                Image($r('app.media.ic_comment_dislike'))
-                  .width(16)
-                  .height(16)
-                  .objectFit(ImageFit.Contain)
-                  .fillColor(this.voteColor(this.myVote === -1))
-                if (this.dislikeCount > 0 || this.myVote === -1) {
-                  Text(`${this.dislikeCount}`)
-                    .fontSize(12)
-                    .fontColor(this.myVote === -1 ? '#FB7299' : '#9499A0')
-                }
-              }
-              .padding({ top: 8, bottom: 8, left: 2, right: 2 })
-              .onClick(() => {
-                this.vote(-1);
-              })
-            }
-          }
-          .width('100%')
-
-          if (this.showRepliesLink && this.replyTotal() > 0) {
-            Text(`${I18n.t('comment_replies', this.lang)} ${this.replyTotal()} ${I18n.t('comment_replies_unit', this.lang)} >`)
-              .fontSize(13)
-              .fontColor('#61666D')
-              .padding({ left: 10, right: 10, top: 6, bottom: 6 })
-              .margin({ top: 6 })
-              .backgroundColor('#F1F2F3')
-              .borderRadius(4)
-              .onClick(() => {
-                CommentUi.openDetail(this.item.id);
-              })
+              .fontColor('#9CA3AF')
+              .maxLines(1)
           }
         }
-        .layoutWeight(1)
-        .alignItems(HorizontalAlign.Start)
+        .alignItems(VerticalAlign.Center)
+
+        if (this.item.status === 0) {
+          Text(this.item.hint.length > 0 ? this.item.hint : I18n.t('comment_rejected', this.lang))
+            .fontSize(12)
+            .fontColor('#B45309')
+            .width('100%')
+        } else if (this.item.status === 2) {
+          Text(this.item.hint.length > 0 ? this.item.hint : I18n.t('forum_pending', this.lang))
+            .fontSize(12)
+            .fontColor('#B45309')
+            .width('100%')
+        }
+
+        Text(this.item.content)
+          .fontSize(14)
+          .fontColor($r('app.color.text_primary'))
+          .width('100%')
+
+        Row({ space: 14 }) {
+          Text(ForumUi.ipLabel(this.item.ipAddress).length > 0 ?
+            `${ForumUi.relativeTime(this.item.createTime, this.lang)} · ${ForumUi.ipLabel(this.item.ipAddress)}` :
+            ForumUi.relativeTime(this.item.createTime, this.lang))
+            .fontSize(11)
+            .fontColor('#9CA3AF')
+          if (this.item.status !== 0) {
+            Text(I18n.t('blog_reply', this.lang))
+              .fontSize(12)
+              .fontColor('#2563EB')
+              .onClick(() => {
+                LoginGate.ensure(I18n.t('comment_feature', this.lang), () => {
+                  this.onReply(this.item.id, this.item.nickname);
+                });
+              })
+          }
+          if (this.isMine()) {
+            Text(I18n.t('delete', this.lang))
+              .fontSize(12)
+              .fontColor('#DC2626')
+              .onClick(() => {
+                this.confirmDelete();
+              })
+          } else {
+            Text(I18n.t('content_report', this.lang))
+              .fontSize(12)
+              .fontColor('#9CA3AF')
+              .onClick(() => {
+                ContentReportNav.open(this.lang, 'QUESTION_COMMENT', this.item.id, this.item.content);
+              })
+          }
+          Blank()
+          Row({ space: 4 }) {
+            Image($r('app.media.ic_comment_like'))
+              .width(14)
+              .height(14)
+              .objectFit(ImageFit.Contain)
+              .fillColor(this.likeColor(this.myVote === 1))
+            Text(`${this.likeCount}`)
+              .fontSize(12)
+              .fontColor(this.likeColor(this.myVote === 1))
+          }
+          .onClick(() => {
+            this.vote(1);
+          })
+        }
+        .width('100%')
+        .alignItems(VerticalAlign.Center)
+
+        if (this.showRepliesLink && this.replyTotal() > 0 && this.item.replies.length === 0) {
+          Text(`${I18n.t('comment_replies', this.lang)} ${this.replyTotal()} ${I18n.t('comment_replies_unit', this.lang)} >`)
+            .fontSize(13)
+            .fontColor('#61666D')
+            .padding({ left: 10, right: 10, top: 6, bottom: 6 })
+            .margin({ top: 6 })
+            .backgroundColor('#F1F2F3')
+            .borderRadius(4)
+            .onClick(() => {
+              CommentUi.openDetail(this.item.id);
+            })
+        }
       }
-      .width('100%')
-      .alignItems(VerticalAlign.Top)
+      .layoutWeight(1)
+      .alignItems(HorizontalAlign.Start)
     }
     .width('100%')
-    .padding({
-      top: 12,
-      bottom: 12,
-      left: this.indentLeft()
-    })
+    .alignItems(VerticalAlign.Top)
+    .padding({ left: this.indentLeft() })
   }
 }

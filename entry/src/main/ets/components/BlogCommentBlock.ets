@@ -319,23 +319,32 @@ export struct BlogCommentBlock {
       }
 
       Row({ space: 8 }) {
-        TextInput({ placeholder: I18n.t('blog_comment_ph', this.lang), text: this.replyText })
-          .layoutWeight(1)
-          .height(40)
-          .backgroundColor('#F3F4F6')
-          .borderRadius(20)
-          .padding({ left: 14, right: 14 })
-          .onChange((v: string) => {
-            this.replyText = v;
-          })
-        Image($r('app.media.ic_comment_emoji_line'))
-          .width(22)
-          .height(22)
-          .objectFit(ImageFit.Contain)
-          .fillColor(this.showEmoji ? '#2563EB' : '#9CA3AF')
-          .onClick(() => {
-            this.showEmoji = !this.showEmoji;
-          })
+        Row({ space: 8 }) {
+          TextInput({ placeholder: I18n.t('blog_comment_ph', this.lang), text: this.replyText })
+            .layoutWeight(1)
+            .height(36)
+            .backgroundColor('#00000000')
+            .padding({ left: 0, right: 0 })
+            .onChange((v: string) => {
+              this.replyText = v;
+            })
+          Image($r('app.media.ic_comment_emoji_line'))
+            .width(22)
+            .height(22)
+            .objectFit(ImageFit.Contain)
+            .fillColor(this.showEmoji ? '#2563EB' : '#9CA3AF')
+            .flexShrink(0)
+            .onClick(() => {
+              this.showEmoji = !this.showEmoji;
+            })
+        }
+        .layoutWeight(1)
+        .height(40)
+        .padding({ left: 14, right: 12 })
+        .backgroundColor('#F3F4F6')
+        .borderRadius(20)
+        .alignItems(VerticalAlign.Center)
+
         Button(this.sending ? I18n.t('forum_publishing', this.lang) : I18n.t('forum_send', this.lang))
           .height(36)
           .padding({ left: 14, right: 14 })
@@ -346,6 +355,7 @@ export struct BlogCommentBlock {
           .onClick(() => this.send())
       }
       .width('100%')
+      .alignItems(VerticalAlign.Center)
     }
     .width('100%')
     .padding({ left: 16, right: 16, top: 16, bottom: 16 })

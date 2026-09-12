@@ -143,43 +143,52 @@ export struct CommentDetailPanel {
 
         if (this.root.id.length > 0) {
           Scroll() {
-            Column() {
+            Column({ space: 8 }) {
               Column() {
                 CommentItemRow({
                   item: this.root,
                   inDetail: true,
+                  nested: false,
                   showRepliesLink: false
                 })
               }
               .width('100%')
               .padding({ left: 16, right: 16 })
 
-              Divider().color($r('app.color.divider')).margin({ top: 4, bottom: 4 })
-
               Row() {
                 Text(`${I18n.t('comment_related', this.lang)}${this.relatedCount()}${I18n.t('comment_replies_unit', this.lang)}`)
                   .fontSize(13)
-                  .fontColor('#9499A0')
+                  .fontColor('#6B7280')
                   .layoutWeight(1)
                 Text(I18n.t('comment_sort_time', this.lang))
                   .fontSize(12)
-                  .fontColor('#9499A0')
+                  .fontColor('#6B7280')
               }
               .width('100%')
-              .padding({ left: 16, right: 16, top: 10, bottom: 4 })
+              .padding({ left: 16, right: 16, top: 4, bottom: 4 })
 
-              ForEach(this.flats, (row: CommentFlatRow) => {
-                Column() {
-                  CommentItemRow({
-                    item: row.item,
-                    inDetail: true,
-                    showRepliesLink: false,
-                    indent: row.depth
-                  })
+              if (this.flats.length > 0) {
+                Column({ space: 8 }) {
+                  ForEach(this.flats, (row: CommentFlatRow) => {
+                    Column() {
+                      CommentItemRow({
+                        item: row.item,
+                        inDetail: true,
+                        nested: true,
+                        showRepliesLink: false,
+                        indent: row.depth > 0 ? row.depth : 0
+                      })
+                    }
+                    .width('100%')
+                  }, (row: CommentFlatRow) => `${row.key}_${row.item.replyCount}_${row.item.likeCount}_${row.item.content}`)
                 }
                 .width('100%')
-                .padding({ left: 16, right: 16 })
-              }, (row: CommentFlatRow) => `${row.key}_${row.item.replyCount}_${row.item.likeCount}_${row.item.content}`)
+                .alignItems(HorizontalAlign.Start)
+                .margin({ left: 16, right: 16 })
+                .padding({ left: 10, right: 8, top: 8, bottom: 8 })
+                .backgroundColor('#F8FAFC')
+                .borderRadius(8)
+              }
             }
             .width('100%')
             .padding({ bottom: 12 })
@@ -190,28 +199,46 @@ export struct CommentDetailPanel {
 
           if (!this.composeOpen) {
             Row({ space: 8 }) {
-              Text(I18n.t('comment_ph', this.lang))
+              Row({ space: 8 }) {
+                Text(I18n.t('blog_comment_ph', this.lang))
+                  .fontSize(14)
+                  .fontColor('#9CA3AF')
+                  .layoutWeight(1)
+                  .maxLines(1)
+                  .textOverflow({ overflow: TextOverflow.Ellipsis })
+                Image($r('app.media.ic_comment_emoji_line'))
+                  .width(22)
+                  .height(22)
+                  .objectFit(ImageFit.Contain)
+                  .fillColor('#9CA3AF')
+                  .flexShrink(0)
+              }
+              .layoutWeight(1)
+              .height(40)
+              .padding({ left: 14, right: 12 })
+              .backgroundColor('#F3F4F6')
+              .borderRadius(20)
+              .alignItems(VerticalAlign.Center)
+
+              Text(I18n.t('forum_send', this.lang))
                 .fontSize(14)
-                .fontColor('#9499A0')
-                .layoutWeight(1)
-              Image($r('app.media.ic_comment_emoji'))
-                .width(22)
-                .height(22)
-                .objectFit(ImageFit.Contain)
+                .fontColor('#FFFFFF')
+                .height(36)
+                .padding({ left: 14, right: 14 })
+                .borderRadius(18)
+                .backgroundColor('#2563EB')
+                .textAlign(TextAlign.Center)
             }
             .width('100%')
-            .height(36)
-            .padding({ left: 14, right: 12 })
-            .margin({ left: 16, right: 16, top: 8, bottom: 16 })
-            .backgroundColor('#F1F2F3')
-            .borderRadius(18)
+            .padding({ left: 16, right: 16, top: 8, bottom: 16 })
+            .alignItems(VerticalAlign.Center)
             .onClick(() => {
               this.openReply(this.root);
             })
           } else {
             Column()
               .width('100%')
-              .height(148)
+              .height(72)
           }
         } else if (this.loading) {
           Column() {

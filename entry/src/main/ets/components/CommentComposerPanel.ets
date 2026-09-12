@@ -15,7 +15,6 @@ export struct CommentComposerPanel {
   @State private draft: string = '';
   @State private posting: boolean = false;
   @State private showEmoji: boolean = false;
-  @State private kbHeight: number = 0;
   private repo: CommentRepository = CommentRepository.getInstance();
   private emojis: string[] = CommentEmojis.all();
   private areaCtrl: TextAreaController = new TextAreaController();
@@ -36,14 +35,7 @@ export struct CommentComposerPanel {
   }
 
   private onKeyboardHeight(px: number): void {
-    let vp = 0;
-    try {
-      vp = this.getUIContext().px2vp(px);
-    } catch (_e) {
-      vp = px > 0 ? px / 3.25 : 0;
-    }
-    this.kbHeight = vp > 1 ? vp : 0;
-    if (this.kbHeight > 20) {
+    if (px > 40) {
       this.showEmoji = false;
     }
   }
@@ -54,10 +46,6 @@ export struct CommentComposerPanel {
       const win = await window.getLastWindow(ctx);
       this.hostWin = win;
       win.on('keyboardHeightChange', this.kbListener);
-      const area = win.getWindowAvoidArea(window.AvoidAreaType.TYPE_KEYBOARD);
-      if (area && area.bottomRect) {
-        this.onKeyboardHeight(area.bottomRect.height);
-      }
     } catch (_e) {
     }
   }
@@ -93,7 +81,7 @@ export struct CommentComposerPanel {
     if (this.replyToName.length > 0) {
       return `${I18n.t('comment_reply_ph', this.lang)}${this.replyToName}:`;
     }
-    return I18n.t('comment_ph', this.lang);
+    return I18n.t('blog_comment_ph', this.lang);
   }
 
   private canPost(): boolean {
@@ -179,61 +167,22 @@ export struct CommentComposerPanel {
         })
 
       Column({ space: 8 }) {
-        TextArea({
-          text: this.draft,
-          placeholder: this.placeholder(),
-          controller: this.areaCtrl
-        })
-          .height(68)
-          .backgroundColor('#F4F4F4')
-          .fontColor('#18191C')
-          .placeholderColor('#9499A0')
-          .borderRadius(8)
-          .padding({ left: 12, right: 12, top: 8, bottom: 8 })
-          .maxLength(500)
-          .defaultFocus(true)
-          .focusable(true)
-          .onAppear(() => {
-            this.tryFocus();
-          })
-          .onChange((v: string) => {
-            this.draft = v;
-          })
-          .onEditChange((editing: boolean) => {
-            if (editing) {
-              this.showEmoji = false;
-            }
-          })
-
-        Row() {
-          Column() {
-            Image($r('app.media.ic_comment_emoji_line'))
-              .width(24)
-              .height(24)
-              .objectFit(ImageFit.Contain)
+        if (this.replyToName.length > 0) {
+          Row() {
+            Text(`${I18n.t('comment_reply_ph', this.lang)}${this.replyToName}`)
+              .fontSize(12)
+              .fontColor('#2563EB')
+              .layoutWeight(1)
+            Text('×')
+              .fontSize(16)
+              .fontColor('#9CA3AF')
+              .onClick(() => {
+                CommentUi.setStr(CommentUi.REPLY_ID, '');
+                CommentUi.setStr(CommentUi.REPLY_NAME, '');
+              })
           }
-          .width(36)
-          .height(36)
-          .justifyContent(FlexAlign.Center)
-          .onClick(() => {
-            this.toggleEmoji();
-          })
-          Blank()
-          Text(this.posting ? I18n.t('comment_posting', this.lang) : I18n.t('comment_send', this.lang))
-            .fontSize(13)
-            .fontColor('#FFFFFF')
-            .height(28)
-            .padding({ left: 14, right: 14 })
-            .borderRadius(14)
-            .backgroundColor(this.canPost() ? '#FB7299' : '#FFB6C9')
-            .textAlign(TextAlign.Center)
-            .opacity(this.posting ? 0.7 : 1)
-            .onClick(() => {
-              this.submit();
-            })
+          .width('100%')
         }
-        .width('100%')
-        .alignItems(VerticalAlign.Center)
 
         if (this.showEmoji) {
           Flex({ wrap: FlexWrap.Wrap }) {
@@ -248,30 +197,75 @@ export struct CommentComposerPanel {
           }
           .width('100%')
           .height(180)
-        } else {
-          Scroll() {
-            Row({ space: 2 }) {
-              ForEach(this.emojis, (e: string) => {
-                Text(e)
-                  .fontSize(26)
-                  .padding({ left: 6, right: 6, top: 4, bottom: 4 })
-                  .onClick(() => {
-                    this.insertEmoji(e);
-                  })
-              }, (e: string) => `strip-${e}`)
-            }
-          }
-          .scrollable(ScrollDirection.Horizontal)
-          .scrollBar(BarState.Off)
-          .width('100%')
-          .height(44)
         }
+
+        Row({ space: 8 }) {
+          Row({ space: 8 }) {
+            TextArea({
+              text: this.draft,
+              placeholder: this.placeholder(),
+              controller: this.areaCtrl
+            })
+              .layoutWeight(1)
+              .height(36)
+              .backgroundColor('#00000000')
+              .fontColor('#111827')
+              .placeholderColor('#9CA3AF')
+              .padding({ left: 0, right: 0, top: 6, bottom: 6 })
+              .maxLength(500)
+              .defaultFocus(true)
+              .focusable(true)
+              .onAppear(() => {
+                this.tryFocus();
+              })
+              .onChange((v: string) => {
+                this.draft = v;
+              })
+              .onEditChange((editing: boolean) => {
+                if (editing) {
+                  this.showEmoji = false;
+                }
+              })
+
+            Image($r('app.media.ic_comment_emoji_line'))
+              .width(22)
+              .height(22)
+              .objectFit(ImageFit.Contain)
+              .fillColor(this.showEmoji ? '#2563EB' : '#9CA3AF')
+              .flexShrink(0)
+              .onClick(() => {
+                this.toggleEmoji();
+              })
+          }
+          .layoutWeight(1)
+          .height(40)
+          .padding({ left: 14, right: 12 })
+          .backgroundColor('#F3F4F6')
+          .borderRadius(20)
+          .alignItems(VerticalAlign.Center)
+
+          Text(this.posting ? I18n.t('comment_posting', this.lang) : I18n.t('forum_send', this.lang))
+            .fontSize(14)
+            .fontColor('#FFFFFF')
+            .height(36)
+            .padding({ left: 14, right: 14 })
+            .borderRadius(18)
+            .backgroundColor(this.canPost() ? '#2563EB' : '#93C5FD')
+            .textAlign(TextAlign.Center)
+            .opacity(this.posting ? 0.7 : 1)
+            .onClick(() => {
+              this.submit();
+            })
+        }
+        .width('100%')
+        .alignItems(VerticalAlign.Center)
       }
       .width('100%')
-      .padding({ left: 12, right: 12, top: 10, bottom: 8 })
-      .margin({ bottom: this.kbHeight })
+      .padding({ left: 12, right: 12, top: 10, bottom: 10 })
       .backgroundColor('#FFFFFF')
       .borderRadius({ topLeft: 12, topRight: 12 })
+      .shadow({ radius: 8, color: '#0F172A14', offsetY: -2 })
+      .expandSafeArea([SafeAreaType.KEYBOARD], [SafeAreaEdge.BOTTOM])
       .onClick(() => {
       })
     }

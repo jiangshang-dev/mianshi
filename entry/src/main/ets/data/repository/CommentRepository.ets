@@ -188,6 +188,27 @@ export class CommentRepository {
     }
   }
 
+  async delete(commentId: string): Promise<string | true> {
+    const userId = LoginGate.currentUserId();
+    if (userId.length === 0) {
+      return '请先登录';
+    }
+    if (commentId.length === 0) {
+      return '评论不存在';
+    }
+    const query = `userId=${encodeURIComponent(userId)}`;
+    const resp = await HttpClient.postJson(`/api/comments/${encodeURIComponent(commentId)}/delete?${query}`, '{}');
+    try {
+      const parsed = JSON.parse(resp.body) as CommentPostResponse;
+      if (parsed.success === false || (parsed.code !== undefined && parsed.code !== 200 && parsed.code !== 0)) {
+        return parsed.message !== undefined && parsed.message.length > 0 ? parsed.message : '删除失败';
+      }
+      return true;
+    } catch (_e) {
+      return '删除失败';
+    }
+  }
+
   normalize(item: QuestionComment): QuestionComment {
     const repliesRaw = item.replies;
     const replies: QuestionComment[] = [];

@@ -541,25 +541,25 @@ export struct BookPage {
             .fontWeight(FontWeight.Bold)
             .fontColor('#0F172A')
             .layoutWeight(1)
-          Text('🔍')
-            .fontSize(20)
-            .onClick(() => this.openSearch())
+          // Text('🔍')
+          //   .fontSize(20)
+          //   .onClick(() => this.openSearch())
         }
         .width('100%')
 
-        Row({ space: 8 }) {
-          Text('🔍').fontSize(14)
-          Text(I18n.t('book_search_ph', this.lang))
-            .fontSize(13)
-            .fontColor('#94A3B8')
-            .layoutWeight(1)
-        }
-        .width('100%')
-        .height(42)
-        .padding({ left: 14, right: 14 })
-        .backgroundColor('#FFFFFF')
-        .borderRadius(21)
-        .onClick(() => this.openSearch())
+        // Row({ space: 8 }) {
+        //   Text('🔍').fontSize(14)
+        //   Text(I18n.t('book_search_ph', this.lang))
+        //     .fontSize(13)
+        //     .fontColor('#94A3B8')
+        //     .layoutWeight(1)
+        // }
+        // .width('100%')
+        // .height(42)
+        // .padding({ left: 14, right: 14 })
+        // .backgroundColor('#FFFFFF')
+        // .borderRadius(21)
+        // .onClick(() => this.openSearch())
 
         Row() {
           this.bookTab(0, 'book_tab_rec')
