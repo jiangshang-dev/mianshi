@@ -25,7 +25,7 @@ struct BookReaderPage {
   @State private pageIndex: number = 0;
   @State private pageCount: number = 0;
   @State private hint: string = '';
-  @State private zoomScale: number = 1;
+  @State private zoomLabel: string = '100%';
   @State private tocOpen: boolean = false;
   @State private toc: BookTocItem[] = [];
   @State private flipOn: boolean = false;
@@ -34,7 +34,9 @@ struct BookReaderPage {
   @State private flipMap: image.PixelMap | undefined = undefined;
   @State private viewW: number = 360;
   private bookId: string = '';
-  private fitZoom: number = 1;
+  private zoomScale: number = 1;
+  private fitZoom: number = 0;
+  private fitLocked: boolean = false;
   private controller: pdfViewManager.PdfController = new pdfViewManager.PdfController();
   private repo: BookRepository = BookRepository.getInstance();
   private lastSaved: number = -1;
@@ -44,6 +46,7 @@ struct BookReaderPage {
   private flipCaptured: boolean = false;
   private flipToken: number = 0;
   private flipApplied: boolean = false;
+  private zoomUiToken: number = 0;
 
   aboutToAppear(): void {
     const params = router.getParams() as BookReaderParams;
@@ -99,13 +102,7 @@ struct BookReaderPage {
         }
       });
       this.controller.registerScaleChangedListener((zoom: number) => {
-        if (!this.isValidZoom(zoom)) {
-          return;
-        }
-        if (!this.isValidZoom(this.fitZoom)) {
-          this.fitZoom = zoom;
-        }
-        this.zoomScale = zoom;
+        this.onZoomChanged(zoom);
       });
       const result = await this.controller.loadDocument(local);
       if (result !== pdfService.ParseResult.PARSE_SUCCESS) {
@@ -113,6 +110,10 @@ struct BookReaderPage {
       }
       this.controller.setPageLayout(pdfService.PageLayout.LAYOUT_SINGLE);
       this.controller.setPageContinuous(false);
+      this.fitZoom = 0;
+      this.fitLocked = false;
+      this.zoomScale = 1;
+      this.zoomLabel = '100%';
       this.controller.setPageFit(pdfService.PageFit.FIT_PAGE);
       if (start > 0) {
         this.controller.goToPage(start);
@@ -129,13 +130,13 @@ struct BookReaderPage {
         }
       } catch (_e) {
       }
-      this.fitZoom = 1;
-      this.zoomScale = 1;
       this.lastSaved = this.pageIndex;
       this.ready = true;
       if (this.toc.length === 0) {
         this.toc = this.fallbackToc();
       }
+      // 首帧布局完成后再锁一次适配比例，避免 FIT_PAGE 与重建互相打架
+      this.scheduleFitLock();
       this.loadTocLater(ctx, local);
     } catch (_e) {
       this.ready = false;
@@ -236,7 +237,7 @@ struct BookReaderPage {
     }
     try {
       this.controller.goToPage(index);
-      this.controller.setPageFit(pdfService.PageFit.FIT_PAGE);
+      // 切页时保留当前缩放，不再强制 FIT_PAGE（否则会把刚捏合的比例打回）
     } catch (_e) {
     }
     this.pageIndex = index;
@@ -452,15 +453,75 @@ struct BookReaderPage {
     return this.isValidZoom(this.fitZoom) ? this.fitZoom : 1;
   }
 
+  private scheduleFitLock(): void {
+    const bookId = this.bookId;
+    setTimeout(() => {
+      if (this.bookId !== bookId || !this.ready || this.fitLocked) {
+        return;
+      }
+      if (this.isValidZoom(this.zoomScale)) {
+        this.fitZoom = this.zoomScale;
+        this.fitLocked = true;
+        this.refreshZoomLabel();
+        return;
+      }
+      setTimeout(() => {
+        if (this.bookId !== bookId || !this.ready || this.fitLocked) {
+          return;
+        }
+        if (this.isValidZoom(this.zoomScale)) {
+          this.fitZoom = this.zoomScale;
+          this.fitLocked = true;
+          this.refreshZoomLabel();
+        }
+      }, 200);
+    }, 160);
+  }
+
+  private onZoomChanged(zoom: number): void {
+    if (!this.isValidZoom(zoom)) {
+      return;
+    }
+    this.zoomScale = zoom;
+    if (!this.fitLocked) {
+      this.fitZoom = zoom;
+      this.fitLocked = true;
+    }
+    // 用私有字段存比例，避免每帧 @State 重建把 PdfView 打回 FIT_PAGE
+    this.scheduleZoomLabel();
+  }
+
+  private scheduleZoomLabel(): void {
+    const token = ++this.zoomUiToken;
+    setTimeout(() => {
+      if (token !== this.zoomUiToken) {
+        return;
+      }
+      this.refreshZoomLabel();
+    }, 48);
+  }
+
+  private refreshZoomLabel(): void {
+    const pct = Math.round(this.safeZoom() * 100 / this.safeFit());
+    if (pct !== pct || pct <= 0) {
+      this.zoomLabel = '100%';
+      return;
+    }
+    this.zoomLabel = `${pct}%`;
+  }
+
   private clampZoom(value: number): number {
     if (!this.isValidZoom(value)) {
-      return 1;
+      return this.safeFit();
     }
-    if (value < 0.5) {
-      return 0.5;
+    const fit = this.safeFit();
+    const min = fit * 0.5;
+    const max = fit * 4;
+    if (value < min) {
+      return Math.round(min * 100) / 100;
     }
-    if (value > 4) {
-      return 4;
+    if (value > max) {
+      return Math.round(max * 100) / 100;
     }
     return Math.round(value * 100) / 100;
   }
@@ -473,16 +534,17 @@ struct BookReaderPage {
     try {
       this.controller.setPageZoom(next);
       this.zoomScale = next;
+      this.refreshZoomLabel();
     } catch (_e) {
     }
   }
 
   private zoomOut(): void {
-    this.applyZoom(this.safeZoom() - 0.25);
+    this.applyZoom(this.safeZoom() - this.safeFit() * 0.25);
   }
 
   private zoomIn(): void {
-    this.applyZoom(this.safeZoom() + 0.25);
+    this.applyZoom(this.safeZoom() + this.safeFit() * 0.25);
   }
 
   private toggleZoom(): void {
@@ -491,8 +553,10 @@ struct BookReaderPage {
     }
     if (this.safeZoom() > this.safeFit() * 1.2) {
       try {
+        this.fitLocked = true;
         this.controller.setPageFit(pdfService.PageFit.FIT_PAGE);
         this.zoomScale = this.safeFit();
+        this.refreshZoomLabel();
       } catch (_e) {
         this.applyZoom(this.safeFit());
       }
@@ -502,11 +566,22 @@ struct BookReaderPage {
   }
 
   private zoomText(): string {
-    const pct = Math.round(this.safeZoom() * 100 / this.safeFit());
-    if (pct !== pct || pct <= 0) {
-      return '100%';
+    return this.zoomLabel;
+  }
+
+  private fingerCount(event: GestureEvent): number {
+    try {
+      const infos = event.fingerInfos;
+      if (infos !== undefined && infos.length > 0) {
+        return infos.length;
+      }
+      const list = event.fingerList;
+      if (list !== undefined && list.length > 0) {
+        return list.length;
+      }
+    } catch (_e) {
     }
-    return `${pct}%`;
+    return 1;
   }
 
   private openToc(): void {
@@ -681,8 +756,7 @@ struct BookReaderPage {
               controller: this.controller,
               pageLayout: pdfService.PageLayout.LAYOUT_SINGLE,
               isContinuous: false,
-              showScroll: false,
-              pageFit: pdfService.PageFit.FIT_PAGE
+              showScroll: false
             })
               .id('book_pdf_view')
               .width('100%')
@@ -716,11 +790,32 @@ struct BookReaderPage {
         })
         .parallelGesture(
           GestureGroup(GestureMode.Exclusive,
-            PanGesture({ fingers: 1, direction: PanDirection.Horizontal, distance: 8 })
+            PanGesture({ fingers: 1, direction: PanDirection.Horizontal, distance: 24 })
+              .onActionStart((event: GestureEvent) => {
+                // 双指捏合时放弃翻页，把缩放交给 PdfView
+                if (this.fingerCount(event) > 1 || !this.canSwipePage()) {
+                  return;
+                }
+              })
               .onActionUpdate((event: GestureEvent) => {
+                if (this.fingerCount(event) > 1) {
+                  if (this.flipDragging) {
+                    this.cancelFlip();
+                  }
+                  return;
+                }
+                if (!this.canSwipePage() && !this.flipDragging) {
+                  return;
+                }
                 this.applyFlipDrag(event.offsetX);
               })
               .onActionEnd((event: GestureEvent) => {
+                if (this.fingerCount(event) > 1) {
+                  if (this.flipDragging) {
+                    this.cancelFlip();
+                  }
+                  return;
+                }
                 this.finishFlipDrag(event.offsetX, event.velocityX);
               })
               .onActionCancel(() => {

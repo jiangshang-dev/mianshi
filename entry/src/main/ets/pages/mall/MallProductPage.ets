@@ -219,7 +219,7 @@ struct MallProductPage {
               Text(this.priceLabel())
                 .fontSize(22)
                 .fontWeight(FontWeight.Bold)
-                .fontColor('#CF0A2C')
+                .fontColor($r('app.color.danger'))
               if (this.originText().length > 0) {
                 Text(this.originText())
                   .fontSize(13)
@@ -229,8 +229,8 @@ struct MallProductPage {
               if (this.showVipTag()) {
                 Text(I18n.t('mall_vip_tag', this.lang))
                   .fontSize(10)
-                  .fontColor('#FFFFFF')
-                  .backgroundColor('#D97706')
+                  .fontColor($r('app.color.text_on_color'))
+                  .backgroundColor($r('app.color.warning_text'))
                   .padding({ left: 6, right: 6, top: 2, bottom: 2 })
                   .borderRadius(4)
               }
@@ -239,15 +239,15 @@ struct MallProductPage {
             Row({ space: 8 }) {
               Text(this.goodsChip())
                 .fontSize(12)
-                .fontColor('#6B7280')
+                .fontColor($r('app.color.chip_idle_text'))
                 .padding({ left: 8, right: 8, top: 4, bottom: 4 })
-                .backgroundColor('#F3F4F6')
+                .backgroundColor($r('app.color.tag_bg'))
                 .borderRadius(4)
               Text(this.payChip())
                 .fontSize(12)
-                .fontColor('#6B7280')
+                .fontColor($r('app.color.chip_idle_text'))
                 .padding({ left: 8, right: 8, top: 4, bottom: 4 })
-                .backgroundColor('#F3F4F6')
+                .backgroundColor($r('app.color.tag_bg'))
                 .borderRadius(4)
               Text(this.stockText())
                 .fontSize(12)
@@ -263,26 +263,26 @@ struct MallProductPage {
             if (this.productDetail().length > 0) {
               Text(this.productDetail())
                 .fontSize(14)
-                .fontColor($r('app.color.chip_idle_text'))
+                .fontColor($r('app.color.text_secondary'))
                 .lineHeight(22)
                 .width('100%')
             }
             if (this.isPanGoods()) {
               Text(I18n.t('mall_pan_hint', this.lang))
                 .fontSize(13)
-                .fontColor($r('app.color.text_muted'))
+                .fontColor($r('app.color.text_secondary'))
                 .width('100%')
                 .padding(10)
-                .backgroundColor('#F8FAFC')
+                .backgroundColor($r('app.color.tag_bg'))
                 .borderRadius(8)
             }
             if (this.productHint().length > 0) {
               Text(this.productHint())
                 .fontSize(13)
-                .fontColor($r('app.color.text_muted'))
+                .fontColor($r('app.color.text_secondary'))
                 .width('100%')
                 .padding(10)
-                .backgroundColor('#F8FAFC')
+                .backgroundColor($r('app.color.tag_bg'))
                 .borderRadius(8)
             }
           }
@@ -298,7 +298,8 @@ struct MallProductPage {
           .width('100%')
           .height(44)
           .margin({ left: 16, right: 16, bottom: 16 })
-          .backgroundColor('#CF0A2C')
+          .backgroundColor($r('app.color.danger'))
+          .fontColor($r('app.color.text_on_color'))
           .onClick(() => {
             this.buy();
           })

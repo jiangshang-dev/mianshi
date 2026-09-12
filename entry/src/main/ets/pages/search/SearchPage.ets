@@ -263,6 +263,7 @@ struct SearchPage {
                   .maxLines(2)
                   .textOverflow({ overflow: TextOverflow.Ellipsis })
                   .width('100%')
+                  .textAlign(TextAlign.Start)
                 if (mallStr(item.summary).length > 0) {
                   Text(mallStr(item.summary))
                     .fontSize(12)
@@ -270,14 +271,18 @@ struct SearchPage {
                     .maxLines(2)
                     .textOverflow({ overflow: TextOverflow.Ellipsis })
                     .width('100%')
+                    .textAlign(TextAlign.Start)
                 }
                 if (mallStr(item.authorName).length > 0) {
                   Text(mallStr(item.authorName))
                     .fontSize(11)
                     .fontColor($r('app.color.text_muted'))
+                    .width('100%')
+                    .textAlign(TextAlign.Start)
                 }
               }
               .width('100%')
+              .alignItems(HorizontalAlign.Start)
               .padding(14)
               .backgroundColor($r('app.color.card_bg'))
               .borderRadius(12)
