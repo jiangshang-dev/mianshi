@@ -233,6 +233,48 @@ export function copyMallCategory(raw: MallCategory): MallCategory {
   }
 }
 
+/**
+ * 解析商品详情图：支持逗号分隔路径，或上传组件 JSON（含 "url":"..."）
+ */
+export function mallParseImageList(raw: string): string[] {
+  const text = mallStr(raw).trim();
+  const out: string[] = [];
+  if (text.length === 0) {
+    return out;
+  }
+  if (text.indexOf('[') === 0 && text.indexOf('"url"') >= 0) {
+    let from = 0;
+    while (from < text.length) {
+      const i = text.indexOf('"url"', from);
+      if (i < 0) {
+        break;
+      }
+      const colon = text.indexOf(':', i);
+      const q1 = colon >= 0 ? text.indexOf('"', colon + 1) : -1;
+      const q2 = q1 >= 0 ? text.indexOf('"', q1 + 1) : -1;
+      if (q1 < 0 || q2 <= q1) {
+        break;
+      }
+      const u = text.substring(q1 + 1, q2).trim();
+      if (u.length > 0) {
+        out.push(u);
+      }
+      from = q2 + 1;
+    }
+    if (out.length > 0) {
+      return out;
+    }
+  }
+  const parts = text.split(',');
+  for (let i = 0; i < parts.length; i++) {
+    const u = parts[i].trim();
+    if (u.length > 0) {
+      out.push(u);
+    }
+  }
+  return out;
+}
+
 export function copyMallProduct(raw: MallProduct): MallProduct {
   try {
     const item: MallProduct = {

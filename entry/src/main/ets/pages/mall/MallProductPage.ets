@@ -1,11 +1,13 @@
 import { promptAction, router } from '@kit.ArkUI';
 import { I18n } from '../../common/i18n/I18n';
+import { BookMedia } from '../../common/utils/BookMedia';
 import { LoginGate } from '../../common/utils/LoginGate';
 import {
   MallProduct,
   mallFenText,
   mallGoodsLabel,
   mallNum,
+  mallParseImageList,
   mallPayLabel,
   mallProductPrice,
   mallStr
@@ -14,6 +16,47 @@ import { MallRepository } from '../../data/repository/MallRepository';
 
 interface MallProductNav {
   productId?: string;
+}
+
+/** 详情图：按屏宽等比缩放，完整显示不裁切 */
+@Component
+struct MallDetailImage {
+  @Prop src: string = '';
+  @State private boxW: number = 360;
+  @State private boxH: number = 200;
+  @State private failed: boolean = false;
+
+  build() {
+    if (this.failed || this.src.length === 0) {
+      Blank().height(0)
+    } else {
+      Image(this.src)
+        .width('100%')
+        .height(this.boxH)
+        .objectFit(ImageFit.Contain)
+        .borderRadius(8)
+        .backgroundColor($r('app.color.card_bg'))
+        .onAreaChange((_o: Area, n: Area) => {
+          const w = Number(n.width);
+          if (w > 0 && Math.abs(w - this.boxW) > 1) {
+            this.boxW = w;
+          }
+        })
+        .onComplete((e) => {
+          if (e === undefined) {
+            return;
+          }
+          const iw = Number(e.width);
+          const ih = Number(e.height);
+          if (iw > 0 && ih > 0 && this.boxW > 0) {
+            this.boxH = Math.max(80, Math.round(this.boxW * ih / iw));
+          }
+        })
+        .onError(() => {
+          this.failed = true;
+        })
+    }
+  }
 }
 
 @Entry
@@ -59,7 +102,24 @@ struct MallProductPage {
 
   private productCover(): string {
     const p = this.product;
-    return p === null ? '' : mallStr(p.coverUrl);
+    return p === null ? '' : BookMedia.resolve(mallStr(p.coverUrl));
+  }
+
+  private productImages(): string[] {
+    const p = this.product;
+    if (p === null) {
+      const empty: string[] = [];
+      return empty;
+    }
+    const raw = mallParseImageList(mallStr(p.images));
+    const out: string[] = [];
+    for (let i = 0; i < raw.length; i++) {
+      const url = BookMedia.resolve(raw[i]);
+      if (url.length > 0) {
+        out.push(url);
+      }
+    }
+    return out;
   }
 
   private productDetail(): string {
@@ -202,7 +262,8 @@ struct MallProductPage {
                 .width('100%')
                 .height(200)
                 .borderRadius(12)
-                .objectFit(ImageFit.Cover)
+                .objectFit(ImageFit.Contain)
+                .backgroundColor($r('app.color.card_bg'))
             }
             Text(this.productName())
               .fontSize(20)
@@ -260,13 +321,6 @@ struct MallProductPage {
                 .fontColor($r('app.color.text_muted'))
                 .width('100%')
             }
-            if (this.productDetail().length > 0) {
-              Text(this.productDetail())
-                .fontSize(14)
-                .fontColor($r('app.color.text_secondary'))
-                .lineHeight(22)
-                .width('100%')
-            }
             if (this.isPanGoods()) {
               Text(I18n.t('mall_pan_hint', this.lang))
                 .fontSize(13)
@@ -285,6 +339,18 @@ struct MallProductPage {
                 .backgroundColor($r('app.color.tag_bg'))
                 .borderRadius(8)
             }
+            if (this.productDetail().length > 0) {
+              Text(this.productDetail())
+                .fontSize(14)
+                .fontColor($r('app.color.text_secondary'))
+                .lineHeight(22)
+                .width('100%')
+            }
+            ForEach(this.productImages(), (url: string, idx: number) => {
+              MallDetailImage({ src: url })
+                .width('100%')
+                .margin({ top: idx === 0 ? 4 : 0 })
+            }, (url: string, idx: number) => `${idx}-${url}`)
           }
           .padding({ left: 16, right: 16, bottom: 24 })
           .width('100%')
