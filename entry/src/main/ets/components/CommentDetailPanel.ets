@@ -128,11 +128,11 @@ export struct CommentDetailPanel {
           Text(I18n.t('comment_detail', this.lang))
             .fontSize(16)
             .fontWeight(FontWeight.Bold)
-            .fontColor('#18191C')
+            .fontColor($r('app.color.text_primary'))
             .layoutWeight(1)
           Text('✕')
             .fontSize(18)
-            .fontColor('#9499A0')
+            .fontColor($r('app.color.chevron'))
             .padding(8)
             .onClick(() => {
               CommentUi.closeDetail();
@@ -158,11 +158,11 @@ export struct CommentDetailPanel {
               Row() {
                 Text(`${I18n.t('comment_related', this.lang)}${this.relatedCount()}${I18n.t('comment_replies_unit', this.lang)}`)
                   .fontSize(13)
-                  .fontColor('#6B7280')
+                  .fontColor($r('app.color.text_muted'))
                   .layoutWeight(1)
                 Text(I18n.t('comment_sort_time', this.lang))
                   .fontSize(12)
-                  .fontColor('#6B7280')
+                  .fontColor($r('app.color.text_muted'))
               }
               .width('100%')
               .padding({ left: 16, right: 16, top: 4, bottom: 4 })
@@ -186,7 +186,7 @@ export struct CommentDetailPanel {
                 .alignItems(HorizontalAlign.Start)
                 .margin({ left: 16, right: 16 })
                 .padding({ left: 10, right: 8, top: 8, bottom: 8 })
-                .backgroundColor('#F8FAFC')
+                .backgroundColor($r('app.color.preview_bg'))
                 .borderRadius(8)
               }
             }
@@ -202,7 +202,7 @@ export struct CommentDetailPanel {
               Row({ space: 8 }) {
                 Text(I18n.t('blog_comment_ph', this.lang))
                   .fontSize(14)
-                  .fontColor('#9CA3AF')
+                  .fontColor($r('app.color.chevron'))
                   .layoutWeight(1)
                   .maxLines(1)
                   .textOverflow({ overflow: TextOverflow.Ellipsis })
@@ -210,23 +210,23 @@ export struct CommentDetailPanel {
                   .width(22)
                   .height(22)
                   .objectFit(ImageFit.Contain)
-                  .fillColor('#9CA3AF')
+                  .fillColor($r('app.color.chevron'))
                   .flexShrink(0)
               }
               .layoutWeight(1)
               .height(40)
               .padding({ left: 14, right: 12 })
-              .backgroundColor('#F3F4F6')
+              .backgroundColor($r('app.color.chip_idle_bg'))
               .borderRadius(20)
               .alignItems(VerticalAlign.Center)
 
               Text(I18n.t('forum_send', this.lang))
                 .fontSize(14)
-                .fontColor('#FFFFFF')
+                .fontColor($r('app.color.text_on_color'))
                 .height(36)
                 .padding({ left: 14, right: 14 })
                 .borderRadius(18)
-                .backgroundColor('#2563EB')
+                .backgroundColor($r('app.color.accent'))
                 .textAlign(TextAlign.Center)
             }
             .width('100%')
@@ -251,7 +251,7 @@ export struct CommentDetailPanel {
       }
       .width('100%')
       .height('72%')
-      .backgroundColor('#FFFFFF')
+      .backgroundColor($r('app.color.card_bg'))
       .borderRadius({ topLeft: 16, topRight: 16 })
       .onClick(() => {
       })

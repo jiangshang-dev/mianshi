@@ -274,11 +274,11 @@ export struct HomePage {
       Text(`🔥 ${I18n.t('home_hot_q', this.lang)}`)
         .fontSize(16)
         .fontWeight(FontWeight.Bold)
-        .fontColor('#0F172A')
+        .fontColor($r('app.color.text_primary'))
         .layoutWeight(1)
       Text(I18n.t('home_more_all', this.lang))
         .fontSize(12)
-        .fontColor('#94A3B8')
+        .fontColor($r('app.color.text_muted'))
         .onClick(() => this.openTab(1))
     }
     .width('100%')
@@ -290,11 +290,11 @@ export struct HomePage {
       Text(`📖 ${I18n.t('home_rec_books', this.lang)}`)
         .fontSize(16)
         .fontWeight(FontWeight.Bold)
-        .fontColor('#0F172A')
+        .fontColor($r('app.color.text_primary'))
         .layoutWeight(1)
       Text(I18n.t('more', this.lang))
         .fontSize(12)
-        .fontColor('#94A3B8')
+        .fontColor($r('app.color.text_muted'))
         .onClick(() => this.openTab(3))
     }
     .width('100%')
@@ -306,11 +306,11 @@ export struct HomePage {
       Text(`📋 ${I18n.t('home_rec_blog', this.lang)}`)
         .fontSize(16)
         .fontWeight(FontWeight.Bold)
-        .fontColor('#0F172A')
+        .fontColor($r('app.color.text_primary'))
         .layoutWeight(1)
       Text(I18n.t('more', this.lang))
         .fontSize(12)
-        .fontColor('#94A3B8')
+        .fontColor($r('app.color.text_muted'))
         .onClick(() => {
           router.pushUrl({ url: 'pages/blog/BlogHubPage' });
         })
@@ -329,10 +329,10 @@ export struct HomePage {
                 Text(`${this.greet()}👋`)
                   .fontSize(22)
                   .fontWeight(FontWeight.Bold)
-                  .fontColor('#111827')
+                  .fontColor($r('app.color.text_primary'))
                 Text(I18n.t('home_explore_sub', this.lang))
                   .fontSize(12)
-                  .fontColor('#9CA3AF')
+                  .fontColor($r('app.color.chevron'))
               }
               .alignItems(HorizontalAlign.Start)
               .layoutWeight(1)
@@ -346,7 +346,7 @@ export struct HomePage {
                 if (this.unread > 0) {
                   Text(this.unread > 99 ? '99+' : `${this.unread}`)
                     .fontSize(9)
-                    .fontColor('#FFFFFF')
+                    .fontColor($r('app.color.text_on_color'))
                     .fontWeight(FontWeight.Bold)
                     .constraintSize({ minWidth: 14 })
                     .padding({ left: 3, right: 3, top: 1, bottom: 1 })
@@ -365,7 +365,7 @@ export struct HomePage {
                 .objectFit(ImageFit.Contain)
               Text(I18n.t('home_search_ph_v2', this.lang))
                 .fontSize(14)
-                .fontColor('#9CA3AF')
+                .fontColor($r('app.color.chevron'))
                 .layoutWeight(1)
               Image($r('app.media.home_scan'))
                 .width(18)
@@ -375,16 +375,16 @@ export struct HomePage {
             .width('100%')
             .height(44)
             .padding({ left: 14, right: 14 })
-            .backgroundColor('#FFFFFF')
+            .backgroundColor($r('app.color.card_bg'))
             .borderRadius(22)
-            .shadow({ radius: 6, color: '#0F172A0D', offsetY: 1 })
+            .shadow({ radius: 6, color: '#00000014', offsetY: 1 })
             .onClick(() => this.openSearch())
           }
           .width('100%')
           .padding({ left: 16, right: 16, top: 12, bottom: 16 })
           .linearGradient({
             angle: 180,
-            colors: [['#DCEBFF', 0], ['#EAF2FF', 0.45], ['#F5F6F8', 1]]
+            colors: [[$r('app.color.home_grad_start'), 0], [$r('app.color.home_grad_mid'), 0.45], [$r('app.color.page_bg'), 1]]
           })
           .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP])
 
@@ -445,10 +445,10 @@ export struct HomePage {
                     Text(I18n.t(item.titleKey, this.lang))
                       .fontSize(12)
                       .fontWeight(FontWeight.Medium)
-                      .fontColor('#111827')
+                      .fontColor($r('app.color.text_primary'))
                     Text(I18n.t(item.subKey, this.lang))
                       .fontSize(10)
-                      .fontColor('#9CA3AF')
+                      .fontColor($r('app.color.chevron'))
                       .maxLines(1)
                   }
                   .width('100%')
@@ -462,7 +462,7 @@ export struct HomePage {
             .columnsGap(0)
             .width('100%')
             .padding({ left: 8, right: 8, top: 14, bottom: 14 })
-            .backgroundColor('#FFFFFF')
+            .backgroundColor($r('app.color.card_bg'))
             .borderRadius(16)
 
             Column({ space: 4 }) {
@@ -471,7 +471,7 @@ export struct HomePage {
               if (this.hotQs.length === 0 && !this.loading) {
                 Text(I18n.t('home_hot_empty', this.lang))
                   .fontSize(12)
-                  .fontColor('#9CA3AF')
+                  .fontColor($r('app.color.chevron'))
                   .padding({ top: 12, bottom: 8 })
               }
 
@@ -490,16 +490,16 @@ export struct HomePage {
                     Text(q.title)
                       .fontSize(14)
                       .fontWeight(FontWeight.Medium)
-                      .fontColor('#111827')
+                      .fontColor($r('app.color.text_primary'))
                       .maxLines(1)
                       .textOverflow({ overflow: TextOverflow.Ellipsis })
                     Row({ space: 6 }) {
                       ForEach(this.previewTags(q), (t: string) => {
                         Text(t)
                           .fontSize(10)
-                          .fontColor('#6B7280')
+                          .fontColor($r('app.color.text_muted'))
                           .padding({ left: 6, right: 6, top: 2, bottom: 2 })
-                          .backgroundColor('#F3F4F6')
+                          .backgroundColor($r('app.color.chip_idle_bg'))
                           .borderRadius(4)
                       }, (t: string) => t)
                     }
@@ -510,7 +510,7 @@ export struct HomePage {
                     Text('🔥').fontSize(11)
                     Text(this.formatCount(q.viewCount !== undefined ? q.viewCount : 0))
                       .fontSize(11)
-                      .fontColor('#9CA3AF')
+                      .fontColor($r('app.color.chevron'))
                   }
                 }
                 .width('100%')
@@ -520,7 +520,7 @@ export struct HomePage {
             }
             .width('100%')
             .padding({ left: 14, right: 14, top: 14, bottom: 8 })
-            .backgroundColor('#FFFFFF')
+            .backgroundColor($r('app.color.card_bg'))
             .borderRadius(16)
 
             if (this.books.length > 0) {
@@ -533,13 +533,13 @@ export struct HomePage {
                         BookCover({ item: b, coverWidth: 88, coverHeight: 118 })
                         Text(mallStr(b.title))
                           .fontSize(12)
-                          .fontColor('#111827')
+                          .fontColor($r('app.color.text_primary'))
                           .maxLines(2)
                           .textOverflow({ overflow: TextOverflow.Ellipsis })
                           .width(88)
                         Text(I18n.tf('book_readers', this.formatCount(mallNum(b.viewCount)), this.lang))
                           .fontSize(10)
-                          .fontColor('#9CA3AF')
+                          .fontColor($r('app.color.chevron'))
                           .width(88)
                       }
                       .width(88)
@@ -554,7 +554,7 @@ export struct HomePage {
               }
               .width('100%')
               .padding(14)
-              .backgroundColor('#FFFFFF')
+              .backgroundColor($r('app.color.card_bg'))
               .borderRadius(16)
             }
 
@@ -575,32 +575,32 @@ export struct HomePage {
                         .height(72)
                         .objectFit(ImageFit.Contain)
                         .padding(14)
-                        .backgroundColor('#ECFDF5')
+                        .backgroundColor($r('app.color.preview_bg'))
                         .borderRadius(10)
                     }
                     Column({ space: 6 }) {
                       Text(mallStr(a.title))
                         .fontSize(14)
                         .fontWeight(FontWeight.Medium)
-                        .fontColor('#111827')
+                        .fontColor($r('app.color.text_primary'))
                         .maxLines(2)
                         .textOverflow({ overflow: TextOverflow.Ellipsis })
                       Text(mallStr(a.summary))
                         .fontSize(11)
-                        .fontColor('#9CA3AF')
+                        .fontColor($r('app.color.chevron'))
                         .maxLines(1)
                         .textOverflow({ overflow: TextOverflow.Ellipsis })
                       Row({ space: 10 }) {
                         Text(mallStr(a.authorName).length > 0 ? mallStr(a.authorName) : '码上Offer')
                           .fontSize(11)
-                          .fontColor('#6B7280')
+                          .fontColor($r('app.color.text_muted'))
                           .layoutWeight(1)
                         Text(`♥ ${mallNum(a.likeCount)}`)
                           .fontSize(11)
-                          .fontColor('#9CA3AF')
+                          .fontColor($r('app.color.chevron'))
                         Text(`💬 ${mallNum(a.commentCount)}`)
                           .fontSize(11)
-                          .fontColor('#9CA3AF')
+                          .fontColor($r('app.color.chevron'))
                       }
                       .width('100%')
                     }
@@ -614,7 +614,7 @@ export struct HomePage {
               }
               .width('100%')
               .padding(14)
-              .backgroundColor('#FFFFFF')
+              .backgroundColor($r('app.color.card_bg'))
               .borderRadius(16)
             }
           }
@@ -630,6 +630,6 @@ export struct HomePage {
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#F5F6F8')
+    .backgroundColor($r('app.color.page_bg'))
   }
 }

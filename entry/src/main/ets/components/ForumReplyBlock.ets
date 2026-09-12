@@ -23,8 +23,8 @@ export struct ForumReplyBlock {
   onReport: (item: ForumReply) => void = (_item: ForumReply) => {
   };
 
-  private likeColor(on: boolean): string {
-    return on ? '#2563EB' : '#9CA3AF';
+  private likeColor(on: boolean): ResourceColor {
+    return on ? $r('app.color.accent') : $r('app.color.chevron');
   }
 
   private bodyText(): string {
@@ -63,15 +63,15 @@ export struct ForumReplyBlock {
             if (mallBool(this.reply.author)) {
               Text(I18n.t('forum_author', this.lang))
                 .fontSize(10)
-                .fontColor('#FFFFFF')
-                .backgroundColor('#2563EB')
+                .fontColor($r('app.color.text_on_color'))
+                .backgroundColor($r('app.color.accent'))
                 .padding({ left: 5, right: 5, top: 1, bottom: 1 })
                 .borderRadius(4)
             }
             if (mallBool(this.reply.featured)) {
               Text(I18n.t('forum_featured', this.lang))
                 .fontSize(10)
-                .fontColor('#FFFFFF')
+                .fontColor($r('app.color.text_on_color'))
                 .backgroundColor('#D97706')
                 .padding({ left: 5, right: 5, top: 1, bottom: 1 })
                 .borderRadius(4)
@@ -80,7 +80,7 @@ export struct ForumReplyBlock {
           .alignItems(VerticalAlign.Center)
           Text(ForumUi.relativeTime(mallStr(this.reply.createTime), this.lang))
             .fontSize(11)
-            .fontColor('#9CA3AF')
+            .fontColor($r('app.color.chevron'))
         }
         .layoutWeight(1)
         .alignItems(HorizontalAlign.Start)
@@ -88,7 +88,7 @@ export struct ForumReplyBlock {
         if (this.floor > 0) {
           Text(I18n.tf('forum_floor', `${this.floor}`, this.lang))
             .fontSize(12)
-            .fontColor('#9CA3AF')
+            .fontColor($r('app.color.chevron'))
         }
       }
       .width('100%')
@@ -101,7 +101,7 @@ export struct ForumReplyBlock {
           `${ForumUi.relativeTime(mallStr(this.reply.createTime), this.lang)} · ${ForumUi.ipLabel(mallStr(this.reply.ipAddress))}` :
           ForumUi.relativeTime(mallStr(this.reply.createTime), this.lang))
           .fontSize(12)
-          .fontColor('#9CA3AF')
+          .fontColor($r('app.color.chevron'))
         Row({ space: 4 }) {
           Image($r('app.media.ic_comment_like'))
             .width(16)
@@ -118,21 +118,21 @@ export struct ForumReplyBlock {
             .width(16)
             .height(16)
             .objectFit(ImageFit.Contain)
-            .fillColor('#2563EB')
+            .fillColor($r('app.color.accent'))
           Text(I18n.t('forum_reply_action', this.lang))
             .fontSize(12)
-            .fontColor('#2563EB')
+            .fontColor($r('app.color.accent'))
         }
         .onClick(() => this.onReply(this.reply))
         if (mallBool(this.reply.mine)) {
           Text(I18n.t('delete', this.lang))
             .fontSize(12)
-            .fontColor('#DC2626')
+            .fontColor($r('app.color.danger'))
             .onClick(() => this.onDelete(this.reply))
         } else {
           Text(I18n.t('content_report', this.lang))
             .fontSize(12)
-            .fontColor('#9CA3AF')
+            .fontColor($r('app.color.chevron'))
             .onClick(() => this.onReport(this.reply))
         }
       }
@@ -155,15 +155,15 @@ export struct ForumReplyBlock {
           if (mallBool(this.reply.author)) {
             Text(I18n.t('forum_author', this.lang))
               .fontSize(10)
-              .fontColor('#FFFFFF')
-              .backgroundColor('#2563EB')
+              .fontColor($r('app.color.text_on_color'))
+              .backgroundColor($r('app.color.accent'))
               .padding({ left: 5, right: 5, top: 1, bottom: 1 })
               .borderRadius(4)
           }
           if (mallBool(this.reply.featured)) {
             Text(I18n.t('forum_featured', this.lang))
               .fontSize(10)
-              .fontColor('#FFFFFF')
+              .fontColor($r('app.color.text_on_color'))
               .backgroundColor('#D97706')
               .padding({ left: 5, right: 5, top: 1, bottom: 1 })
               .borderRadius(4)
@@ -171,10 +171,10 @@ export struct ForumReplyBlock {
           if (mallStr(this.reply.replyToNickname).length > 0) {
             Text(I18n.t('forum_reply_action', this.lang))
               .fontSize(12)
-              .fontColor('#9CA3AF')
+              .fontColor($r('app.color.chevron'))
             Text(mallStr(this.reply.replyToNickname))
               .fontSize(12)
-              .fontColor('#6B7280')
+              .fontColor($r('app.color.text_muted'))
               .maxLines(1)
           }
         }
@@ -183,19 +183,19 @@ export struct ForumReplyBlock {
         if (mallBool(this.reply.mine)) {
           Text(I18n.t('delete', this.lang))
             .fontSize(12)
-            .fontColor('#DC2626')
+            .fontColor($r('app.color.danger'))
             .margin({ right: 10 })
             .onClick(() => this.onDelete(this.reply))
         } else {
           Text(I18n.t('content_report', this.lang))
             .fontSize(12)
-            .fontColor('#9CA3AF')
+            .fontColor($r('app.color.chevron'))
             .margin({ right: 10 })
             .onClick(() => this.onReport(this.reply))
         }
         Text(I18n.t('forum_reply_action', this.lang))
           .fontSize(12)
-          .fontColor('#2563EB')
+          .fontColor($r('app.color.accent'))
           .onClick(() => this.onReply(this.reply))
       }
       .width('100%')
@@ -204,7 +204,7 @@ export struct ForumReplyBlock {
       if (ForumUi.ipLabel(mallStr(this.reply.ipAddress)).length > 0) {
         Text(ForumUi.ipLabel(mallStr(this.reply.ipAddress)))
           .fontSize(11)
-          .fontColor('#9CA3AF')
+          .fontColor($r('app.color.chevron'))
       }
     }
     .width('100%')
@@ -217,7 +217,7 @@ export struct ForumReplyBlock {
       Text(mallStr(this.reply.rejectHint).length > 0 ? mallStr(this.reply.rejectHint) :
         (mallBool(this.reply.pending) ? I18n.t('forum_pending', this.lang) : I18n.t('forum_rejected', this.lang)))
         .fontSize(12)
-        .fontColor('#B45309')
+        .fontColor($r('app.color.warning_text'))
         .width('100%')
     }
     Text(this.bodyText())
@@ -229,7 +229,7 @@ export struct ForumReplyBlock {
     if (this.needExpand()) {
       Text(I18n.t('forum_expand', this.lang))
         .fontSize(13)
-        .fontColor('#2563EB')
+        .fontColor($r('app.color.accent'))
         .padding({ top: 2, bottom: 2 })
         .onClick(() => this.onToggleContent(this.reply))
     }
@@ -248,7 +248,7 @@ export struct ForumReplyBlock {
       Column() {
         Text(ForumUi.nickInitial(mallStr(this.reply.nickname)))
           .fontSize(13)
-          .fontColor('#FFFFFF')
+          .fontColor($r('app.color.text_on_color'))
       }
       .width(size)
       .height(size)

@@ -224,8 +224,8 @@ export struct BlogCommentBlock {
     promptAction.showToast({ message: I18n.t('forum_soon', this.lang) });
   }
 
-  private likeColor(on: boolean): string {
-    return on ? '#2563EB' : '#9CA3AF';
+  private likeColor(on: boolean): ResourceColor {
+    return on ? $r('app.color.accent') : $r('app.color.chevron');
   }
 
   build() {
@@ -238,16 +238,16 @@ export struct BlogCommentBlock {
           .layoutWeight(1)
         // Text(I18n.t('blog_toc', this.lang))
         //   .fontSize(13)
-        //   .fontColor('#2563EB')
+        //   .fontColor($r('app.color.accent'))
         //   .padding({ right: 12 })
         //   .onClick(() => this.onOpenToc())
         Row({ space: 2 }) {
           Text(I18n.t('blog_hot', this.lang))
             .fontSize(13)
-            .fontColor('#6B7280')
+            .fontColor($r('app.color.text_muted'))
           Text('▾')
             .fontSize(12)
-            .fontColor('#6B7280')
+            .fontColor($r('app.color.text_muted'))
         }
         .onClick(() => this.hotSoon())
       }
@@ -279,7 +279,7 @@ export struct BlogCommentBlock {
               .width('100%')
               .alignItems(HorizontalAlign.Start)
               .padding({ left: 10, right: 8, top: 8, bottom: 8 })
-              .backgroundColor('#F8FAFC')
+              .backgroundColor($r('app.color.preview_bg'))
               .borderRadius(8)
             }
           }
@@ -332,7 +332,7 @@ export struct BlogCommentBlock {
             .width(22)
             .height(22)
             .objectFit(ImageFit.Contain)
-            .fillColor(this.showEmoji ? '#2563EB' : '#9CA3AF')
+            .fillColor(this.showEmoji ? $r('app.color.accent') : $r('app.color.chevron'))
             .flexShrink(0)
             .onClick(() => {
               this.showEmoji = !this.showEmoji;
@@ -341,7 +341,7 @@ export struct BlogCommentBlock {
         .layoutWeight(1)
         .height(40)
         .padding({ left: 14, right: 12 })
-        .backgroundColor('#F3F4F6')
+        .backgroundColor($r('app.color.chip_idle_bg'))
         .borderRadius(20)
         .alignItems(VerticalAlign.Center)
 
@@ -350,7 +350,7 @@ export struct BlogCommentBlock {
           .padding({ left: 14, right: 14 })
           .fontSize(14)
           .enabled(!this.sending)
-          .backgroundColor('#2563EB')
+          .backgroundColor($r('app.color.accent'))
           .borderRadius(18)
           .onClick(() => this.send())
       }
@@ -368,7 +368,7 @@ export struct BlogCommentBlock {
         Column() {
           Text(ForumUi.nickInitial(mallStr(item.nickname)))
             .fontSize(12)
-            .fontColor('#FFFFFF')
+            .fontColor($r('app.color.text_on_color'))
         }
         .width(32)
         .height(32)
@@ -386,23 +386,23 @@ export struct BlogCommentBlock {
           if (this.isAuthor(item)) {
             Text(I18n.t('blog_author', this.lang))
               .fontSize(10)
-              .fontColor('#FFFFFF')
-              .backgroundColor('#2563EB')
+              .fontColor($r('app.color.text_on_color'))
+              .backgroundColor($r('app.color.accent'))
               .padding({ left: 5, right: 5, top: 1, bottom: 1 })
               .borderRadius(4)
           }
           if (mallStr(item.replyToNickname).length > 0) {
             Text(`${I18n.t('blog_reply', this.lang)} ${mallStr(item.replyToNickname)}`)
               .fontSize(12)
-              .fontColor('#9CA3AF')
+              .fontColor($r('app.color.chevron'))
               .maxLines(1)
           }
         }
         .alignItems(VerticalAlign.Center)
         if (mallStr(item.hint).length > 0) {
-          Text(mallStr(item.hint)).fontSize(12).fontColor('#B45309').width('100%')
+          Text(mallStr(item.hint)).fontSize(12).fontColor($r('app.color.warning_text')).width('100%')
         } else if (mallNum(item.status) === 2) {
-          Text(I18n.t('forum_pending', this.lang)).fontSize(12).fontColor('#B45309').width('100%')
+          Text(I18n.t('forum_pending', this.lang)).fontSize(12).fontColor($r('app.color.warning_text')).width('100%')
         }
         Text(mallStr(item.content))
           .fontSize(14)
@@ -413,20 +413,20 @@ export struct BlogCommentBlock {
             `${ForumUi.relativeTime(mallStr(item.createTime), this.lang)} · ${ForumUi.ipLabel(mallStr(item.ipAddress))}` :
             ForumUi.relativeTime(mallStr(item.createTime), this.lang))
             .fontSize(11)
-            .fontColor('#9CA3AF')
+            .fontColor($r('app.color.chevron'))
           Text(I18n.t('blog_reply', this.lang))
             .fontSize(12)
-            .fontColor('#2563EB')
+            .fontColor($r('app.color.accent'))
             .onClick(() => this.startReply(item))
           if (this.isMine(item)) {
             Text(I18n.t('delete', this.lang))
               .fontSize(12)
-              .fontColor('#DC2626')
+              .fontColor($r('app.color.danger'))
               .onClick(() => this.confirmDelete(item))
           } else {
             Text(I18n.t('content_report', this.lang))
               .fontSize(12)
-              .fontColor('#9CA3AF')
+              .fontColor($r('app.color.chevron'))
               .onClick(() => ContentReportNav.open(this.lang, 'BLOG_COMMENT', mallStr(item.id), mallStr(item.content)))
           }
           Blank()

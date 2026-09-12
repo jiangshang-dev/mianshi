@@ -220,14 +220,14 @@ export struct BankPage {
           if (this.showNavBack) {
             Text('‹')
               .fontSize(28)
-              .fontColor('#0F172A')
+              .fontColor($r('app.color.text_primary'))
               .padding({ right: 8 })
               .onClick(() => router.back())
           }
           Text(I18n.t('bank_title_full', this.lang))
             .fontSize(22)
             .fontWeight(FontWeight.Bold)
-            .fontColor('#0F172A')
+            .fontColor($r('app.color.text_primary'))
             .layoutWeight(1)
         }
         .width('100%')
@@ -236,7 +236,7 @@ export struct BankPage {
         //   Text('🔍').fontSize(14)
         //   Text(I18n.t('bank_search_ph', this.lang))
         //     .fontSize(13)
-        //     .fontColor('#94A3B8')
+        //     .fontColor($r('app.color.text_muted'))
         //     .layoutWeight(1)
         // }
         // .width('100%')
@@ -254,9 +254,9 @@ export struct BankPage {
                 Text(tab.name)
                   .fontSize(13)
                   .fontWeight(this.selectedId === tab.id ? FontWeight.Medium : FontWeight.Regular)
-                  .fontColor(this.selectedId === tab.id ? '#FFFFFF' : '#64748B')
+                  .fontColor(this.selectedId === tab.id ? $r('app.color.text_on_color') : $r('app.color.header_search_text'))
                   .padding({ left: 14, right: 14, top: 7, bottom: 7 })
-                  .backgroundColor(this.selectedId === tab.id ? '#2563EB' : '#FFFFFF')
+                  .backgroundColor(this.selectedId === tab.id ? $r('app.color.accent') : $r('app.color.card_bg'))
                   .borderRadius(16)
                   .onClick(() => this.selectTab(tab))
               }, (tab: BankTab) => tab.id)
@@ -268,7 +268,7 @@ export struct BankPage {
 
           Text('☰')
             .fontSize(16)
-            .fontColor('#64748B')
+            .fontColor($r('app.color.header_search_text'))
             .padding({ left: 10, top: 6, bottom: 6 })
             .onClick(() => {
               router.pushUrl({ url: 'pages/bank/CategoryAllPage' });
@@ -323,13 +323,13 @@ export struct BankPage {
             Text(I18n.t('bank_list_title', this.lang))
               .fontSize(15)
               .fontWeight(FontWeight.Bold)
-              .fontColor('#0F172A')
+              .fontColor($r('app.color.text_primary'))
               .layoutWeight(1)
             Select(this.diffOpts)
               .selected(this.difficultyIndex)
               .value(`${I18n.t('diff_filter', this.lang)} · ${this.difficultyLabel}`)
               .font({ size: 12 })
-              .fontColor('#64748B')
+              .fontColor($r('app.color.header_search_text'))
               .selectedOptionFont({ size: 13 })
               .optionFont({ size: 13 })
               .onSelect((index: number) => this.onDiffChange(index))
@@ -341,7 +341,7 @@ export struct BankPage {
         if (this.loading && this.list.length === 0) {
           ListItem() {
             Column() {
-              LoadingProgress().width(36).height(36).color('#2563EB')
+              LoadingProgress().width(36).height(36).color($r('app.color.accent'))
             }
             .width('100%')
             .height(160)
@@ -351,7 +351,7 @@ export struct BankPage {
           ListItem() {
             Text(I18n.t('bank_empty_list', this.lang))
               .fontSize(13)
-              .fontColor('#94A3B8')
+              .fontColor($r('app.color.text_muted'))
               .width('100%')
               .textAlign(TextAlign.Center)
               .padding({ top: 40, bottom: 40 })
@@ -369,24 +369,24 @@ export struct BankPage {
               Column({ space: 6 }) {
                 Text(q.title)
                   .fontSize(14)
-                  .fontColor('#0F172A')
+                  .fontColor($r('app.color.text_primary'))
                   .maxLines(2)
                   .textOverflow({ overflow: TextOverflow.Ellipsis })
                 Row({ space: 6 }) {
                   ForEach(this.previewTags(q), (t: string) => {
                     Text(t)
                       .fontSize(10)
-                      .fontColor('#64748B')
+                      .fontColor($r('app.color.header_search_text'))
                       .padding({ left: 6, right: 6, top: 2, bottom: 2 })
-                      .backgroundColor('#F1F5F9')
+                      .backgroundColor($r('app.color.tag_bg'))
                       .borderRadius(4)
                   }, (t: string) => `${q.id}_${t}`)
                   if (q.difficulty.length > 0) {
                     Text(q.difficulty)
                       .fontSize(10)
-                      .fontColor('#64748B')
+                      .fontColor($r('app.color.header_search_text'))
                       .padding({ left: 6, right: 6, top: 2, bottom: 2 })
-                      .backgroundColor('#EEF2FF')
+                      .backgroundColor($r('app.color.ai_badge_bg'))
                       .borderRadius(4)
                   }
                 }
@@ -397,9 +397,9 @@ export struct BankPage {
                 Text('🔥').fontSize(11)
                 Text(this.formatCount(q.viewCount !== undefined ? q.viewCount : 0))
                   .fontSize(11)
-                  .fontColor('#94A3B8')
+                  .fontColor($r('app.color.text_muted'))
               }
-              Text('›').fontSize(18).fontColor('#CBD5E1')
+              Text('›').fontSize(18).fontColor($r('app.color.chevron'))
             }
             .width('100%')
             .padding({ left: 16, right: 16, top: 12, bottom: 12 })
@@ -410,11 +410,11 @@ export struct BankPage {
         ListItem() {
           Column() {
             if (this.loadingMore) {
-              LoadingProgress().width(24).height(24).color('#2563EB')
+              LoadingProgress().width(24).height(24).color($r('app.color.accent'))
             } else if (this.finished && this.list.length > 0) {
               Text(I18n.t('bank_no_more', this.lang))
                 .fontSize(12)
-                .fontColor('#94A3B8')
+                .fontColor($r('app.color.text_muted'))
             }
           }
           .width('100%')
@@ -431,6 +431,6 @@ export struct BankPage {
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#F3F6FB')
+    .backgroundColor($r('app.color.page_bg'))
   }
 }

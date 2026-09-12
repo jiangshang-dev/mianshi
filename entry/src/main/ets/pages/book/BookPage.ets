@@ -188,7 +188,7 @@ export struct BookPage {
     Text(`${icon} ${I18n.t(titleKey, this.lang)}`)
       .fontSize(16)
       .fontWeight(FontWeight.Bold)
-      .fontColor('#0F172A')
+      .fontColor($r('app.color.text_primary'))
       .width('100%')
   }
 
@@ -208,9 +208,9 @@ export struct BookPage {
             Text(I18n.t('book_hero_btn', this.lang))
               .fontSize(13)
               .fontWeight(FontWeight.Medium)
-              .fontColor('#2563EB')
+              .fontColor($r('app.color.accent'))
               .padding({ left: 14, right: 14, top: 8, bottom: 8 })
-              .backgroundColor('#FFFFFF')
+              .backgroundColor($r('app.color.card_bg'))
               .borderRadius(16)
           }
           .onClick(() => this.switchTab(1))
@@ -243,7 +243,7 @@ export struct BookPage {
       }
       .width('100%')
       .padding(14)
-      .backgroundColor('#FFFFFF')
+      .backgroundColor($r('app.color.card_bg'))
       .borderRadius(16)
 
       Column({ space: 12 }) {
@@ -255,11 +255,11 @@ export struct BookPage {
                 Text(this.catIcon(cat)).fontSize(20)
                 Text(mallStr(cat.name))
                   .fontSize(12)
-                  .fontColor('#0F172A')
+                  .fontColor($r('app.color.text_primary'))
                   .maxLines(1)
                 Text(I18n.tf('book_count_n', `${mallNum(cat.bookCount)}`, this.lang))
                   .fontSize(10)
-                  .fontColor('#94A3B8')
+                  .fontColor($r('app.color.text_muted'))
               }
               .width('100%')
               .padding({ top: 12, bottom: 12 })
@@ -276,7 +276,7 @@ export struct BookPage {
       }
       .width('100%')
       .padding(14)
-      .backgroundColor('#FFFFFF')
+      .backgroundColor($r('app.color.card_bg'))
       .borderRadius(16)
 
       Column({ space: 12 }) {
@@ -288,13 +288,13 @@ export struct BookPage {
                 BookCover({ item: b, coverWidth: 88, coverHeight: 118 })
                 Text(mallStr(b.title))
                   .fontSize(12)
-                  .fontColor('#0F172A')
+                  .fontColor($r('app.color.text_primary'))
                   .maxLines(2)
                   .textOverflow({ overflow: TextOverflow.Ellipsis })
                   .width(88)
                 Text(I18n.tf('book_readers', this.formatCount(mallNum(b.viewCount)), this.lang))
                   .fontSize(10)
-                  .fontColor('#94A3B8')
+                  .fontColor($r('app.color.text_muted'))
                   .width(88)
               }
               .width(88)
@@ -309,7 +309,7 @@ export struct BookPage {
       }
       .width('100%')
       .padding(14)
-      .backgroundColor('#FFFFFF')
+      .backgroundColor($r('app.color.card_bg'))
       .borderRadius(16)
 
       if (mallStr(this.featured.id).length > 0) {
@@ -321,22 +321,22 @@ export struct BookPage {
               Text(mallStr(this.featured.title))
                 .fontSize(15)
                 .fontWeight(FontWeight.Bold)
-                .fontColor('#0F172A')
+                .fontColor($r('app.color.text_primary'))
                 .maxLines(2)
               Text(mallStr(this.featured.subtitle).length > 0 ? mallStr(this.featured.subtitle) :
                 mallStr(this.featured.quoteText))
                 .fontSize(12)
-                .fontColor('#64748B')
+                .fontColor($r('app.color.header_search_text'))
                 .maxLines(2)
               Text(I18n.tf('book_readers', this.formatCount(mallNum(this.featured.viewCount)), this.lang))
                 .fontSize(11)
-                .fontColor('#94A3B8')
+                .fontColor($r('app.color.text_muted'))
               Row() {
                 Text(I18n.t('book_view_detail', this.lang))
                   .fontSize(12)
                   .fontColor('#FFFFFF')
                   .padding({ left: 12, right: 12, top: 6, bottom: 6 })
-                  .backgroundColor('#2563EB')
+                  .backgroundColor($r('app.color.accent'))
                   .borderRadius(14)
               }
               .onClick(() => this.openReader(this.featured))
@@ -348,7 +348,7 @@ export struct BookPage {
         }
         .width('100%')
         .padding(14)
-        .backgroundColor('#FFFFFF')
+        .backgroundColor($r('app.color.card_bg'))
         .borderRadius(16)
       }
     }
@@ -363,12 +363,12 @@ export struct BookPage {
       Column({ space: 4 }) {
         Text(mallStr(item.title))
           .fontSize(13)
-          .fontColor('#0F172A')
+          .fontColor($r('app.color.text_primary'))
           .maxLines(2)
           .textOverflow({ overflow: TextOverflow.Ellipsis })
         Text(I18n.tf('book_readers', this.formatCount(mallNum(item.viewCount)), this.lang))
           .fontSize(10)
-          .fontColor('#94A3B8')
+          .fontColor($r('app.color.text_muted'))
       }
       .alignItems(HorizontalAlign.Start)
       .layoutWeight(1)
@@ -385,11 +385,11 @@ export struct BookPage {
           ListItem() {
             Text(mallStr(cat.name))
               .fontSize(13)
-              .fontColor(this.catId === mallStr(cat.id) ? '#2563EB' : '#64748B')
+              .fontColor(this.catId === mallStr(cat.id) ? $r('app.color.accent') : $r('app.color.header_search_text'))
               .fontWeight(this.catId === mallStr(cat.id) ? FontWeight.Medium : FontWeight.Regular)
               .width('100%')
               .padding({ left: 10, right: 10, top: 12, bottom: 12 })
-              .backgroundColor(this.catId === mallStr(cat.id) ? '#EFF6FF' : '#00000000')
+              .backgroundColor(this.catId === mallStr(cat.id) ? $r('app.color.ai_badge_bg') : '#00000000')
               .onClick(() => this.selectCat(mallStr(cat.id)))
           }
         }, (cat: BookCategory) => mallStr(cat.id))
@@ -398,7 +398,7 @@ export struct BookPage {
       .height('100%')
       .scrollBar(BarState.Off)
       .alignListItem(ListItemAlign.Start)
-      .backgroundColor('#FFFFFF')
+      .backgroundColor($r('app.color.card_bg'))
 
       List() {
         ForEach(this.catBooks, (b: BookItem) => {
@@ -409,14 +409,14 @@ export struct BookPage {
                 Text(mallStr(b.title))
                   .fontSize(14)
                   .fontWeight(FontWeight.Medium)
-                  .fontColor('#0F172A')
+                  .fontColor($r('app.color.text_primary'))
                   .maxLines(2)
                 Text(mallStr(b.authorName))
                   .fontSize(12)
-                  .fontColor('#94A3B8')
+                  .fontColor($r('app.color.text_muted'))
                 Text(I18n.tf('book_readers', this.formatCount(mallNum(b.viewCount)), this.lang))
                   .fontSize(11)
-                  .fontColor('#94A3B8')
+                  .fontColor($r('app.color.text_muted'))
               }
               .alignItems(HorizontalAlign.Start)
               .layoutWeight(1)
@@ -445,24 +445,24 @@ export struct BookPage {
           Text(`${index + 1}`)
             .fontSize(16)
             .fontWeight(FontWeight.Bold)
-            .fontColor(index < 3 ? '#EF4444' : '#94A3B8')
+            .fontColor(index < 3 ? '#EF4444' : $r('app.color.text_muted'))
             .width(28)
           BookCover({ item: b, coverWidth: 48, coverHeight: 64 })
           Column({ space: 4 }) {
             Text(mallStr(b.title))
               .fontSize(14)
-              .fontColor('#0F172A')
+              .fontColor($r('app.color.text_primary'))
               .maxLines(2)
             Text(I18n.tf('book_readers', this.formatCount(mallNum(b.viewCount)), this.lang))
               .fontSize(11)
-              .fontColor('#94A3B8')
+              .fontColor($r('app.color.text_muted'))
           }
           .alignItems(HorizontalAlign.Start)
           .layoutWeight(1)
         }
         .width('100%')
         .padding(12)
-        .backgroundColor('#FFFFFF')
+        .backgroundColor($r('app.color.card_bg'))
         .borderRadius(12)
         .onClick(() => this.openReader(b))
       }, (b: BookItem) => mallStr(b.id))
@@ -477,7 +477,7 @@ export struct BookPage {
       if (this.shelfList.length === 0) {
         Text(I18n.t('book_shelf_empty', this.lang))
           .fontSize(13)
-          .fontColor('#94A3B8')
+          .fontColor($r('app.color.text_muted'))
           .padding({ top: 40 })
           .width('100%')
           .textAlign(TextAlign.Center)
@@ -489,14 +489,14 @@ export struct BookPage {
               Text(mallStr(b.title))
                 .fontSize(14)
                 .fontWeight(FontWeight.Medium)
-                .fontColor('#0F172A')
+                .fontColor($r('app.color.text_primary'))
               Text(I18n.t('book_continue', this.lang))
                 .fontSize(12)
-                .fontColor('#2563EB')
+                .fontColor($r('app.color.accent'))
               if (mallNum(b.percent) > 0) {
                 Text(`${mallNum(b.percent)}%`)
                   .fontSize(11)
-                  .fontColor('#94A3B8')
+                  .fontColor($r('app.color.text_muted'))
               }
             }
             .alignItems(HorizontalAlign.Start)
@@ -504,7 +504,7 @@ export struct BookPage {
           }
           .width('100%')
           .padding(14)
-          .backgroundColor('#FFFFFF')
+          .backgroundColor($r('app.color.card_bg'))
           .borderRadius(12)
           .onClick(() => this.openReader(b))
         }, (b: BookItem) => mallStr(b.id))
@@ -520,12 +520,12 @@ export struct BookPage {
       Text(I18n.t(titleKey, this.lang))
         .fontSize(14)
         .fontWeight(this.mainTab === i ? FontWeight.Medium : FontWeight.Regular)
-        .fontColor(this.mainTab === i ? '#2563EB' : '#64748B')
+        .fontColor(this.mainTab === i ? $r('app.color.accent') : $r('app.color.header_search_text'))
       Row()
         .width(20)
         .height(3)
         .borderRadius(2)
-        .backgroundColor(this.mainTab === i ? '#2563EB' : '#00000000')
+        .backgroundColor(this.mainTab === i ? $r('app.color.accent') : '#00000000')
     }
     .layoutWeight(1)
     .padding({ top: 4, bottom: 4 })
@@ -539,7 +539,7 @@ export struct BookPage {
           Text(I18n.t('tab_book', this.lang))
             .fontSize(22)
             .fontWeight(FontWeight.Bold)
-            .fontColor('#0F172A')
+            .fontColor($r('app.color.text_primary'))
             .layoutWeight(1)
           // Text('🔍')
           //   .fontSize(20)
@@ -551,13 +551,13 @@ export struct BookPage {
         //   Text('🔍').fontSize(14)
         //   Text(I18n.t('book_search_ph', this.lang))
         //     .fontSize(13)
-        //     .fontColor('#94A3B8')
+        //     .fontColor($r('app.color.text_muted'))
         //     .layoutWeight(1)
         // }
         // .width('100%')
         // .height(42)
         // .padding({ left: 14, right: 14 })
-        // .backgroundColor('#FFFFFF')
+        // .backgroundColor($r('app.color.card_bg'))
         // .borderRadius(21)
         // .onClick(() => this.openSearch())
 
@@ -574,7 +574,7 @@ export struct BookPage {
 
       if (this.loading) {
         Column() {
-          LoadingProgress().width(36).height(36).color('#2563EB')
+          LoadingProgress().width(36).height(36).color($r('app.color.accent'))
         }
         .width('100%')
         .layoutWeight(1)
@@ -598,6 +598,6 @@ export struct BookPage {
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#F3F6FB')
+    .backgroundColor($r('app.color.page_bg'))
   }
 }

@@ -253,14 +253,27 @@ export class AuthRepository {
       authRequest.state = `mianshi${Date.now()}`;
       const authResp = await controller.executeRequest(authRequest);
       const authResponse = authResp as authentication.AuthorizationWithHuaweiIDResponse;
-      if (authResponse.data) {
-        return { payload: authResponse.data as HuaweiAuthPayload, failCode: 0 };
+      const payload = authResponse.data as HuaweiAuthPayload | undefined;
+      if (payload !== undefined && payload !== null) {
+        hilog.info(DOMAIN, 'AuthRepository',
+          'huawei auth ok openID=%{public}s nick=%{public}s',
+          (payload.openID ?? '').length > 0 ? 'yes' : 'no',
+          (payload.nickName ?? '').length > 0 ? 'yes' : 'no');
+        return { payload: payload, failCode: 0 };
       }
+      hilog.warn(DOMAIN, 'AuthRepository', 'huawei auth empty data %{public}s', JSON.stringify(authResp));
       return { payload: null, failCode: 0 };
     } catch (authErr) {
       const raw = JSON.stringify(authErr);
       hilog.warn(DOMAIN, 'AuthRepository', 'authorization failed %{public}s', raw);
-      return { payload: null, failCode: this.errorCodeFromRaw(raw) };
+      let code = this.errorCodeFromRaw(raw);
+      if (code === 0 && authErr !== undefined && authErr !== null) {
+        const anyErr = authErr as Record<string, number>;
+        if (anyErr.code !== undefined) {
+          code = anyErr.code;
+        }
+      }
+      return { payload: null, failCode: code };
     }
   }
 
@@ -290,15 +303,15 @@ export class AuthRepository {
       return '华为账号授权参数无效，请确认已开通华为账号服务且 client_id 为应用 OAuth ID';
     }
     if (code === 1001502014 || code === 1001500003) {
-      return '华为账号授权范围未开通，请在 AGC 开通华为账号服务';
+      return '华为账号授权范围未开通，请在 AGC「华为账号服务」开通并勾选 Profile 中的账号能力';
     }
     if (code === 1001502005) {
       return '网络异常，请稍后重试';
     }
     if (code === 0) {
-      return '未获取到华为账号授权，请确认已登录华为账号';
+      return '未获取到华为账号授权：请卸载手机上的本应用后重装，确认 AGC Profile 已勾选华为账号服务，并在授权弹窗点同意';
     }
-    return '华为账号登录失败，请稍后重试';
+    return `华为账号登录失败，请稍后重试`;
   }
 
   private parseLoginBody(body: string): LoginApiBody {

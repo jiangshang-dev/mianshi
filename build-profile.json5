@@ -7,11 +7,11 @@
         "material": {
           "certpath": "/Users/xiaobai/.ohos/config/default_mianshi_r3k1zoLJnuysMGna8myk1Hp1ZPmk5AoogGJN12UObK4=.cer",
           "keyAlias": "debugKey",
-          "keyPassword": "0000001B2211534B30A75BEA5BEB27A2AE94CEE4E47AEF2DAE7A3478D5F9DB2E58A9D3A464478BE1CEE6C0",
+          "keyPassword": "0000001BD06FD56B0FB22204B24861E04C8134D7E0E84AAEB292524714DD23F2CB5ECFAC734AC7660B5D17",
           "profile": "/Users/xiaobai/.ohos/config/default_mianshi_r3k1zoLJnuysMGna8myk1Hp1ZPmk5AoogGJN12UObK4=.p7b",
           "signAlg": "SHA256withECDSA",
           "storeFile": "/Users/xiaobai/.ohos/config/default_mianshi_r3k1zoLJnuysMGna8myk1Hp1ZPmk5AoogGJN12UObK4=.p12",
-          "storePassword": "0000001B618FA5AD82B66D7ADC13BB691ADCC71C9360F3044882E3C1D3429346013F1D81F1362EE74843ED"
+          "storePassword": "0000001BAE08246B33CB06CFD40FB15A0C8F7FE22809176A7B6AEC9C977E429A5BA68252421E6E9A7EBD0E"
         }
       }
     ],

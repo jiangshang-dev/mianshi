@@ -58,8 +58,8 @@ export struct CommentItemRow {
     return this.item.replies.length;
   }
 
-  private likeColor(active: boolean): string {
-    return active ? '#2563EB' : '#9CA3AF';
+  private likeColor(active: boolean): ResourceColor {
+    return active ? $r('app.color.accent') : $r('app.color.chevron');
   }
 
   private async doVote(action: number): Promise<void> {
@@ -124,7 +124,7 @@ export struct CommentItemRow {
           Column() {
             Text(ForumUi.nickInitial(this.item.nickname))
               .fontSize(12)
-              .fontColor('#FFFFFF')
+              .fontColor($r('app.color.text_on_color'))
           }
           .width(32)
           .height(32)
@@ -144,7 +144,7 @@ export struct CommentItemRow {
           if (this.item.replyToNickname.length > 0) {
             Text(`${I18n.t('blog_reply', this.lang)} ${this.item.replyToNickname}`)
               .fontSize(12)
-              .fontColor('#9CA3AF')
+              .fontColor($r('app.color.chevron'))
               .maxLines(1)
           }
         }
@@ -153,12 +153,12 @@ export struct CommentItemRow {
         if (this.item.status === 0) {
           Text(this.item.hint.length > 0 ? this.item.hint : I18n.t('comment_rejected', this.lang))
             .fontSize(12)
-            .fontColor('#B45309')
+            .fontColor($r('app.color.warning_text'))
             .width('100%')
         } else if (this.item.status === 2) {
           Text(this.item.hint.length > 0 ? this.item.hint : I18n.t('forum_pending', this.lang))
             .fontSize(12)
-            .fontColor('#B45309')
+            .fontColor($r('app.color.warning_text'))
             .width('100%')
         }
 
@@ -172,11 +172,11 @@ export struct CommentItemRow {
             `${ForumUi.relativeTime(this.item.createTime, this.lang)} · ${ForumUi.ipLabel(this.item.ipAddress)}` :
             ForumUi.relativeTime(this.item.createTime, this.lang))
             .fontSize(11)
-            .fontColor('#9CA3AF')
+            .fontColor($r('app.color.chevron'))
           if (this.item.status !== 0) {
             Text(I18n.t('blog_reply', this.lang))
               .fontSize(12)
-              .fontColor('#2563EB')
+              .fontColor($r('app.color.accent'))
               .onClick(() => {
                 LoginGate.ensure(I18n.t('comment_feature', this.lang), () => {
                   this.onReply(this.item.id, this.item.nickname);
@@ -186,14 +186,14 @@ export struct CommentItemRow {
           if (this.isMine()) {
             Text(I18n.t('delete', this.lang))
               .fontSize(12)
-              .fontColor('#DC2626')
+              .fontColor($r('app.color.danger'))
               .onClick(() => {
                 this.confirmDelete();
               })
           } else {
             Text(I18n.t('content_report', this.lang))
               .fontSize(12)
-              .fontColor('#9CA3AF')
+              .fontColor($r('app.color.chevron'))
               .onClick(() => {
                 ContentReportNav.open(this.lang, 'QUESTION_COMMENT', this.item.id, this.item.content);
               })
@@ -219,10 +219,10 @@ export struct CommentItemRow {
         if (this.showRepliesLink && this.replyTotal() > 0 && this.item.replies.length === 0) {
           Text(`${I18n.t('comment_replies', this.lang)} ${this.replyTotal()} ${I18n.t('comment_replies_unit', this.lang)} >`)
             .fontSize(13)
-            .fontColor('#61666D')
+            .fontColor($r('app.color.text_muted'))
             .padding({ left: 10, right: 10, top: 6, bottom: 6 })
             .margin({ top: 6 })
-            .backgroundColor('#F1F2F3')
+            .backgroundColor($r('app.color.chip_idle_bg'))
             .borderRadius(4)
             .onClick(() => {
               CommentUi.openDetail(this.item.id);

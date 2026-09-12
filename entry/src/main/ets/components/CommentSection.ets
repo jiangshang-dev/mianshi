@@ -191,10 +191,10 @@ export struct CommentSection {
         Row({ space: 2 }) {
           Text(this.sortHot ? I18n.t('comment_sort_hot', this.lang) : I18n.t('comment_sort_time', this.lang))
             .fontSize(13)
-            .fontColor('#6B7280')
+            .fontColor($r('app.color.text_muted'))
           Text('▾')
             .fontSize(12)
-            .fontColor('#6B7280')
+            .fontColor($r('app.color.text_muted'))
         }
         .onClick(() => {
           this.sortHot = !this.sortHot;
@@ -245,7 +245,7 @@ export struct CommentSection {
               .width('100%')
               .alignItems(HorizontalAlign.Start)
               .padding({ left: 10, right: 8, top: 8, bottom: 8 })
-              .backgroundColor('#F8FAFC')
+              .backgroundColor($r('app.color.preview_bg'))
               .borderRadius(8)
             }
           }
@@ -259,11 +259,11 @@ export struct CommentSection {
         Row() {
           Text(I18n.tf('forum_reply_to_ph', this.replyToName, this.lang))
             .fontSize(12)
-            .fontColor('#2563EB')
+            .fontColor($r('app.color.accent'))
             .layoutWeight(1)
           Text('×')
             .fontSize(16)
-            .fontColor('#9CA3AF')
+            .fontColor($r('app.color.chevron'))
             .onClick(() => {
               this.replyToId = '';
               this.replyToName = '';
@@ -303,7 +303,7 @@ export struct CommentSection {
             .width(22)
             .height(22)
             .objectFit(ImageFit.Contain)
-            .fillColor(this.showEmoji ? '#2563EB' : '#9CA3AF')
+            .fillColor(this.showEmoji ? $r('app.color.accent') : $r('app.color.chevron'))
             .flexShrink(0)
             .onClick(() => {
               this.showEmoji = !this.showEmoji;
@@ -312,7 +312,7 @@ export struct CommentSection {
         .layoutWeight(1)
         .height(40)
         .padding({ left: 14, right: 12 })
-        .backgroundColor('#F3F4F6')
+        .backgroundColor($r('app.color.chip_idle_bg'))
         .borderRadius(20)
         .alignItems(VerticalAlign.Center)
 
@@ -321,7 +321,7 @@ export struct CommentSection {
           .padding({ left: 14, right: 14 })
           .fontSize(14)
           .enabled(!this.sending)
-          .backgroundColor(this.replyText.trim().length > 0 ? '#2563EB' : '#93C5FD')
+          .backgroundColor(this.replyText.trim().length > 0 ? $r('app.color.accent') : $r('app.color.accent_soft'))
           .borderRadius(18)
           .onClick(() => {
             this.send();
@@ -332,7 +332,7 @@ export struct CommentSection {
     }
     .width('100%')
     .padding({ left: 16, right: 16, top: 16, bottom: 16 })
-    .backgroundColor('#FFFFFF')
+    .backgroundColor($r('app.color.card_bg'))
     .borderRadius(12)
   }
 }

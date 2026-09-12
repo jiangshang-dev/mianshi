@@ -407,11 +407,12 @@ export struct ProfilePage {
         .borderRadius(14)
 
         Column() {
-          if (this.memberEnabled) {
-            this.menuRow('member_title', 'member_sub', () => {
-              MemberGate.goMember();
-            })
-          }
+          // todo 会员中心 暂时隐藏
+          // if (this.memberEnabled) {
+          //   this.menuRow('member_title', 'member_sub', () => {
+          //     MemberGate.goMember();
+          //   })
+          // }
           this.menuRow('mall_title', 'mall_sub', () => {
             this.openNeedLogin(I18n.t('mall_title', this.lang), 'pages/mall/MallPage');
           })

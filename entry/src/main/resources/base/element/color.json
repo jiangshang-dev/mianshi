@@ -12,6 +12,7 @@
     { "name": "header_search_text", "value": "#64748B" },
     { "name": "chip_preview_bg", "value": "#F3F4F6" },
     { "name": "accent", "value": "#2563EB" },
+    { "name": "accent_soft", "value": "#93C5FD" },
     { "name": "text_on_color", "value": "#FFFFFF" },
     { "name": "chip_idle_bg", "value": "#F3F4F6" },
     { "name": "chip_idle_text", "value": "#374151" },
@@ -21,6 +22,11 @@
     { "name": "chevron", "value": "#9CA3AF" },
     { "name": "bubble_mine_bg", "value": "#DBEAFE" },
     { "name": "ai_badge_bg", "value": "#DBEAFE" },
-    { "name": "ai_badge_text", "value": "#1E3A8A" }
+    { "name": "ai_badge_text", "value": "#1E3A8A" },
+    { "name": "tag_bg", "value": "#F1F5F9" },
+    { "name": "danger", "value": "#DC2626" },
+    { "name": "warning_text", "value": "#B45309" },
+    { "name": "home_grad_start", "value": "#DCEBFF" },
+    { "name": "home_grad_mid", "value": "#EAF2FF" }
   ]
 }

@@ -278,8 +278,8 @@ struct ForumDetailPage {
     return content.indexOf(title) !== 0;
   }
 
-  private likeColor(on: boolean): string {
-    return on ? '#2563EB' : '#9CA3AF';
+  private likeColor(on: boolean): ResourceColor {
+    return on ? $r('app.color.accent') : $r('app.color.chevron');
   }
 
   private likePost(): void {
@@ -485,19 +485,19 @@ struct ForumDetailPage {
             .layoutWeight(1)
           Text(this.postFavored() ? '★' : '☆')
             .fontSize(22)
-            .fontColor(this.postFavored() ? '#F59E0B' : '#6B7280')
+            .fontColor(this.postFavored() ? '#F59E0B' : $r('app.color.text_muted'))
             .padding({ left: 10, right: 6 })
             .onClick(() => this.toggleFav())
           if (this.isMine()) {
             Text(I18n.t('delete', this.lang))
               .fontSize(14)
-              .fontColor('#DC2626')
+              .fontColor($r('app.color.danger'))
               .padding({ left: 8, top: 6, bottom: 6 })
               .onClick(() => this.confirmDelete())
           } else if (this.post !== null) {
             Text(I18n.t('content_report', this.lang))
               .fontSize(14)
-              .fontColor('#6B7280')
+              .fontColor($r('app.color.text_muted'))
               .padding({ left: 8, top: 6, bottom: 6 })
               .onClick(() => this.reportPost())
           }
@@ -590,35 +590,47 @@ struct ForumDetailPage {
           }
 
           Row({ space: 8 }) {
-            TextInput({ placeholder: this.replyPlaceholder(), text: this.replyText })
-              .layoutWeight(1)
-              .height(40)
-              .backgroundColor('#F3F4F6')
-              .borderRadius(20)
-              .padding({ left: 14, right: 14 })
-              .onChange((v: string) => {
-                this.replyText = v;
-              })
-            Image($r('app.media.ic_comment_emoji_line'))
-              .width(24)
-              .height(24)
-              .objectFit(ImageFit.Contain)
-              .fillColor(this.showEmoji ? '#2563EB' : '#9CA3AF')
-              .onClick(() => {
-                this.showEmoji = !this.showEmoji;
-              })
-            Button(this.sending ? I18n.t('forum_publishing', this.lang) : I18n.t('forum_publish', this.lang))
+            Row({ space: 8 }) {
+              TextInput({ placeholder: this.replyPlaceholder(), text: this.replyText })
+                .layoutWeight(1)
+                .height(36)
+                .backgroundColor('#00000000')
+                .fontColor($r('app.color.text_primary'))
+                .placeholderColor($r('app.color.chevron'))
+                .padding({ left: 0, right: 0 })
+                .onChange((v: string) => {
+                  this.replyText = v;
+                })
+              Image($r('app.media.ic_comment_emoji_line'))
+                .width(22)
+                .height(22)
+                .objectFit(ImageFit.Contain)
+                .fillColor(this.showEmoji ? $r('app.color.accent') : $r('app.color.chevron'))
+                .flexShrink(0)
+                .onClick(() => {
+                  this.showEmoji = !this.showEmoji;
+                })
+            }
+            .layoutWeight(1)
+            .height(40)
+            .padding({ left: 14, right: 12 })
+            .backgroundColor($r('app.color.chip_idle_bg'))
+            .borderRadius(20)
+            .alignItems(VerticalAlign.Center)
+
+            Button(this.sending ? I18n.t('forum_publishing', this.lang) : I18n.t('forum_send', this.lang))
               .height(36)
               .padding({ left: 14, right: 14 })
               .fontSize(14)
               .enabled(!this.sending)
-              .backgroundColor('#2563EB')
+              .backgroundColor(this.replyText.trim().length > 0 ? $r('app.color.accent') : $r('app.color.accent_soft'))
               .borderRadius(18)
               .onClick(() => this.sendReply())
           }
           .width('100%')
           .padding({ left: 12, right: 12, top: 8, bottom: 8 })
           .backgroundColor($r('app.color.card_bg'))
+          .alignItems(VerticalAlign.Center)
         }
       }
       .width('100%')
@@ -634,7 +646,7 @@ struct ForumDetailPage {
             .objectFit(ImageFit.Contain)
           Text(I18n.t('image_preview_close', this.lang))
             .fontSize(15)
-            .fontColor('#FFFFFF')
+            .fontColor($r('app.color.text_on_color'))
             .padding({ left: 16, right: 16, top: 46, bottom: 12 })
             .align(Alignment.TopStart)
             .onClick(() => {
@@ -667,14 +679,14 @@ struct ForumDetailPage {
               .maxLines(1)
             Text(I18n.t('forum_author', this.lang))
               .fontSize(10)
-              .fontColor('#FFFFFF')
-              .backgroundColor('#2563EB')
+              .fontColor($r('app.color.text_on_color'))
+              .backgroundColor($r('app.color.accent'))
               .padding({ left: 5, right: 5, top: 1, bottom: 1 })
               .borderRadius(4)
             if (this.postMember()) {
               Text('VIP')
                 .fontSize(10)
-                .fontColor('#FFFFFF')
+                .fontColor($r('app.color.text_on_color'))
                 .backgroundColor('#D97706')
                 .padding({ left: 5, right: 5, top: 1, bottom: 1 })
                 .borderRadius(4)
@@ -685,7 +697,7 @@ struct ForumDetailPage {
             `${ForumUi.relativeTime(this.postTime(), this.lang)} · ${this.postIp()}` :
             ForumUi.relativeTime(this.postTime(), this.lang))
             .fontSize(12)
-            .fontColor('#9CA3AF')
+            .fontColor($r('app.color.chevron'))
         }
         .layoutWeight(1)
         .alignItems(HorizontalAlign.Start)
@@ -693,10 +705,10 @@ struct ForumDetailPage {
         // if (!this.isMine()) {
         //   Text(I18n.t('forum_follow', this.lang))
         //     .fontSize(13)
-        //     .fontColor('#FFFFFF')
+        //     .fontColor($r('app.color.text_on_color'))
         //     .padding({ left: 12, right: 12, top: 6, bottom: 6 })
         //     .borderRadius(16)
-        //     .backgroundColor('#2563EB')
+        //     .backgroundColor($r('app.color.accent'))
         //     .onClick(() => this.followSoon())
         // }
       }
@@ -722,7 +734,7 @@ struct ForumDetailPage {
         if (this.post !== null && mallBool(this.post.featured)) {
           Text(I18n.t('forum_featured', this.lang))
             .fontSize(12)
-            .fontColor('#FFFFFF')
+            .fontColor($r('app.color.text_on_color'))
             .backgroundColor('#D97706')
             .padding({ left: 10, right: 10, top: 3, bottom: 3 })
             .borderRadius(12)
@@ -732,7 +744,7 @@ struct ForumDetailPage {
         Text(this.postHint().length > 0 ? this.postHint() :
           (this.postPending() ? I18n.t('forum_pending', this.lang) : I18n.t('forum_rejected', this.lang)))
           .fontSize(13)
-          .fontColor('#B45309')
+          .fontColor($r('app.color.warning_text'))
           .width('100%')
       }
       Text(this.postContent())
@@ -745,7 +757,7 @@ struct ForumDetailPage {
 
       Text(I18n.tf('forum_edited', this.postTime(), this.lang))
         .fontSize(12)
-        .fontColor('#9CA3AF')
+        .fontColor($r('app.color.chevron'))
         .width('100%')
 
       Row({ space: 18 }) {
@@ -754,20 +766,20 @@ struct ForumDetailPage {
             .width(16)
             .height(16)
             .objectFit(ImageFit.Contain)
-            .fillColor('#9CA3AF')
+            .fillColor($r('app.color.chevron'))
           Text(I18n.tf('forum_views', ForumUi.formatCount(this.postViewCount()), this.lang))
             .fontSize(13)
-            .fontColor('#6B7280')
+            .fontColor($r('app.color.text_muted'))
         }
         Row({ space: 4 }) {
           Image($r('app.media.ic_forum_comment'))
             .width(16)
             .height(16)
             .objectFit(ImageFit.Contain)
-            .fillColor('#9CA3AF')
+            .fillColor($r('app.color.chevron'))
           Text(I18n.tf('forum_comments', ForumUi.formatCount(this.postReplyCount()), this.lang))
             .fontSize(13)
-            .fontColor('#6B7280')
+            .fontColor($r('app.color.text_muted'))
         }
         Row({ space: 4 }) {
           Image($r('app.media.ic_comment_like'))
@@ -803,7 +815,7 @@ struct ForumDetailPage {
       Column() {
         Text(ForumUi.nickInitial(this.postNickname()))
           .fontSize(16)
-          .fontColor('#FFFFFF')
+          .fontColor($r('app.color.text_on_color'))
       }
       .width(44)
       .height(44)
@@ -839,7 +851,7 @@ struct ForumDetailPage {
                 Text(`+${this.imageExtra(url)}`)
                   .fontSize(20)
                   .fontWeight(FontWeight.Bold)
-                  .fontColor('#FFFFFF')
+                  .fontColor($r('app.color.text_on_color'))
               }
               .width('100%')
               .aspectRatio(1)
@@ -869,7 +881,7 @@ struct ForumDetailPage {
         .onClick(() => this.openAllReplies(''))
       Text(I18n.t('forum_sort_default', this.lang))
         .fontSize(13)
-        .fontColor(this.commentSort === 'default' ? '#2563EB' : '#6B7280')
+        .fontColor(this.commentSort === 'default' ? $r('app.color.accent') : $r('app.color.text_muted'))
         .padding({ left: 8, top: 4, bottom: 4 })
         .onClick(() => {
           if (this.commentSort === 'default') {
@@ -880,7 +892,7 @@ struct ForumDetailPage {
         })
       Text(I18n.t('forum_sort_latest', this.lang))
         .fontSize(13)
-        .fontColor(this.commentSort === 'latest' ? '#2563EB' : '#6B7280')
+        .fontColor(this.commentSort === 'latest' ? $r('app.color.accent') : $r('app.color.text_muted'))
         .padding({ left: 8, top: 4, bottom: 4 })
         .onClick(() => {
           if (this.commentSort === 'latest') {
@@ -949,7 +961,7 @@ struct ForumDetailPage {
           if (this.hiddenChildCount(thread) > 0) {
             Text(I18n.tf('forum_more_replies', `${thread.children.length}`, this.lang))
               .fontSize(13)
-              .fontColor('#2563EB')
+              .fontColor($r('app.color.accent'))
               .padding({ top: 2, bottom: 2 })
               .onClick(() => this.expandThread(thread))
           }
@@ -957,7 +969,7 @@ struct ForumDetailPage {
         .width('100%')
         .alignItems(HorizontalAlign.Start)
         .padding({ left: 12, top: 8, bottom: 4, right: 4 })
-        .backgroundColor('#F8FAFC')
+        .backgroundColor($r('app.color.preview_bg'))
         .borderRadius(8)
       }
     }

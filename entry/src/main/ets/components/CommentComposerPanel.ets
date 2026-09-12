@@ -171,11 +171,11 @@ export struct CommentComposerPanel {
           Row() {
             Text(`${I18n.t('comment_reply_ph', this.lang)}${this.replyToName}`)
               .fontSize(12)
-              .fontColor('#2563EB')
+              .fontColor($r('app.color.accent'))
               .layoutWeight(1)
             Text('×')
               .fontSize(16)
-              .fontColor('#9CA3AF')
+              .fontColor($r('app.color.chevron'))
               .onClick(() => {
                 CommentUi.setStr(CommentUi.REPLY_ID, '');
                 CommentUi.setStr(CommentUi.REPLY_NAME, '');
@@ -209,8 +209,8 @@ export struct CommentComposerPanel {
               .layoutWeight(1)
               .height(36)
               .backgroundColor('#00000000')
-              .fontColor('#111827')
-              .placeholderColor('#9CA3AF')
+              .fontColor($r('app.color.text_primary'))
+              .placeholderColor($r('app.color.chevron'))
               .padding({ left: 0, right: 0, top: 6, bottom: 6 })
               .maxLength(500)
               .defaultFocus(true)
@@ -231,7 +231,7 @@ export struct CommentComposerPanel {
               .width(22)
               .height(22)
               .objectFit(ImageFit.Contain)
-              .fillColor(this.showEmoji ? '#2563EB' : '#9CA3AF')
+              .fillColor(this.showEmoji ? $r('app.color.accent') : $r('app.color.chevron'))
               .flexShrink(0)
               .onClick(() => {
                 this.toggleEmoji();
@@ -240,17 +240,17 @@ export struct CommentComposerPanel {
           .layoutWeight(1)
           .height(40)
           .padding({ left: 14, right: 12 })
-          .backgroundColor('#F3F4F6')
+          .backgroundColor($r('app.color.chip_idle_bg'))
           .borderRadius(20)
           .alignItems(VerticalAlign.Center)
 
           Text(this.posting ? I18n.t('comment_posting', this.lang) : I18n.t('forum_send', this.lang))
             .fontSize(14)
-            .fontColor('#FFFFFF')
+            .fontColor($r('app.color.text_on_color'))
             .height(36)
             .padding({ left: 14, right: 14 })
             .borderRadius(18)
-            .backgroundColor(this.canPost() ? '#2563EB' : '#93C5FD')
+            .backgroundColor(this.canPost() ? $r('app.color.accent') : $r('app.color.accent_soft'))
             .textAlign(TextAlign.Center)
             .opacity(this.posting ? 0.7 : 1)
             .onClick(() => {
@@ -262,7 +262,7 @@ export struct CommentComposerPanel {
       }
       .width('100%')
       .padding({ left: 12, right: 12, top: 10, bottom: 10 })
-      .backgroundColor('#FFFFFF')
+      .backgroundColor($r('app.color.card_bg'))
       .borderRadius({ topLeft: 12, topRight: 12 })
       .shadow({ radius: 8, color: '#0F172A14', offsetY: -2 })
       .expandSafeArea([SafeAreaType.KEYBOARD], [SafeAreaEdge.BOTTOM])
