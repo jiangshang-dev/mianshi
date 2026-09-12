@@ -27,6 +27,16 @@
     { "name": "danger", "value": "#DC2626" },
     { "name": "warning_text", "value": "#B45309" },
     { "name": "home_grad_start", "value": "#DCEBFF" },
-    { "name": "home_grad_mid", "value": "#EAF2FF" }
+    { "name": "home_grad_mid", "value": "#EAF2FF" },
+    { "name": "book_cat_0", "value": "#DBEAFE" },
+    { "name": "book_cat_1", "value": "#DCFCE7" },
+    { "name": "book_cat_2", "value": "#EDE9FE" },
+    { "name": "book_cat_3", "value": "#FFEDD5" },
+    { "name": "book_cat_4", "value": "#FCE7F3" },
+    { "name": "book_cat_5", "value": "#E0F2FE" },
+    { "name": "book_cat_6", "value": "#FEF3C7" },
+    { "name": "book_cat_7", "value": "#E2E8F0" },
+    { "name": "book_cat_text", "value": "#0F172A" },
+    { "name": "book_cat_text_muted", "value": "#64748B" }
   ]
 }

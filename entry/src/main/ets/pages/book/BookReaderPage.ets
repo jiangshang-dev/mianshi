@@ -637,7 +637,7 @@ struct BookReaderPage {
               .layoutWeight(1)
             Text(I18n.t('book_toc', this.lang))
               .fontSize(14)
-              .fontColor('#2563EB')
+              .fontColor($r('app.color.accent'))
               .padding({ left: 10, right: 4, top: 4, bottom: 4 })
               .onClick(() => this.openToc())
           }
@@ -673,7 +673,7 @@ struct BookReaderPage {
           .padding({ left: 8, right: 16 })
         }
         .width('100%')
-        .backgroundColor('#FFFFFF')
+        .backgroundColor($r('app.color.card_bg'))
 
         Stack() {
           if (this.ready) {
@@ -692,7 +692,7 @@ struct BookReaderPage {
           if (this.loading || !this.ready) {
             Column({ space: 10 }) {
               if (this.loading) {
-                LoadingProgress().width(40).height(40).color('#2563EB')
+                LoadingProgress().width(40).height(40).color($r('app.color.accent'))
               }
               Text(this.hint.length > 0 ? this.hint : I18n.t('book_opening', this.lang))
                 .fontSize(13)
@@ -706,7 +706,7 @@ struct BookReaderPage {
         }
         .layoutWeight(1)
         .width('100%')
-        .backgroundColor('#F8FAFC')
+        .backgroundColor($r('app.color.page_bg'))
         .clip(true)
         .onAreaChange((_o: Area, n: Area) => {
           const w = Number(n.width);
@@ -737,7 +737,7 @@ struct BookReaderPage {
       }
       .width('100%')
       .height('100%')
-      .backgroundColor('#FFFFFF')
+      .backgroundColor($r('app.color.page_bg'))
 
       if (this.tocOpen) {
         Row() {
@@ -778,7 +778,7 @@ struct BookReaderPage {
                         Column({ space: 4 }) {
                           Text(item.title)
                             .fontSize(14)
-                            .fontColor(this.pageIndex === item.pageIndex ? '#2563EB' : $r('app.color.text_primary'))
+                            .fontColor(this.pageIndex === item.pageIndex ? $r('app.color.accent') : $r('app.color.text_primary'))
                             .fontWeight(this.pageIndex === item.pageIndex ? FontWeight.Medium : FontWeight.Regular)
                             .maxLines(2)
                             .textOverflow({ overflow: TextOverflow.Ellipsis })
@@ -792,7 +792,7 @@ struct BookReaderPage {
                       }
                       .width('100%')
                       .padding({ left: 16, right: 16, top: 12, bottom: 12 })
-                      .backgroundColor(this.pageIndex === item.pageIndex ? '#EFF6FF' : Color.Transparent)
+                      .backgroundColor(this.pageIndex === item.pageIndex ? $r('app.color.ai_badge_bg') : Color.Transparent)
                       .onClick(() => this.jumpToc(item))
                     }
                   }, (item: BookTocItem, idx: number) => `${idx}-${item.pageIndex}-${item.title}`)
@@ -808,7 +808,7 @@ struct BookReaderPage {
           }
           .width('78%')
           .height('100%')
-          .backgroundColor('#FFFFFF')
+          .backgroundColor($r('app.color.card_bg'))
         }
         .width('100%')
         .height('100%')

@@ -178,9 +178,26 @@ export struct BookPage {
     return icon.length > 0 ? icon : '📘';
   }
 
-  private catBg(index: number): string {
-    const colors: string[] = ['#DBEAFE', '#DCFCE7', '#EDE9FE', '#FFEDD5', '#FCE7F3', '#E0F2FE', '#FEF3C7', '#E2E8F0'];
+  private catBg(index: number): ResourceColor {
+    const colors: ResourceColor[] = [
+      $r('app.color.book_cat_0'),
+      $r('app.color.book_cat_1'),
+      $r('app.color.book_cat_2'),
+      $r('app.color.book_cat_3'),
+      $r('app.color.book_cat_4'),
+      $r('app.color.book_cat_5'),
+      $r('app.color.book_cat_6'),
+      $r('app.color.book_cat_7')
+    ];
     return colors[index % colors.length];
+  }
+
+  private catFg(): ResourceColor {
+    return $r('app.color.book_cat_text');
+  }
+
+  private catFgMuted(): ResourceColor {
+    return $r('app.color.book_cat_text_muted');
   }
 
   @Builder
@@ -255,11 +272,11 @@ export struct BookPage {
                 Text(this.catIcon(cat)).fontSize(20)
                 Text(mallStr(cat.name))
                   .fontSize(12)
-                  .fontColor($r('app.color.text_primary'))
+                  .fontColor(this.catFg())
                   .maxLines(1)
                 Text(I18n.tf('book_count_n', `${mallNum(cat.bookCount)}`, this.lang))
                   .fontSize(10)
-                  .fontColor($r('app.color.text_muted'))
+                  .fontColor(this.catFgMuted())
               }
               .width('100%')
               .padding({ top: 12, bottom: 12 })
