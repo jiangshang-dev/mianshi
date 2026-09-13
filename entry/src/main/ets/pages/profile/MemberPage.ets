@@ -4,6 +4,7 @@ import { I18n } from '../../common/i18n/I18n';
 import { MemberMe, MemberPlan, MemberQuota } from '../../common/models/MemberTypes';
 import { IapService } from '../../common/utils/IapService';
 import { LoginGate } from '../../common/utils/LoginGate';
+import { MemberGate } from '../../common/utils/MemberGate';
 import { MemberRepository } from '../../data/repository/MemberRepository';
 import { MemberBadge } from '../../components/MemberBadge';
 
@@ -112,9 +113,14 @@ struct MemberPage {
       return I18n.t('member_hero_life', this.lang);
     }
     if (snap.expireTime !== undefined && snap.expireTime > 0) {
-      const d = new Date(snap.expireTime);
-      const date = `${d.getFullYear()}-${this.datePad(d.getMonth() + 1)}-${this.datePad(d.getDate())}`;
-      return I18n.tf('member_until', date, this.lang);
+      const ms = MemberGate.parseExpireMs(snap.expireTime as number | string);
+      if (ms > 0) {
+        const d = new Date(ms);
+        if (!isNaN(d.getTime())) {
+          const date = `${d.getFullYear()}-${this.datePad(d.getMonth() + 1)}-${this.datePad(d.getDate())}`;
+          return I18n.tf('member_until', date, this.lang);
+        }
+      }
     }
     return I18n.t('member_hero_on', this.lang);
   }

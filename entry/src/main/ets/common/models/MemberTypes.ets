@@ -27,7 +27,8 @@ export interface MemberMe {
   memberEnabled?: boolean;
   planCode: string;
   planName: string;
-  expireTime?: number;
+  /** 后端 Long，JSON 可能是 number 或 string */
+  expireTime?: number | string;
   questionAi: MemberQuota | null;
   interviewAi: MemberQuota | null;
   plans: MemberPlan[];

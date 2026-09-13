@@ -41,6 +41,7 @@ export default class EntryAbility extends UIAbility {
     AppStorage.setOrCreate('isMember', false);
     AppStorage.setOrCreate('isLifetimeMember', false);
     AppStorage.setOrCreate('memberPlanName', '');
+    AppStorage.setOrCreate('memberExpireTime', 0);
     AppStorage.setOrCreate('userPoints', 0);
     AppStorage.setOrCreate('userTodayChecked', false);
     AppStorage.setOrCreate('userCheckinStreak', 0);

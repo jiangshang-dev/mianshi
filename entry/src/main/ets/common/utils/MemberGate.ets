@@ -14,6 +14,7 @@ export class MemberGate {
   static readonly IS_MEMBER: string = 'isMember';
   static readonly LIFETIME: string = 'isLifetimeMember';
   static readonly PLAN_NAME: string = 'memberPlanName';
+  static readonly EXPIRE_TIME: string = 'memberExpireTime';
 
   static isEnabled(): boolean {
     const v = AppStorage.get(MemberGate.ENABLED) as boolean;
@@ -32,15 +33,30 @@ export class MemberGate {
     CommentUi.setBool(MemberGate.IS_MEMBER, me !== null && me.member);
     CommentUi.setBool(MemberGate.LIFETIME, me !== null && me.lifetime);
     CommentUi.setStr(MemberGate.PLAN_NAME, me !== null && me.planName.length > 0 ? me.planName : '');
+    CommentUi.setNum(MemberGate.EXPIRE_TIME, MemberGate.parseExpireMs(me !== null ? me.expireTime : undefined));
     if (me !== null && me.memberEnabled !== undefined) {
       CommentUi.setBool(MemberGate.ENABLED, me.memberEnabled !== false);
     }
+  }
+
+  /** JSON 里 Long 常变成字符串，必须 Number 后再给 Date，否则会 NaN-NaN-NaN */
+  static parseExpireMs(raw: number | string | undefined | null): number {
+    if (raw === undefined || raw === null) {
+      return 0;
+    }
+    const n = typeof raw === 'number' ? raw : Number(`${raw}`.trim());
+    if (isNaN(n) || n <= 0) {
+      return 0;
+    }
+    // 兼容秒级时间戳
+    return n < 1000000000000 ? n * 1000 : n;
   }
 
   static clearMember(): void {
     CommentUi.setBool(MemberGate.IS_MEMBER, false);
     CommentUi.setBool(MemberGate.LIFETIME, false);
     CommentUi.setStr(MemberGate.PLAN_NAME, '');
+    CommentUi.setNum(MemberGate.EXPIRE_TIME, 0);
   }
 
   static isQuotaError(text: string): boolean {

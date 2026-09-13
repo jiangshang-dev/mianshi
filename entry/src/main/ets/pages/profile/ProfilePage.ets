@@ -25,6 +25,9 @@ export struct ProfilePage {
   @StorageLink('questionAiEnabled') questionAiEnabled: boolean = true;
   @StorageLink('interviewAiEnabled') interviewAiEnabled: boolean = true;
   @StorageLink('memberEnabled') memberEnabled: boolean = true;
+  @StorageLink('isMember') isMember: boolean = false;
+  @StorageLink('isLifetimeMember') isLifetimeMember: boolean = false;
+  @StorageLink('memberExpireTime') memberExpireTime: number = 0;
   @StorageLink('userPoints') userPoints: number = 0;
   @StorageLink('userTodayChecked') todayChecked: boolean = false;
   @StorageLink('userCheckinStreak') checkinStreak: number = 0;
@@ -143,6 +146,29 @@ export struct ProfilePage {
     return I18n.tf2('uc_checkin_sub', `${this.checkinStreak}`, `${this.todayReward}`, this.lang);
   }
 
+  private memberExpireLine(): string {
+    if (this.isLifetimeMember) {
+      return I18n.t('member_badge_life', this.lang);
+    }
+    const ms = MemberGate.parseExpireMs(this.memberExpireTime as number | string);
+    if (ms <= 0) {
+      return I18n.t('member_badge_life', this.lang);
+    }
+    const d = new Date(ms);
+    if (isNaN(d.getTime())) {
+      return I18n.t('member_badge', this.lang);
+    }
+    return I18n.tf('member_until', this.padDate(d), this.lang);
+  }
+
+  private padDate(d: Date): string {
+    const m = d.getMonth() + 1;
+    const day = d.getDate();
+    const ms = m < 10 ? `0${m}` : `${m}`;
+    const ds = day < 10 ? `0${day}` : `${day}`;
+    return `${d.getFullYear()}-${ms}-${ds}`;
+  }
+
   private async doCheckin(): Promise<void> {
     if (!this.isLoggedIn) {
       this.goLogin();
@@ -254,6 +280,11 @@ export struct ProfilePage {
             Text(this.isLoggedIn ? I18n.t('huawei_on', this.lang) : I18n.t('tap_login', this.lang))
               .fontSize(12)
               .fontColor($r('app.color.text_muted'))
+            if (this.isLoggedIn && this.memberEnabled && this.isMember) {
+              Text(this.memberExpireLine())
+                .fontSize(11)
+                .fontColor('#B45309')
+            }
             if (this.isLoggedIn) {
               Text(I18n.tf('uc_profile_points', `${this.userPoints}`, this.lang))
                 .fontSize(12)

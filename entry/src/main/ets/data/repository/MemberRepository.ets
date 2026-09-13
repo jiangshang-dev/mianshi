@@ -65,6 +65,9 @@ export class MemberRepository {
         throw new Error(parsed.message !== undefined ? parsed.message : '请求失败');
       }
       const result = parsed.result !== undefined ? parsed.result : null;
+      if (result !== null) {
+        result.expireTime = MemberGate.parseExpireMs(result.expireTime);
+      }
       MemberGate.applyMe(result);
       return result;
     } catch (e) {
