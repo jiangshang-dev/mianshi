@@ -105,9 +105,13 @@ export struct ProfilePage {
             'scene': scene,
             'title': pageTitle
           }
+        }).catch(() => {
+          promptAction.showToast({ message: I18n.t('cs_open_fail', this.lang) });
         });
       } else {
-        router.pushUrl({ url: url });
+        router.pushUrl({ url: url }).catch(() => {
+          promptAction.showToast({ message: I18n.t('cs_open_fail', this.lang) });
+        });
       }
     });
   }
@@ -446,6 +450,9 @@ export struct ProfilePage {
           // }
           this.menuRow('mall_title', 'mall_sub', () => {
             this.openNeedLogin(I18n.t('mall_title', this.lang), 'pages/mall/MallPage');
+          })
+          this.menuRow('cs_title', 'cs_sub', () => {
+            this.openNeedLogin(I18n.t('cs_title', this.lang), 'pages/profile/CustomerServicePage');
           })
           if (this.questionAiEnabled) {
             this.menuRow('ai_qa', 'ai_qa_sub', () => {

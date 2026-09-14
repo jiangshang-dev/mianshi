@@ -10,6 +10,7 @@
     "pages/interview/InterviewSessionPage",
     "pages/profile/LoginPage",
     "pages/profile/SettingsPage",
+    "pages/profile/CustomerServicePage",
     "pages/profile/LegalPage",
     "pages/profile/LanguagePage",
     "pages/profile/ThemePage",

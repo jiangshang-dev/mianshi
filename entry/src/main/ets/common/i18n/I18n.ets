@@ -507,6 +507,16 @@ export class I18n {
     I18n.put('cache_cleared', '缓存已清除', '快取已清除', 'Cache cleared');
     I18n.put('feedback', '意见反馈', '意見回饋', 'Feedback');
     I18n.put('feedback_sub', '功能建议、内容纠错', '功能建議、內容糾錯', 'Suggestions and corrections');
+    I18n.put('cs_title', '在线客服', '線上客服', 'Support');
+    I18n.put('cs_sub', '实时咨询会员与订单问题', '即時諮詢會員與訂單問題', 'Chat with support');
+    I18n.put('cs_loading', '正在接入客服…', '正在接入客服…', 'Connecting…');
+    I18n.put('cs_hint', '请描述您的问题', '請描述您的問題', 'Describe your issue');
+    I18n.put('cs_send', '发送', '發送', 'Send');
+    I18n.put('cs_queue', '客服排队中', '客服排隊中', 'Waiting for agent');
+    I18n.put('cs_agent', '客服', '客服', 'Agent');
+    I18n.put('cs_closed', '会话已结束', '會話已結束', 'Chat closed');
+    I18n.put('cs_open_fail', '打开客服失败', '打開客服失敗', 'Failed to open chat');
+    I18n.put('cs_send_fail', '发送失败', '發送失敗', 'Send failed');
     I18n.put('feedback_type', '反馈类型', '回饋類型', 'Type');
     I18n.put('feedback_content', '反馈内容', '回饋內容', 'Details');
     I18n.put('feedback_hint', '请尽量说明复现步骤或期望', '請盡量說明重現步驟或期望', 'Describe steps or what you expected');
