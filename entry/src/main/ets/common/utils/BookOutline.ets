@@ -1,8 +1,12 @@
 import { pdfService } from '@kit.PDFKit';
 import { BookTocItem } from '../models/BookTypes';
 
+/**
+ * 只解析 PDF 书签大纲。
+ * 大 PDF 禁止逐页扫文字标题（会卡死/OOM）。
+ */
 export class BookOutline {
-  static load(path: string, pageLabel: (pageNo: number) => string): BookTocItem[] {
+  static load(path: string, _pageLabel: (pageNo: number) => string): BookTocItem[] {
     const items: BookTocItem[] = [];
     const doc: pdfService.PdfDocument = new pdfService.PdfDocument();
     try {
@@ -11,9 +15,6 @@ export class BookOutline {
         return items;
       }
       BookOutline.collectBookmarks(doc, items);
-      if (items.length === 0) {
-        BookOutline.collectPageTitles(doc, items, pageLabel);
-      }
     } catch (_e) {
     } finally {
       try {
@@ -62,68 +63,20 @@ export class BookOutline {
         const item: BookTocItem = { title: title, pageIndex: page, level: level };
         out.push(item);
       }
-      if (mark.hasChild()) {
+      if (out.length >= 800) {
+        return;
+      }
+      if (level < 6 && mark.hasChild()) {
         const kids = mark.getChildren();
         for (let i = 0; i < kids.length; i++) {
           BookOutline.walkBookmark(kids[i], level + 1, out);
+          if (out.length >= 800) {
+            return;
+          }
         }
       }
     } catch (_e) {
     }
-  }
-
-  private static collectPageTitles(doc: pdfService.PdfDocument, out: BookTocItem[],
-    pageLabel: (pageNo: number) => string): void {
-    let count = 0;
-    try {
-      count = doc.getPageCount();
-    } catch (_e) {
-      return;
-    }
-    for (let i = 0; i < count; i++) {
-      let title = '';
-      try {
-        const page = doc.getPage(i);
-        try {
-          title = BookOutline.pageHeading(page);
-        } finally {
-          page.release();
-        }
-      } catch (_e) {
-      }
-      if (title.length === 0) {
-        title = pageLabel(i + 1);
-      }
-      const item: BookTocItem = { title: title, pageIndex: i, level: 0 };
-      out.push(item);
-    }
-  }
-
-  private static pageHeading(page: pdfService.PdfPage): string {
-    let best = '';
-    let bestScore = -1;
-    try {
-      const objs = page.getGraphicsObjects();
-      const limit = objs.length > 48 ? 48 : objs.length;
-      for (let i = 0; i < limit; i++) {
-        const obj = objs[i];
-        if (obj.type !== pdfService.GraphicsObjectType.OBJECT_TEXT) {
-          continue;
-        }
-        const textObj = obj as pdfService.TextObject;
-        const title = BookOutline.cleanTitle(textObj.text);
-        if (title.length < 2) {
-          continue;
-        }
-        const score = textObj.textSize * 1000 + textObj.y;
-        if (score > bestScore) {
-          bestScore = score;
-          best = title;
-        }
-      }
-    } catch (_e) {
-    }
-    return best;
   }
 
   private static cleanTitle(raw: string): string {
@@ -144,7 +97,7 @@ export class BookOutline {
       }
       space = false;
       out += ch;
-      if (out.length >= 36) {
+      if (out.length >= 48) {
         break;
       }
     }

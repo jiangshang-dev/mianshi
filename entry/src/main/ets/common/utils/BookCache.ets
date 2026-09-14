@@ -33,16 +33,28 @@ export class BookCache {
   }
 
   static copyFile(src: string, dest: string): boolean {
+    // 优先系统拷贝，避免整文件进内存
+    try {
+      fileIo.copyFileSync(src, dest);
+      return true;
+    } catch (_e) {
+    }
+    // 分块读写兜底
     try {
       const srcFile = fileIo.openSync(src, fileIo.OpenMode.READ_ONLY);
       try {
-        const stat = fileIo.statSync(srcFile.fd);
-        const buffer = new ArrayBuffer(stat.size);
-        fileIo.readSync(srcFile.fd, buffer);
         const destFile = fileIo.openSync(dest,
           fileIo.OpenMode.READ_WRITE | fileIo.OpenMode.CREATE | fileIo.OpenMode.TRUNC);
         try {
-          fileIo.writeSync(destFile.fd, buffer);
+          const bufSize = 1024 * 1024;
+          const buffer = new ArrayBuffer(bufSize);
+          let offset = 0;
+          let len = fileIo.readSync(srcFile.fd, buffer, { offset: offset, length: bufSize });
+          while (len > 0) {
+            fileIo.writeSync(destFile.fd, buffer, { length: len });
+            offset += len;
+            len = fileIo.readSync(srcFile.fd, buffer, { offset: offset, length: bufSize });
+          }
         } finally {
           fileIo.closeSync(destFile);
         }

@@ -47,6 +47,8 @@ struct BookReaderPage {
   private flipToken: number = 0;
   private flipApplied: boolean = false;
   private zoomUiToken: number = 0;
+  /** 大 PDF 关闭翻页截屏动画，避免 PixelMap OOM / 卡死 */
+  private flipAnimEnabled: boolean = false;
 
   aboutToAppear(): void {
     const params = router.getParams() as BookReaderParams;
@@ -71,6 +73,10 @@ struct BookReaderPage {
     }
     this.loading = true;
     this.hint = I18n.t('book_opening', this.lang);
+    this.toc = [];
+    this.tocOpen = false;
+    this.flipAnimEnabled = false;
+    this.clearFlip(true);
     let local = '';
     try {
       const ctx = getContext(this) as common.UIAbilityContext;
@@ -80,7 +86,9 @@ struct BookReaderPage {
       if (fileUrl.length === 0) {
         throw new Error('empty');
       }
+      this.hint = I18n.t('book_opening', this.lang);
       local = await BookCache.ensureFile(ctx, this.bookId, fileUrl);
+      this.hint = I18n.t('book_opening', this.lang);
       const saved = await BookCache.loadProgress(ctx, this.bookId);
       let start = mallNum(detail.lastPage, -1);
       if (start < 0) {
@@ -91,9 +99,7 @@ struct BookReaderPage {
       }
       this.controller.registerPageCountChangedListener((count: number) => {
         this.pageCount = count;
-        if (this.toc.length === 0 && count > 0) {
-          this.toc = this.fallbackToc();
-        }
+        this.flipAnimEnabled = count > 0 && count <= 40;
       });
       this.controller.registerPageChangedListener((index: number) => {
         if (index >= 0 && !this.flipBusy) {
@@ -123,6 +129,7 @@ struct BookReaderPage {
         const count = this.controller.getPageCount();
         if (count > 0) {
           this.pageCount = count;
+          this.flipAnimEnabled = count <= 40;
         }
         const index = this.controller.getPageIndex();
         if (index >= 0) {
@@ -132,12 +139,9 @@ struct BookReaderPage {
       }
       this.lastSaved = this.pageIndex;
       this.ready = true;
-      if (this.toc.length === 0) {
-        this.toc = this.fallbackToc();
-      }
       // 首帧布局完成后再锁一次适配比例，避免 FIT_PAGE 与重建互相打架
       this.scheduleFitLock();
-      this.loadTocLater(ctx, local);
+      this.loadTocLater(local);
     } catch (_e) {
       this.ready = false;
       this.hint = I18n.t('book_open_fail', this.lang);
@@ -146,33 +150,37 @@ struct BookReaderPage {
     }
   }
 
-  private loadTocLater(ctx: common.UIAbilityContext, local: string): void {
+  private loadTocLater(local: string): void {
     const bookId = this.bookId;
+    // 延后解析书签，不挡首屏；不再整本复制 + 逐页扫字
     setTimeout(() => {
       if (this.bookId !== bookId) {
         return;
       }
-      const copyPath = `${ctx.cacheDir}/book_ol_${bookId}`;
-      BookCache.removeFile(copyPath);
-      if (!BookCache.copyFile(local, copyPath)) {
-        return;
-      }
       try {
-        const items = BookOutline.load(copyPath, (pageNo: number) => {
+        const items = BookOutline.load(local, (pageNo: number) => {
           return I18n.tf('book_page_n', `${pageNo}`, this.lang);
         });
         if (items.length > 0) {
           this.toc = items;
+          return;
         }
       } catch (_e) {
       }
-      BookCache.removeFile(copyPath);
-    }, 400);
+      // 无书签时用轻量页码目录（不扫页面内容）
+      if (this.toc.length === 0) {
+        this.toc = this.fallbackToc();
+      }
+    }, 600);
   }
 
   private fallbackToc(): BookTocItem[] {
     const items: BookTocItem[] = [];
-    for (let i = 0; i < this.pageCount; i++) {
+    const count = this.pageCount;
+    if (count <= 0) {
+      return items;
+    }
+    for (let i = 0; i < count; i++) {
       const item: BookTocItem = {
         title: I18n.tf('book_page_n', `${i + 1}`, this.lang),
         pageIndex: i,
@@ -194,7 +202,21 @@ struct BookReaderPage {
     return this.ready && !this.flipBusy && this.safeZoom() <= this.safeFit() * 1.12;
   }
 
+  private turnPage(next: boolean): void {
+    const target = next ? this.pageIndex + 1 : this.pageIndex - 1;
+    if (target < 0) {
+      return;
+    }
+    if (this.pageCount > 0 && target >= this.pageCount) {
+      return;
+    }
+    this.refreshPdf(target);
+  }
+
   private capturePage(): image.PixelMap | undefined {
+    if (!this.flipAnimEnabled) {
+      return undefined;
+    }
     try {
       return componentSnapshot.getSync('book_pdf_view');
     } catch (_e) {
@@ -245,6 +267,9 @@ struct BookReaderPage {
   }
 
   private beginFlip(next: boolean): boolean {
+    if (!this.flipAnimEnabled) {
+      return false;
+    }
     if (this.flipBusy && !this.flipDragging) {
       return false;
     }
@@ -273,6 +298,9 @@ struct BookReaderPage {
   }
 
   private applyFlipDrag(offsetX: number): void {
+    if (!this.flipAnimEnabled) {
+      return;
+    }
     if (!this.canSwipePage() && !this.flipDragging) {
       return;
     }
@@ -289,20 +317,21 @@ struct BookReaderPage {
     }
     const span = Math.max(this.viewW * 0.62, 180);
     const progress = Math.min(dist / span, 1);
-    // 最大约 70°，避免纸面完全立起盖住底层 PDF
     const angle = progress * 70;
     this.flipAngle = this.flipNext ? -angle : angle;
   }
 
   private finishFlipDrag(offsetX: number, velocityX: number): void {
+    if (!this.flipAnimEnabled) {
+      if (Math.abs(offsetX) >= 48 && this.canSwipePage()) {
+        this.turnPage(offsetX < 0);
+      }
+      return;
+    }
     if (!this.flipDragging || !this.flipOn) {
       this.flipDragging = false;
       if (Math.abs(offsetX) >= 48 && this.canSwipePage()) {
-        if (offsetX < 0) {
-          this.flipToNeighbor(true);
-        } else {
-          this.flipToNeighbor(false);
-        }
+        this.turnPage(offsetX < 0);
       }
       return;
     }
@@ -389,12 +418,8 @@ struct BookReaderPage {
   }
 
   private flipToNeighbor(next: boolean): void {
-    if (!this.beginFlip(next)) {
-      if (next) {
-        this.refreshPdf(this.pageIndex + 1);
-      } else {
-        this.refreshPdf(this.pageIndex - 1);
-      }
+    if (!this.flipAnimEnabled || !this.beginFlip(next)) {
+      this.turnPage(next);
       return;
     }
     this.flipDragging = false;
@@ -403,6 +428,7 @@ struct BookReaderPage {
   }
 
   private applyPage(index: number): void {
+    this.clearFlip(true);
     this.refreshPdf(index);
   }
 
@@ -410,7 +436,7 @@ struct BookReaderPage {
     if (!this.ready || this.pageIndex <= 0) {
       return;
     }
-    this.flipToNeighbor(false);
+    this.turnPage(false);
   }
 
   private nextPage(): void {
@@ -420,7 +446,7 @@ struct BookReaderPage {
     if (this.pageCount > 0 && this.pageIndex >= this.pageCount - 1) {
       return;
     }
-    this.flipToNeighbor(true);
+    this.turnPage(true);
   }
 
   private goPage(index: number): void {
@@ -430,15 +456,17 @@ struct BookReaderPage {
     if (this.pageCount > 0 && index >= this.pageCount) {
       return;
     }
-    if (index === this.pageIndex + 1) {
-      this.flipToNeighbor(true);
-      return;
-    }
-    if (index === this.pageIndex - 1) {
-      this.flipToNeighbor(false);
-      return;
-    }
     this.applyPage(index);
+  }
+
+  private openToc(): void {
+    if (!this.ready) {
+      return;
+    }
+    if (this.toc.length === 0) {
+      this.toc = this.fallbackToc();
+    }
+    this.tocOpen = true;
   }
 
   private isValidZoom(value: number): boolean {
@@ -582,13 +610,6 @@ struct BookReaderPage {
     } catch (_e) {
     }
     return 1;
-  }
-
-  private openToc(): void {
-    if (!this.ready) {
-      return;
-    }
-    this.tocOpen = true;
   }
 
   private jumpToc(item: BookTocItem): void {
