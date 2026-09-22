@@ -1,9 +1,9 @@
 import { common } from '@kit.AbilityKit';
-import { componentSnapshot, router } from '@kit.ArkUI';
+import { componentSnapshot, promptAction, router } from '@kit.ArkUI';
 import { image } from '@kit.ImageKit';
 import { pdfService, PdfView, pdfViewManager } from '@kit.PDFKit';
 import { I18n } from '../../common/i18n/I18n';
-import { BookItem, BookTocItem } from '../../common/models/BookTypes';
+import { BookBookmark, BookItem, BookTocItem } from '../../common/models/BookTypes';
 import { mallNum, mallStr } from '../../common/models/MallTypes';
 import { BookCache } from '../../common/utils/BookCache';
 import { BookMedia } from '../../common/utils/BookMedia';
@@ -28,6 +28,10 @@ struct BookReaderPage {
   @State private zoomLabel: string = '100%';
   @State private tocOpen: boolean = false;
   @State private toc: BookTocItem[] = [];
+  @State private bookmarkOpen: boolean = false;
+  @State private bookmarkAddOpen: boolean = false;
+  @State private bookmarks: BookBookmark[] = [];
+  @State private bookmarkDraft: string = '';
   @State private flipOn: boolean = false;
   @State private flipAngle: number = 0;
   @State private flipNext: boolean = true;
@@ -75,6 +79,10 @@ struct BookReaderPage {
     this.hint = I18n.t('book_opening', this.lang);
     this.toc = [];
     this.tocOpen = false;
+    this.bookmarkOpen = false;
+    this.bookmarkAddOpen = false;
+    this.bookmarks = [];
+    this.bookmarkDraft = '';
     this.flipAnimEnabled = false;
     this.clearFlip(true);
     let local = '';
@@ -88,6 +96,7 @@ struct BookReaderPage {
       }
       this.hint = I18n.t('book_opening', this.lang);
       local = await BookCache.ensureFile(ctx, this.bookId, fileUrl);
+      this.bookmarks = await BookCache.loadBookmarks(ctx, this.bookId);
       this.hint = I18n.t('book_opening', this.lang);
       const saved = await BookCache.loadProgress(ctx, this.bookId);
       let start = mallNum(detail.lastPage, -1);
@@ -466,7 +475,91 @@ struct BookReaderPage {
     if (this.toc.length === 0) {
       this.toc = this.fallbackToc();
     }
+    this.bookmarkOpen = false;
+    this.bookmarkAddOpen = false;
     this.tocOpen = true;
+  }
+
+  private openBookmarks(): void {
+    if (!this.ready) {
+      return;
+    }
+    this.tocOpen = false;
+    this.bookmarkAddOpen = false;
+    this.bookmarkOpen = true;
+    void this.reloadBookmarks();
+  }
+
+  private async reloadBookmarks(): Promise<void> {
+    if (this.bookId.length === 0) {
+      return;
+    }
+    try {
+      const ctx = getContext(this) as common.UIAbilityContext;
+      this.bookmarks = await BookCache.loadBookmarks(ctx, this.bookId);
+    } catch (_e) {
+    }
+  }
+
+  /** 取当前页最近章节名作为默认书签名 */
+  private suggestBookmarkTitle(): string {
+    let best: BookTocItem | null = null;
+    for (let i = 0; i < this.toc.length; i++) {
+      const item = this.toc[i];
+      if (item.pageIndex > this.pageIndex) {
+        break;
+      }
+      const looksLikePage = /^第\s*\d+\s*页$/.test(item.title) || /^Page\s*\d+$/i.test(item.title);
+      if (looksLikePage) {
+        continue;
+      }
+      best = item;
+    }
+    if (best !== null && best.title.length > 0) {
+      return best.title;
+    }
+    return I18n.tf('book_page_n', `${this.pageIndex + 1}`, this.lang);
+  }
+
+  private openAddBookmark(): void {
+    if (!this.ready) {
+      return;
+    }
+    if (this.toc.length === 0) {
+      this.toc = this.fallbackToc();
+    }
+    this.bookmarkDraft = this.suggestBookmarkTitle();
+    this.bookmarkAddOpen = true;
+  }
+
+  private async saveBookmark(): Promise<void> {
+    if (this.bookId.length === 0) {
+      return;
+    }
+    try {
+      const ctx = getContext(this) as common.UIAbilityContext;
+      this.bookmarks = await BookCache.addBookmark(ctx, this.bookId, this.bookmarkDraft, this.pageIndex);
+      this.bookmarkAddOpen = false;
+      promptAction.showToast({ message: I18n.t('book_bookmark_ok', this.lang) });
+    } catch (_e) {
+    }
+  }
+
+  private async deleteBookmark(id: string): Promise<void> {
+    if (this.bookId.length === 0) {
+      return;
+    }
+    try {
+      const ctx = getContext(this) as common.UIAbilityContext;
+      this.bookmarks = await BookCache.removeBookmark(ctx, this.bookId, id);
+    } catch (_e) {
+    }
+  }
+
+  private jumpBookmark(item: BookBookmark): void {
+    this.bookmarkOpen = false;
+    this.bookmarkAddOpen = false;
+    this.goPage(item.pageIndex);
   }
 
   private isValidZoom(value: number): boolean {
@@ -731,10 +824,15 @@ struct BookReaderPage {
               .maxLines(1)
               .textOverflow({ overflow: TextOverflow.Ellipsis })
               .layoutWeight(1)
+            Text(I18n.t('book_bookmark', this.lang))
+              .fontSize(14)
+              .fontColor($r('app.color.accent'))
+              .padding({ left: 8, right: 4, top: 4, bottom: 4 })
+              .onClick(() => this.openBookmarks())
             Text(I18n.t('book_toc', this.lang))
               .fontSize(14)
               .fontColor($r('app.color.accent'))
-              .padding({ left: 10, right: 4, top: 4, bottom: 4 })
+              .padding({ left: 6, right: 4, top: 4, bottom: 4 })
               .onClick(() => this.openToc())
           }
           .width('100%')
@@ -912,6 +1010,131 @@ struct BookReaderPage {
                       .onClick(() => this.jumpToc(item))
                     }
                   }, (item: BookTocItem, idx: number) => `${idx}-${item.pageIndex}-${item.title}`)
+                }
+                .width('100%')
+                .layoutWeight(1)
+                .scrollBar(BarState.Off)
+                .edgeEffect(EdgeEffect.Spring)
+              }
+            }
+            .width('100%')
+            .layoutWeight(1)
+          }
+          .width('78%')
+          .height('100%')
+          .backgroundColor($r('app.color.card_bg'))
+        }
+        .width('100%')
+        .height('100%')
+        .backgroundColor('#66000000')
+      }
+
+      if (this.bookmarkOpen) {
+        Row() {
+          Column()
+            .layoutWeight(1)
+            .height('100%')
+            .onClick(() => {
+              this.bookmarkOpen = false;
+              this.bookmarkAddOpen = false;
+            })
+          Column() {
+            Row() {
+              Text(I18n.t('book_bookmark', this.lang))
+                .fontSize(17)
+                .fontWeight(FontWeight.Bold)
+                .fontColor($r('app.color.text_primary'))
+                .layoutWeight(1)
+              Text(I18n.t('book_close', this.lang))
+                .fontSize(14)
+                .fontColor($r('app.color.text_muted'))
+                .onClick(() => {
+                  this.bookmarkOpen = false;
+                  this.bookmarkAddOpen = false;
+                })
+            }
+            .width('100%')
+            .padding({ left: 16, right: 16, top: 16, bottom: 10 })
+
+            if (this.bookmarkAddOpen) {
+              Column({ space: 10 }) {
+                Text(I18n.tf('book_page_n', `${this.pageIndex + 1}`, this.lang))
+                  .fontSize(12)
+                  .fontColor($r('app.color.text_muted'))
+                  .width('100%')
+                TextInput({ text: this.bookmarkDraft, placeholder: I18n.t('book_bookmark_hint', this.lang) })
+                  .height(40)
+                  .width('100%')
+                  .onChange((v: string) => {
+                    this.bookmarkDraft = v;
+                  })
+                Row({ space: 10 }) {
+                  Button(I18n.t('book_close', this.lang))
+                    .layoutWeight(1)
+                    .height(40)
+                    .backgroundColor($r('app.color.chip_idle_bg'))
+                    .fontColor($r('app.color.text_primary'))
+                    .onClick(() => {
+                      this.bookmarkAddOpen = false;
+                    })
+                  Button(I18n.t('book_bookmark_save', this.lang))
+                    .layoutWeight(1)
+                    .height(40)
+                    .onClick(() => {
+                      void this.saveBookmark();
+                    })
+                }
+                .width('100%')
+              }
+              .width('100%')
+              .padding({ left: 16, right: 16, bottom: 12 })
+            } else {
+              Button(I18n.t('book_bookmark_add', this.lang))
+                .width('100%')
+                .height(40)
+                .margin({ left: 16, right: 16, bottom: 8 })
+                .onClick(() => this.openAddBookmark())
+            }
+
+            Column() {
+              if (this.bookmarks.length === 0) {
+                Text(I18n.t('book_bookmark_empty', this.lang))
+                  .fontSize(13)
+                  .fontColor($r('app.color.text_muted'))
+                  .padding(16)
+                  .width('100%')
+              } else {
+                List() {
+                  ForEach(this.bookmarks, (item: BookBookmark) => {
+                    ListItem() {
+                      Row() {
+                        Column({ space: 4 }) {
+                          Text(item.title)
+                            .fontSize(14)
+                            .fontColor(this.pageIndex === item.pageIndex ? $r('app.color.accent') : $r('app.color.text_primary'))
+                            .fontWeight(this.pageIndex === item.pageIndex ? FontWeight.Medium : FontWeight.Regular)
+                            .maxLines(2)
+                            .textOverflow({ overflow: TextOverflow.Ellipsis })
+                          Text(I18n.tf('book_page_n', `${item.pageIndex + 1}`, this.lang))
+                            .fontSize(11)
+                            .fontColor($r('app.color.text_muted'))
+                        }
+                        .alignItems(HorizontalAlign.Start)
+                        .layoutWeight(1)
+                        .onClick(() => this.jumpBookmark(item))
+                        Text(I18n.t('book_bookmark_del', this.lang))
+                          .fontSize(13)
+                          .fontColor('#DC2626')
+                          .padding({ left: 10, top: 8, bottom: 8 })
+                          .onClick(() => {
+                            void this.deleteBookmark(item.id);
+                          })
+                      }
+                      .width('100%')
+                      .padding({ left: 16, right: 16, top: 12, bottom: 12 })
+                      .backgroundColor(this.pageIndex === item.pageIndex ? $r('app.color.ai_badge_bg') : Color.Transparent)
+                    }
+                  }, (item: BookBookmark) => item.id)
                 }
                 .width('100%')
                 .layoutWeight(1)

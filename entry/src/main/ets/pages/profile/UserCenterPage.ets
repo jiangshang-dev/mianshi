@@ -324,16 +324,16 @@ struct UserCenterPage {
                 .onClick(() => {
                   this.goMall();
                 })
-              if (this.memberEnabled) {
-                Button(I18n.t('member_title', this.lang))
-                  .layoutWeight(1)
-                  .height(40)
-                  .fontSize(14)
-                  .backgroundColor('#2563EB')
-                  .onClick(() => {
-                    this.goMember();
-                  })
-              }
+              // if (this.memberEnabled) {
+              //   Button(I18n.t('member_title', this.lang))
+              //     .layoutWeight(1)
+              //     .height(40)
+              //     .fontSize(14)
+              //     .backgroundColor('#2563EB')
+              //     .onClick(() => {
+              //       this.goMember();
+              //     })
+              // }
             }
             .width('100%')
           }

@@ -46,6 +46,14 @@ export interface BookTocItem {
   level: number;
 }
 
+/** 本地阅读书签 */
+export interface BookBookmark {
+  id: string;
+  title: string;
+  pageIndex: number;
+  createdAt: number;
+}
+
 export interface JeecgBookMsgResp {
   success?: boolean;
   message?: string;

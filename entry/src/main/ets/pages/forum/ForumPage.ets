@@ -707,19 +707,19 @@ export struct ForumPage {
         .justifyContent(FlexAlign.Center)
         .onClick(() => this.favPost(item))
 
-        Row({ space: 4 }) {
-          Image($r('app.media.ic_forum_share'))
-            .width(18)
-            .height(18)
-            .objectFit(ImageFit.Contain)
-            .fillColor('#9CA3AF')
-          Text(I18n.t('forum_share', this.lang))
-            .fontSize(12)
-            .fontColor('#9CA3AF')
-        }
-        .layoutWeight(1)
-        .justifyContent(FlexAlign.End)
-        .onClick(() => this.sharePost(item))
+        // Row({ space: 4 }) {
+        //   Image($r('app.media.ic_forum_share'))
+        //     .width(18)
+        //     .height(18)
+        //     .objectFit(ImageFit.Contain)
+        //     .fillColor('#9CA3AF')
+        //   Text(I18n.t('forum_share', this.lang))
+        //     .fontSize(12)
+        //     .fontColor('#9CA3AF')
+        // }
+        // .layoutWeight(1)
+        // .justifyContent(FlexAlign.End)
+        // .onClick(() => this.sharePost(item))
       }
       .width('100%')
       .alignItems(VerticalAlign.Center)

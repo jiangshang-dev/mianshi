@@ -1,10 +1,12 @@
 import { common } from '@kit.AbilityKit';
 import { fileIo } from '@kit.CoreFileKit';
 import { preferences } from '@kit.ArkData';
-import { HttpClient } from '../../common/network/HttpClient';
-import { mallNum } from '../../common/models/MallTypes';
+import { HttpClient } from '../network/HttpClient';
+import { BookBookmark } from '../models/BookTypes';
+import { mallNum } from '../models/MallTypes';
 
 const PREF_NAME = 'book_progress';
+const BOOKMARK_PREF = 'book_bookmarks';
 
 export interface LocalBookProgress {
   pageIndex: number;
@@ -102,6 +104,89 @@ export class BookCache {
       await store.flush();
     } catch (_e) {
     }
+  }
+
+  static async loadBookmarks(ctx: common.UIAbilityContext, bookId: string): Promise<BookBookmark[]> {
+    try {
+      const store = await preferences.getPreferences(ctx, BOOKMARK_PREF);
+      const raw = await store.get(bookId, '') as string;
+      if (raw.length === 0) {
+        return [];
+      }
+      const parsed = JSON.parse(raw) as BookBookmark[];
+      if (parsed === null || parsed === undefined) {
+        return [];
+      }
+      const out: BookBookmark[] = [];
+      for (let i = 0; i < parsed.length; i++) {
+        const item = parsed[i];
+        if (item === undefined || item === null) {
+          continue;
+        }
+        const title = item.title !== undefined && item.title !== null ? `${item.title}` : '';
+        const id = item.id !== undefined && item.id !== null ? `${item.id}` : '';
+        if (id.length === 0) {
+          continue;
+        }
+        out.push({
+          id: id,
+          title: title.length > 0 ? title : `P${mallNum(item.pageIndex) + 1}`,
+          pageIndex: mallNum(item.pageIndex),
+          createdAt: mallNum(item.createdAt)
+        });
+      }
+      return out;
+    } catch (_e) {
+      return [];
+    }
+  }
+
+  static async saveBookmarks(ctx: common.UIAbilityContext, bookId: string, list: BookBookmark[]): Promise<void> {
+    try {
+      const store = await preferences.getPreferences(ctx, BOOKMARK_PREF);
+      await store.put(bookId, JSON.stringify(list));
+      await store.flush();
+    } catch (_e) {
+    }
+  }
+
+  static async addBookmark(ctx: common.UIAbilityContext, bookId: string, title: string, pageIndex: number): Promise<BookBookmark[]> {
+    const list = await BookCache.loadBookmarks(ctx, bookId);
+    const name = title.trim().length > 0 ? title.trim() : `P${pageIndex + 1}`;
+    // 同页已有则更新标题
+    for (let i = 0; i < list.length; i++) {
+      if (list[i].pageIndex === pageIndex) {
+        list[i].title = name;
+        list[i].createdAt = Date.now();
+        await BookCache.saveBookmarks(ctx, bookId, list);
+        return list;
+      }
+    }
+    const item: BookBookmark = {
+      id: `${Date.now()}_${pageIndex}`,
+      title: name.slice(0, 48),
+      pageIndex: pageIndex,
+      createdAt: Date.now()
+    };
+    list.unshift(item);
+    // 单书最多 100 条
+    while (list.length > 100) {
+      list.pop();
+    }
+    await BookCache.saveBookmarks(ctx, bookId, list);
+    return list;
+  }
+
+  static async removeBookmark(ctx: common.UIAbilityContext, bookId: string, id: string): Promise<BookBookmark[]> {
+    const list = await BookCache.loadBookmarks(ctx, bookId);
+    const next: BookBookmark[] = [];
+    for (let i = 0; i < list.length; i++) {
+      if (list[i].id !== id) {
+        next.push(list[i]);
+      }
+    }
+    await BookCache.saveBookmarks(ctx, bookId, next);
+    return next;
   }
 
   private static fileExists(path: string): boolean {

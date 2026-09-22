@@ -153,11 +153,11 @@ struct MemberPage {
           .onClick(() => {
             router.back();
           })
-        Text(I18n.t('member_title', this.lang))
-          .fontSize(18)
-          .fontWeight(FontWeight.Bold)
-          .fontColor($r('app.color.text_primary'))
-          .layoutWeight(1)
+        // Text(I18n.t('member_title', this.lang))
+        //   .fontSize(18)
+        //   .fontWeight(FontWeight.Bold)
+        //   .fontColor($r('app.color.text_primary'))
+        //   .layoutWeight(1)
       }
       .width('100%')
       .padding({ left: 12, right: 16, top: 8, bottom: 8 })
@@ -310,16 +310,16 @@ struct MemberPage {
                 })
               }, (plan: MemberPlan) => plan.code)
 
-              Button(I18n.t('member_restore', this.lang))
-                .width('100%')
-                .height(40)
-                .fontSize(14)
-                .backgroundColor('#FFF7ED')
-                .fontColor('#B45309')
-                .enabled(!this.buying)
-                .onClick(() => {
-                  this.bootstrap();
-                })
+              // Button(I18n.t('member_restore', this.lang))
+              //   .width('100%')
+              //   .height(40)
+              //   .fontSize(14)
+              //   .backgroundColor('#FFF7ED')
+              //   .fontColor('#B45309')
+              //   .enabled(!this.buying)
+              //   .onClick(() => {
+              //     this.bootstrap();
+              //   })
             }
 
             Text(I18n.t('member_iap_tip', this.lang))

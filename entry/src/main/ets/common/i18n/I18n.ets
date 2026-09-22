@@ -877,6 +877,13 @@ export class I18n {
     I18n.put('book_open_fail', '暂时无法打开这本书', '暫時無法打開這本書', 'Unable to open this book');
     I18n.put('book_toc', '目录', '目錄', 'Contents');
     I18n.put('book_toc_empty', '暂无目录，可按页码跳转', '暫無目錄，可按頁碼跳轉', 'No outline');
+    I18n.put('book_bookmark', '书签', '書籤', 'Bookmarks');
+    I18n.put('book_bookmark_add', '添加书签', '新增書籤', 'Add bookmark');
+    I18n.put('book_bookmark_save', '保存', '保存', 'Save');
+    I18n.put('book_bookmark_empty', '暂无书签，可把当前页加入书签', '暫無書籤，可把目前頁加入書籤', 'No bookmarks yet');
+    I18n.put('book_bookmark_hint', '章节名 / 备注', '章節名 / 備註', 'Chapter name');
+    I18n.put('book_bookmark_ok', '已添加书签', '已新增書籤', 'Bookmark saved');
+    I18n.put('book_bookmark_del', '删除', '刪除', 'Delete');
     I18n.put('book_page_n', '第 {0} 页', '第 {0} 頁', 'Page {0}');
     I18n.put('book_close', '关闭', '關閉', 'Close');
     I18n.put('book_all_cat', '全部分类', '全部分類', 'All topics');

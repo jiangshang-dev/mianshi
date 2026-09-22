@@ -41,11 +41,11 @@ export struct MemberBadge {
         .padding({ left: 7, right: 7, top: 2, bottom: 2 })
         .borderRadius(4)
         .backgroundColor('#FEF3C7')
-        .onClick(() => {
-          if (this.tapToOpen) {
-            MemberGate.goMember();
-          }
-        })
+        // .onClick(() => {
+        //   if (this.tapToOpen) {
+        //     MemberGate.goMember();
+        //   }
+        // })
     }
   }
 }
@@ -73,19 +73,19 @@ export struct MemberNeedHint {
           .fontColor('#92400E')
           .layoutWeight(1)
           .maxLines(2)
-        Text(I18n.t('member_go', this.lang))
-          .fontSize(12)
-          .fontColor('#B45309')
-          .fontWeight(FontWeight.Medium)
+        // Text(I18n.t('member_go', this.lang))
+        //   .fontSize(12)
+        //   .fontColor('#B45309')
+        //   .fontWeight(FontWeight.Medium)
       }
       .width('100%')
       .alignItems(VerticalAlign.Center)
       .padding({ left: 10, right: 10, top: 8, bottom: 8 })
       .backgroundColor('#FFFBEB')
       .borderRadius(10)
-      .onClick(() => {
-        MemberGate.goMember();
-      })
+      // .onClick(() => {
+      //   MemberGate.goMember();
+      // })
     }
   }
 }
