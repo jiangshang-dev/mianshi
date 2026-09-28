@@ -171,6 +171,8 @@ export class I18n {
     I18n.put('home_grid_forum', '技术社区', '技術社區', 'Community');
     I18n.put('home_grid_ai', 'AI 问答', 'AI 問答', 'AI Q&A');
     I18n.put('home_grid_fav', '我的收藏', '我的收藏', 'Favorites');
+    I18n.put('home_grid_listen', 'AI辅助面试', 'AI輔助面試', 'Live assist');
+    I18n.put('home_grid_listen_sub', '听面试官怎么问', '聽面試官怎麼問', 'Hear the interviewer');
     I18n.put('home_grid_mall', '积分商城', '積分商城', 'Mall');
     I18n.put('home_grid_more', '更多功能', '更多功能', 'More');
     I18n.put('home_grid_bank_sub', '海量面试题', '海量面試題', 'Many questions');

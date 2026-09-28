@@ -39,15 +39,14 @@
           "when": "inuse"
         }
       }
-      // todo 上架暂时关闭麦克风权限，语音面试恢复时再打开
-      // ,{
-      //   "name": "ohos.permission.MICROPHONE",
-      //   "reason": "$string:microphone_permission_reason",
-      //   "usedScene": {
-      //     "abilities": ["EntryAbility"],
-      //     "when": "inuse"
-      //   }
-      // }
+      ,{
+        "name": "ohos.permission.MICROPHONE",
+        "reason": "$string:microphone_permission_reason",
+        "usedScene": {
+          "abilities": ["EntryAbility"],
+          "when": "inuse"
+        }
+      }
     ],
     "abilities": [
       {

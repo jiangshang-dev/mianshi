@@ -22,7 +22,7 @@
     },
     {
       "name": "microphone_permission_reason",
-      "value": "用於模擬面試語音對話與語音識別"
+      "value": "用於 AI 輔助面試時聽面試官提問"
     }
   ]
 }

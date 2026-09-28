@@ -22,7 +22,7 @@
     },
     {
       "name": "microphone_permission_reason",
-      "value": "Used for mock interview voice chat and speech recognition"
+      "value": "Used to hear the interviewer during live interview assist"
     }
   ]
 }

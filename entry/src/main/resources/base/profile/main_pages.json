@@ -8,6 +8,7 @@
     "pages/bank/CategoryAllPage",
     "pages/search/SearchPage",
     "pages/interview/InterviewSessionPage",
+    "pages/listen/ListenAssistPage",
     "pages/profile/LoginPage",
     "pages/profile/SettingsPage",
     "pages/profile/CustomerServicePage",

@@ -6,6 +6,7 @@ export interface AppFeatureFlags {
   commentEnabled: boolean;
   questionAiEnabled: boolean;
   interviewAiEnabled: boolean;
+  listenAiEnabled?: boolean;
   blogEnabled?: boolean;
   forumEnabled?: boolean;
 }
@@ -20,6 +21,7 @@ export class AppFeatureRepository {
   static readonly COMMENT = 'commentFeatureEnabled';
   static readonly QUESTION_AI = 'questionAiEnabled';
   static readonly INTERVIEW_AI = 'interviewAiEnabled';
+  static readonly LISTEN_AI = 'listenAiEnabled';
   static readonly MEMBER = 'memberEnabled';
   static readonly BLOG = 'blogEnabled';
   static readonly FORUM = 'forumEnabled';
@@ -37,6 +39,7 @@ export class AppFeatureRepository {
     let commentOn = true;
     let questionAiOn = true;
     let interviewAiOn = true;
+    let listenAiOn = true;
     let memberOn = true;
     let blogOn = true;
     let forumOn = true;
@@ -49,6 +52,7 @@ export class AppFeatureRepository {
           commentOn = flags.commentEnabled !== false;
           questionAiOn = flags.questionAiEnabled !== false;
           interviewAiOn = flags.interviewAiEnabled !== false;
+          listenAiOn = flags.listenAiEnabled !== false;
           memberOn = flags.memberEnabled !== false;
           blogOn = flags.blogEnabled !== false;
           forumOn = flags.forumEnabled !== false;
@@ -59,6 +63,7 @@ export class AppFeatureRepository {
     CommentUi.setBool(AppFeatureRepository.COMMENT, commentOn);
     CommentUi.setBool(AppFeatureRepository.QUESTION_AI, questionAiOn);
     CommentUi.setBool(AppFeatureRepository.INTERVIEW_AI, interviewAiOn);
+    CommentUi.setBool(AppFeatureRepository.LISTEN_AI, listenAiOn);
     CommentUi.setBool(AppFeatureRepository.MEMBER, memberOn);
     CommentUi.setBool(AppFeatureRepository.BLOG, blogOn);
     CommentUi.setBool(AppFeatureRepository.FORUM, forumOn);

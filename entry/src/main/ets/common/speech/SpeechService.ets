@@ -17,6 +17,8 @@ export class SpeechService {
   private ttsReady: boolean = false;
   private asrReady: boolean = false;
   private listening: boolean = false;
+  private continuous: boolean = false;
+  private utteranceSeq: number = 0;
   private onResult: AsrResultCallback | null = null;
   private onError: AsrErrorCallback | null = null;
 
@@ -152,6 +154,46 @@ export class SpeechService {
     }
   }
 
+  /** AI 辅助面试：一句结束后立刻再听，sessionId 每句更换。不朗读。 */
+  async beginContinuous(onResult: AsrResultCallback, onError: AsrErrorCallback): Promise<boolean> {
+    const ready = await this.initAsr(onResult, onError);
+    if (!ready) {
+      return false;
+    }
+    this.continuous = true;
+    return await this.listenNext();
+  }
+
+  async stopContinuous(): Promise<void> {
+    this.continuous = false;
+    await this.stopListening();
+  }
+
+  private async listenNext(): Promise<boolean> {
+    if (!this.asrEngine || !this.continuous) {
+      return false;
+    }
+    this.utteranceSeq++;
+    const startParams: speechRecognizer.StartParams = {
+      sessionId: `listen-${this.utteranceSeq}`,
+      audioInfo: {
+        audioType: 'pcm',
+        sampleRate: 16000,
+        soundChannel: 1,
+        sampleBit: 16
+      }
+    };
+    try {
+      await this.asrEngine.startListening(startParams);
+      this.listening = true;
+      return true;
+    } catch (err) {
+      this.listening = false;
+      hilog.warn(DOMAIN, 'SpeechService', 'listenNext failed %{public}s', JSON.stringify(err));
+      return false;
+    }
+  }
+
   async stopListening(): Promise<void> {
     if (!this.asrEngine || !this.listening) {
       return;
@@ -181,6 +223,7 @@ export class SpeechService {
     this.ttsReady = false;
     this.asrReady = false;
     this.listening = false;
+    this.continuous = false;
   }
 
   private bindAsrListener(): void {
@@ -198,6 +241,9 @@ export class SpeechService {
         }
         if (result.isLast) {
           this.listening = false;
+          if (this.continuous) {
+            this.listenNext();
+          }
         }
       },
       onComplete: (_sessionId: string, _eventMessage: string) => {

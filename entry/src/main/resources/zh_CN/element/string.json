@@ -22,7 +22,7 @@
     },
     {
       "name": "microphone_permission_reason",
-      "value": "用于模拟面试语音对话与语音识别"
+      "value": "用于 AI 辅助面试时听面试官提问"
     }
   ]
 }

@@ -25,6 +25,7 @@ export struct HomePage {
   @StorageLink('blogEnabled') blogEnabled: boolean = true;
   @StorageLink('forumEnabled') forumEnabled: boolean = true;
   @StorageLink('interviewAiEnabled') interviewAiEnabled: boolean = true;
+  @StorageLink('listenAiEnabled') listenAiEnabled: boolean = true;
   @State private loading: boolean = true;
   @State private hotQs: QuestionItem[] = [];
   @State private books: BookItem[] = [];
@@ -157,6 +158,12 @@ export struct HomePage {
       });
       return;
     }
+    if (action === 'listen') {
+      LoginGate.ensure(I18n.t('home_grid_listen', this.lang), () => {
+        router.pushUrl({ url: 'pages/listen/ListenAssistPage' });
+      });
+      return;
+    }
     if (action === 'more') {
       this.openTab(4);
     }
@@ -164,6 +171,10 @@ export struct HomePage {
 
   private gridItems(): HomeGridItem[] {
     const items: HomeGridItem[] = [];
+    if (this.listenAiEnabled) {
+      const listen: HomeGridItem = { titleKey: 'home_grid_listen', subKey: 'home_grid_listen_sub', action: 'listen' };
+      items.push(listen);
+    }
     const a: HomeGridItem = { titleKey: 'home_grid_bank', subKey: 'home_grid_bank_sub', action: 'bank' };
     const b: HomeGridItem = { titleKey: 'home_grid_book', subKey: 'home_grid_book_sub', action: 'book' };
     const c: HomeGridItem = { titleKey: 'home_grid_blog', subKey: 'home_grid_blog_sub', action: 'blog' };
@@ -196,7 +207,7 @@ export struct HomePage {
     if (action === 'forum') {
       return $r('app.media.home_grid_forum');
     }
-    if (action === 'ai') {
+    if (action === 'ai' || action === 'listen') {
       return $r('app.media.home_grid_ai');
     }
     if (action === 'fav') {
