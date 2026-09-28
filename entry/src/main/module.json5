@@ -14,7 +14,9 @@
     "querySchemes": [
       "https",
       "http",
-      "bilibili"
+      "bilibili",
+      "alipays",
+      "alipay"
     ],
     "metadata": [
       {

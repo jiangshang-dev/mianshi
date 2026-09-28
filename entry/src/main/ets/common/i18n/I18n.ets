@@ -627,14 +627,19 @@ export class I18n {
     I18n.put('member_until', '有效期至 {0}', '有效期至 {0}', 'Until {0}');
     I18n.put('member_unlimited', '不限次数', '不限次數', 'Unlimited');
     I18n.put('member_remain', '剩余 {0}', '剩餘 {0}', '{0} left');
-    I18n.put('member_buy', '立即开通', '立即開通', 'Subscribe');
-    I18n.put('member_renew', '续费 / 升级', '續費 / 升級', 'Renew');
+    I18n.put('member_buy', '开通会员', '開通會員', 'Subscribe');
+    I18n.put('member_upgrade', '升级会员', '升級會員', 'Upgrade');
+    I18n.put('member_renew', '续费', '續費', 'Renew');
     I18n.put('member_buying', '支付中…', '支付中…', 'Paying…');
+    I18n.put('member_pay_cancel', '已取消支付', '已取消支付', 'Payment cancelled');
+    I18n.put('member_pay_pending', '支付处理中，请稍后查看会员状态', '支付處理中，請稍後查看會員狀態', 'Payment is processing');
+    I18n.put('member_pay_ok', '支付成功', '支付成功', 'Payment succeeded');
+    I18n.put('member_pay_fail', '支付未完成', '支付未完成', 'Payment was not completed');
     I18n.put('member_restore', '恢复购买', '恢復購買', 'Restore purchases');
     I18n.put('member_load_fail', '会员信息加载失败', '會員資訊載入失敗', 'Failed to load membership');
-    I18n.put('member_iap_tip', '支付由华为应用内购买完成，虚拟商品不支持退款到第三方。沙盒测试请使用调试签名与沙盒账号。',
-      '支付由華為應用內購買完成，虛擬商品不支援退款到第三方。沙盒測試請使用調試簽名與沙盒帳號。',
-      'Paid via Huawei IAP. Use a sandbox account for testing.');
+    I18n.put('member_iap_tip', '支付由支付宝完成。开通后按套餐生效，虚拟会员暂不支持退款。',
+      '支付由支付寶完成。開通後按套餐生效，虛擬會員暫不支援退款。',
+      'Paid with Alipay. Virtual membership is non-refundable.');
     I18n.put('member_iap_unavail', '当前环境暂无华为 IAP，已展示后台标价。真机调试签名 + 沙盒账号可完成购买。',
       '當前環境暫無華為 IAP，已展示後台標價。真機調試簽名 + 沙盒帳號可完成購買。',
       'Huawei IAP is unavailable here. Catalog prices are shown.');

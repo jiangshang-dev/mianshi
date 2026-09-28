@@ -1,5 +1,6 @@
 import { HttpClient } from '../../common/network/HttpClient';
-import { JeecgMemberMeResp, JeecgMemberPlanListResp, MemberMe, MemberPlan, IapVerifyBody } from '../../common/models/MemberTypes';
+import { JeecgMemberMeResp, JeecgMemberPlanListResp, MemberMe, MemberPlan, IapVerifyBody,
+  AppPayPrepare, JeecgAppPayResp, AppPayOrderStatus, JeecgAppPayOrderResp } from '../../common/models/MemberTypes';
 import { MemberGate } from '../../common/utils/MemberGate';
 
 export class MemberRepository {
@@ -47,6 +48,24 @@ export class MemberRepository {
     return me;
   }
 
+  async createAppOrder(planId: string, channel: string): Promise<AppPayPrepare> {
+    const resp = await HttpClient.postJson('/api/member/app/order',
+      JSON.stringify({ planId: planId, channel: channel }), 20000);
+    return this.parsePrepare(resp.body, resp.ok);
+  }
+
+  async syncAppOrder(orderId: string): Promise<AppPayOrderStatus | null> {
+    const resp = await HttpClient.postJson(`/api/member/app/order/${orderId}/sync`, '{}', 20000);
+    if (resp.body.length === 0) {
+      return null;
+    }
+    const parsed: JeecgAppPayOrderResp = JSON.parse(resp.body) as JeecgAppPayOrderResp;
+    if (parsed.success === false || !resp.ok) {
+      throw new Error(parsed.message !== undefined && parsed.message.length > 0 ? parsed.message : '确认支付失败');
+    }
+    return parsed.result !== undefined ? parsed.result : null;
+  }
+
   async restore(body: IapVerifyBody): Promise<MemberMe | null> {
     const resp = await HttpClient.postJson('/api/member/iap/restore', JSON.stringify(body), 20000);
     return this.parseMe(resp.body, resp.ok);
@@ -76,6 +95,17 @@ export class MemberRepository {
       }
       return null;
     }
+  }
+
+  private parsePrepare(body: string, ok: boolean): AppPayPrepare {
+    if (body.length === 0) {
+      throw new Error('下单失败');
+    }
+    const parsed: JeecgAppPayResp = JSON.parse(body) as JeecgAppPayResp;
+    if (parsed.success === false || !ok || parsed.result === undefined) {
+      throw new Error(parsed.message !== undefined && parsed.message.length > 0 ? parsed.message : '下单失败');
+    }
+    return parsed.result;
   }
 
   private parseMessage(body: string, fallback: string): string {

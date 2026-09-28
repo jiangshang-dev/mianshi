@@ -23,6 +23,8 @@ export interface MemberPlan {
 
 export interface MemberMe {
   member: boolean;
+  /** 曾经付费开通过。未返回时按未付费处理。 */
+  paidMember?: boolean;
   lifetime: boolean;
   memberEnabled?: boolean;
   planCode: string;
@@ -59,6 +61,33 @@ export interface IapPurchaseOrder {
   purchaseOrderId: string;
   purchaseToken: string;
   finishStatus?: string;
+}
+
+export interface AppPayPrepare {
+  orderId: string;
+  orderNo: string;
+  channel: string;
+  status: string;
+  orderStr?: string;
+}
+
+export interface JeecgAppPayResp {
+  success?: boolean;
+  message?: string;
+  result?: AppPayPrepare;
+  code?: number;
+}
+
+export interface AppPayOrderStatus {
+  orderId: string;
+  status: string;
+}
+
+export interface JeecgAppPayOrderResp {
+  success?: boolean;
+  message?: string;
+  result?: AppPayOrderStatus;
+  code?: number;
 }
 
 export interface IapVerifyBody {

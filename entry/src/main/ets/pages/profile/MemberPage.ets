@@ -1,8 +1,7 @@
-import { common } from '@kit.AbilityKit';
 import { promptAction, router } from '@kit.ArkUI';
 import { I18n } from '../../common/i18n/I18n';
 import { MemberMe, MemberPlan, MemberQuota } from '../../common/models/MemberTypes';
-import { IapService } from '../../common/utils/IapService';
+import { PayCheckout } from '../../common/pay/PayCheckout';
 import { LoginGate } from '../../common/utils/LoginGate';
 import { MemberGate } from '../../common/utils/MemberGate';
 import { MemberRepository } from '../../data/repository/MemberRepository';
@@ -24,14 +23,6 @@ struct MemberPage {
     this.bootstrap();
   }
 
-  private hostContext(): common.UIAbilityContext {
-    const host = this.getUIContext().getHostContext();
-    if (host) {
-      return host as common.UIAbilityContext;
-    }
-    return getContext(this) as common.UIAbilityContext;
-  }
-
   private async bootstrap(): Promise<void> {
     if (!LoginGate.isLoggedIn()) {
       this.loading = false;
@@ -42,15 +33,10 @@ struct MemberPage {
     }
     this.loading = true;
     try {
-      const ctx = this.hostContext();
-      await IapService.restoreUnfinished(ctx);
       const snapshot = await this.repo.me();
       this.me = snapshot;
-      const list = snapshot !== null && snapshot.plans.length > 0 ? snapshot.plans : await this.repo.plans();
-      await IapService.queryLocalPrice(ctx, list);
-      this.plans = list;
-      const env = await IapService.queryEnv(ctx);
-      this.hint = env === 0 ? '' : I18n.t('member_iap_unavail', this.lang);
+      this.plans = snapshot !== null && snapshot.plans.length > 0 ? snapshot.plans : await this.repo.plans();
+      this.hint = '';
     } catch (err) {
       this.hint = err instanceof Error ? err.message : I18n.t('member_load_fail', this.lang);
     } finally {
@@ -64,14 +50,60 @@ struct MemberPage {
     }
     this.buying = true;
     try {
-      const result = await IapService.buy(this.hostContext(), plan);
-      promptAction.showToast({ message: result.message });
-      if (result.ok) {
-        await this.bootstrap();
+      const prepared = await this.repo.createAppOrder(plan.id, PayCheckout.ALIPAY);
+      const orderStr = prepared.orderStr !== undefined ? prepared.orderStr : '';
+      if (orderStr.length === 0) {
+        promptAction.showToast({ message: I18n.t('member_pay_fail', this.lang) });
+        return;
       }
+      const status = await this.launchAlipay(orderStr);
+      if (status === '9000') {
+        const synced = await this.repo.syncAppOrder(prepared.orderId);
+        promptAction.showToast({
+          message: synced !== null && synced.status === 'paid'
+            ? I18n.t('member_pay_ok', this.lang)
+            : I18n.t('member_pay_pending', this.lang)
+        });
+        await this.bootstrap();
+      } else if (status === '8000') {
+        promptAction.showToast({ message: I18n.t('member_pay_pending', this.lang) });
+      } else if (status === '6001') {
+        promptAction.showToast({ message: I18n.t('member_pay_cancel', this.lang) });
+      } else {
+        promptAction.showToast({ message: I18n.t('member_pay_fail', this.lang) });
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : I18n.t('member_pay_fail', this.lang);
+      promptAction.showToast({ message: message });
     } finally {
       this.buying = false;
     }
+  }
+
+  private launchAlipay(orderStr: string): Promise<string> {
+    return new Promise<string>((resolve, reject) => {
+      this.getUIContext().runScopedTask(() => {
+        PayCheckout.start(PayCheckout.ALIPAY, orderStr).then((status: string) => {
+          resolve(status);
+        }).catch((err: Error) => {
+          reject(err);
+        });
+      });
+    });
+  }
+
+  private actionLabel(): string {
+    if (this.buying) {
+      return I18n.t('member_buying', this.lang);
+    }
+    const snap = this.me;
+    if (snap !== null && snap.paidMember === true) {
+      return I18n.t('member_renew', this.lang);
+    }
+    if (snap !== null && snap.member) {
+      return I18n.t('member_upgrade', this.lang);
+    }
+    return I18n.t('member_buy', this.lang);
   }
 
   private priceText(plan: MemberPlan): string {
@@ -289,8 +321,7 @@ struct MemberPage {
                     .alignItems(HorizontalAlign.End)
                   }
                   .width('100%')
-                  Button(this.buying ? I18n.t('member_buying', this.lang) :
-                    (this.me !== null && this.me.member ? I18n.t('member_renew', this.lang) : I18n.t('member_buy', this.lang)))
+                  Button(this.actionLabel())
                     .width('100%')
                     .height(42)
                     .fontSize(15)
