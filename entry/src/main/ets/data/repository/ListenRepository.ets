@@ -1,5 +1,4 @@
 import { AiStreamSnapshot } from '../../common/models/Types';
-import { ResumeProfile } from '../../common/models/ResumeTypes';
 import { HttpClient, SseAbort } from '../../common/network/HttpClient';
 import { DeviceProfile } from '../../common/utils/DeviceProfile';
 import { AuthRepository } from './AuthRepository';
@@ -75,7 +74,7 @@ export class ListenRepository {
       userId: user !== null ? user.userId : '',
       resumeId: resume !== null ? resume.resumeId : '',
       resumeFileName: resume !== null ? resume.fileName : '',
-      resumePreview: ListenRepository.resumeText(resume),
+      resumePreview: '',
       userDevice: DeviceProfile.loginDevice()
     };
     const resp = await HttpClient.postJson('/api/ai/listen/session', JSON.stringify(body));
@@ -134,7 +133,6 @@ export class ListenRepository {
   async streamTurn(sessionId: string, turnId: string, seq: number, questionText: string, forceLlm: boolean,
     onUpdate: (snap: AiStreamSnapshot) => void, abort?: SseAbort): Promise<string> {
     const user = AuthRepository.getInstance().getCached();
-    const resume = ResumeRepository.getInstance().getCached();
     const body: TurnBody = {
       sessionId: sessionId,
       userId: user !== null ? user.userId : '',
@@ -142,20 +140,10 @@ export class ListenRepository {
       seq: seq,
       questionText: questionText,
       forceLlm: forceLlm,
-      resumePreview: ListenRepository.resumeText(resume),
+      resumePreview: '',
       userDevice: DeviceProfile.loginDevice()
     };
     const resp = await HttpClient.postSse('/api/ai/listen/turn', JSON.stringify(body), onUpdate, abort);
     return resp.body;
-  }
-
-  private static resumeText(resume: ResumeProfile | null): string {
-    if (resume === null) {
-      return '';
-    }
-    if (resume.textContent.length > 0) {
-      return resume.textContent;
-    }
-    return resume.textPreview;
   }
 }

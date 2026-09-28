@@ -216,8 +216,11 @@ export struct ProfilePage {
       const ctx = this.hostContext();
       const profile = await this.repo.pickAndSave(ctx);
       if (profile) {
-        this.resume = profile;
-        promptAction.showToast({ message: I18n.t('resume_saved', this.lang) });
+        this.resume = this.repo.getCached() ?? profile;
+        const parseHint = this.repo.consumePickError();
+        promptAction.showToast({
+          message: parseHint.length > 0 ? parseHint : I18n.t('resume_saved', this.lang)
+        });
       } else {
         const errMsg = this.repo.consumePickError();
         if (errMsg.length > 0) {

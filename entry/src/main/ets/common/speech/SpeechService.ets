@@ -30,8 +30,7 @@ export class SpeechService {
   private activeSessionId: string = '';
   private pcmCarry: Uint8Array = new Uint8Array(0);
   private writeFailCount: number = 0;
-  private restartCount: number = 0;
-  private lastRestartAt: number = 0;
+  private sessionStartedAt: number = 0;
   private asrOnline: number = 0;
   private heardText: boolean = false;
   private swapped: boolean = false;
@@ -155,7 +154,6 @@ export class SpeechService {
     this.continuous = true;
     this.heardText = false;
     this.swapped = false;
-    this.restartCount = 0;
     const opened = await this.listenNext();
     if (!opened) {
       this.continuous = false;
@@ -184,8 +182,18 @@ export class SpeechService {
         hilog.warn(DOMAIN, 'SpeechService', 'cancel previous failed %{public}s', JSON.stringify(err));
       }
     }
-    this.utteranceSeq++;
-    return await this.openSession(`listen-${this.utteranceSeq}`);
+    for (let attempt = 0; attempt < 4; attempt++) {
+      if (!this.continuous || !this.asrEngine) {
+        return false;
+      }
+      this.utteranceSeq++;
+      const opened = await this.openSession(`listen-${this.utteranceSeq}`);
+      if (opened) {
+        return true;
+      }
+      await SpeechService.sleep(320);
+    }
+    return false;
   }
 
   async stopListening(): Promise<void> {
@@ -293,6 +301,7 @@ export class SpeechService {
       this.activeSessionId = '';
       return false;
     }
+    this.sessionStartedAt = Date.now();
     this.feeding = true;
     this.listening = true;
     this.drain();
@@ -431,13 +440,9 @@ export class SpeechService {
       if (this.writeFailCount === 1 || this.writeFailCount === 40) {
         hilog.warn(DOMAIN, 'SpeechService', 'writeAudio failed %{public}s', JSON.stringify(err));
       }
-      if (this.writeFailCount === 40) {
-        this.feeding = false;
-        this.continuous = false;
-        this.reportError('麦克风有声音，但识别没有接上，请再点一次「听面试官」');
-        setTimeout(() => {
-          this.stopCapturer();
-        }, 0);
+      if (this.writeFailCount >= 12) {
+        this.writeFailCount = 0;
+        this.scheduleRestart(this.activeSessionId);
       }
     }
   }
@@ -467,17 +472,19 @@ export class SpeechService {
             this.onResult(result.result, result.isFinal || result.isLast);
           }
         }
-        if (result.isLast) {
+        if (result.isLast && !this.sessionTooYoung()) {
           this.scheduleRestart(sessionId);
         }
       },
       onComplete: (sessionId: string, _eventMessage: string) => {
-        if (sessionId === this.activeSessionId) {
-          this.listening = false;
-          this.scheduleRestart(sessionId);
+        if (sessionId !== this.activeSessionId || this.sessionTooYoung()) {
+          return;
         }
+        this.listening = false;
+        this.scheduleRestart(sessionId);
       },
       onError: (sessionId: string, errorCode: number, errorMessage: string) => {
+        hilog.warn(DOMAIN, 'SpeechService', 'asr error %{public}d %{public}s', errorCode, errorMessage);
         if (this.restarting) {
           return;
         }
@@ -486,13 +493,16 @@ export class SpeechService {
         }
         this.listening = false;
         this.feeding = false;
-        hilog.warn(DOMAIN, 'SpeechService', 'asr error %{public}d %{public}s', errorCode, errorMessage);
-        if (!this.heardText && !this.swapped && this.continuous) {
+        if (!this.continuous) {
+          this.reportError(`识别失败(${errorCode}): ${errorMessage}`);
+          return;
+        }
+        if (!this.heardText && !this.swapped && (errorCode === 1002200001 || errorCode === 1002200007)) {
           this.swapped = true;
           this.swapEngine();
           return;
         }
-        this.reportError(`识别失败(${errorCode}): ${errorMessage}`);
+        this.scheduleRestart(sessionId);
       }
     };
     this.asrEngine.setListener(listener);
@@ -543,30 +553,21 @@ export class SpeechService {
     }
   }
 
+  private sessionTooYoung(): boolean {
+    return Date.now() - this.sessionStartedAt < 900;
+  }
+
   private scheduleRestart(sessionId: string): void {
     if (!this.continuous || this.restarting) {
       return;
     }
-    if (this.activeSessionId.length > 0 && sessionId !== this.activeSessionId) {
-      return;
-    }
-    const now = Date.now();
-    if (now - this.lastRestartAt > 5000) {
-      this.restartCount = 0;
-    }
-    this.restartCount++;
-    this.lastRestartAt = now;
-    if (this.restartCount > 8) {
-      this.continuous = false;
-      this.feeding = false;
-      this.reportError('听写反复中断，请再点一次「听面试官」');
-      setTimeout(() => {
-        this.stopCapturer();
-      }, 0);
+    if (sessionId.length > 0 && this.activeSessionId.length > 0 && sessionId !== this.activeSessionId) {
       return;
     }
     this.restarting = true;
     this.feeding = false;
+    this.writeFailCount = 0;
+    this.pcmCarry = new Uint8Array(0);
     setTimeout(() => {
       if (!this.continuous) {
         this.restarting = false;
@@ -575,10 +576,18 @@ export class SpeechService {
       this.listenNext().then((ok: boolean) => {
         this.restarting = false;
         if (!ok && this.continuous) {
-          this.reportError(this.lastAsrError.length > 0 ? this.lastAsrError : '听写中断，请再点一次「听面试官」');
+          this.reportError(this.lastAsrError.length > 0 ? this.lastAsrError : '听写中断，请点「开始聆听」再试一次');
         }
       });
-    }, 80);
+    }, 400);
+  }
+
+  private static sleep(ms: number): Promise<void> {
+    return new Promise<void>((resolve: () => void) => {
+      setTimeout(() => {
+        resolve();
+      }, ms);
+    });
   }
 
   private reportError(message: string): void {

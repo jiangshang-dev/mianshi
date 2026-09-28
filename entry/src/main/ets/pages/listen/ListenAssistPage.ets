@@ -42,6 +42,7 @@ struct ListenAssistPage {
   private seq: number = 0;
   private abort: SseAbort | null = null;
   private abortFollow: SseAbort | null = null;
+  private pendingRaw: string = '';
   private stableTimer: number = -1;
   private clockTimer: number = -1;
   private questionAt: number = 0;
@@ -156,12 +157,14 @@ struct ListenAssistPage {
 
   private commit(raw: string, force: boolean): void {
     if (this.busy && !force) {
+      this.pendingRaw = raw;
       return;
     }
     const text = this.segmenter.tryCommit(raw, this.answer, force);
     if (text.length === 0) {
       return;
     }
+    this.pendingRaw = '';
     this.ask(text, false);
   }
 
@@ -202,6 +205,11 @@ struct ListenAssistPage {
     }
     this.busy = false;
     this.segmenter.hold(2500);
+    const pending = this.pendingRaw;
+    this.pendingRaw = '';
+    if (pending.length > 0 && pending !== questionText) {
+      this.commit(pending, false);
+    }
     if (this.tab === 2) {
       this.fetchFollows();
     }
@@ -714,7 +722,7 @@ struct ListenAssistPage {
   private recognizedChip() {
     Row({ space: 8 }) {
       this.miniWave()
-      Text(this.busy ? '正在生成回答建议' : '已识别面试官问题')
+      Text(this.busy ? '正在生成回答建议' : (this.hearing ? '继续聆听下一题' : '已识别面试官问题'))
         .fontSize(13)
         .fontColor('#5B4BDB')
         .layoutWeight(1)

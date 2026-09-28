@@ -18,7 +18,7 @@ export class QuestionSegmenter {
       return '';
     }
     if (!force) {
-      if (Date.now() < this.holdUntil) {
+      if (Date.now() < this.holdUntil && QuestionSegmenter.overlap(cleaned, answerOnScreen) >= 0.45) {
         return '';
       }
       if (cleaned.length < 8) {

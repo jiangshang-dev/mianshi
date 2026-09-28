@@ -196,7 +196,10 @@ export class ResumeRepository {
     await this.persist(context, profile);
     this.cached = profile;
     this.publish(profile);
-    this.pushRemote(context, profile);
+    const hint = await this.pushRemote(context, profile);
+    if (hint.length > 0) {
+      this.lastPickError = hint;
+    }
     return profile;
   }
 
@@ -343,7 +346,10 @@ export class ResumeRepository {
       if (!vo || !vo.fileName) {
         return null;
       }
-      const text = vo.textContent ?? vo.textPreview ?? '';
+      const text = vo.textContent ?? '';
+      const parsedText = ResumeRepository.isParsed(text);
+      const preview = parsedText ? this.trimPreview(text) :
+        (vo.textPreview !== undefined && vo.textPreview.length > 0 ? vo.textPreview : '');
       return {
         fileName: vo.fileName,
         filePath: '',
@@ -351,10 +357,10 @@ export class ResumeRepository {
         fileSize: vo.fileSize ?? 0,
         mimeType: vo.mimeType ?? '',
         uploadedAt: new Date().toISOString(),
-        textPreview: this.trimPreview(text),
-        textContent: text,
+        textPreview: preview,
+        textContent: parsedText ? text : '',
         resumeId: vo.id ?? '',
-        parseStatus: vo.parseStatus ?? (ResumeRepository.isParsed(text) ? 'done' : 'pending'),
+        parseStatus: vo.parseStatus ?? (parsedText ? 'done' : 'pending'),
         syncStatus: 'uploaded'
       };
     } catch (err) {
@@ -363,19 +369,19 @@ export class ResumeRepository {
     }
   }
 
-  private async pushRemote(context: common.UIAbilityContext, profile: ResumeProfile): Promise<void> {
+  private async pushRemote(context: common.UIAbilityContext, profile: ResumeProfile): Promise<string> {
     const userId = this.currentUserId();
     if (userId.length === 0) {
-      return;
+      return '请先登录后再上传简历';
     }
     if (profile.filePath.length === 0) {
-      return;
+      return '简历文件读取失败，请重新选择';
     }
     try {
       fileIo.accessSync(profile.filePath);
     } catch (_e) {
       hilog.warn(DOMAIN, 'ResumeRepository', 'local file missing, skip upload');
-      return;
+      return '简历文件读取失败，请重新选择';
     }
     const resp = await HttpClient.postMultipart(AppConfig.REMOTE_RESUME_UPLOAD_PATH, [
       { name: 'userId', data: userId },
@@ -387,18 +393,18 @@ export class ResumeRepository {
       }
     ], AppConfig.UPLOAD_TIMEOUT_MS);
     if (!resp.ok) {
-      hilog.warn(DOMAIN, 'ResumeRepository', 'upload failed %{public}s %{public}s', `${resp.code}`, resp.message);
-      return;
+      hilog.warn(DOMAIN, 'ResumeRepository', 'upload failed %{public}s %{public}s', `${resp.code}`, resp.body);
+      return ResumeRepository.uploadFailMessage(resp.body);
     }
     try {
       const parsed = JSON.parse(resp.body) as ResumeApiWrap;
       if (parsed.success === false) {
         hilog.warn(DOMAIN, 'ResumeRepository', 'upload rejected %{public}s', parsed.message ?? '');
-        return;
+        return parsed.message !== undefined && parsed.message.length > 0 ? parsed.message : '简历上传失败，请稍后再试';
       }
       const vo = parsed.result ?? parsed.data;
       if (!vo) {
-        return;
+        return '简历上传失败，请稍后再试';
       }
       if (vo.id) {
         profile.resumeId = vo.id;
@@ -406,26 +412,55 @@ export class ResumeRepository {
       if (vo.fileUrl) {
         profile.fileUrl = vo.fileUrl;
       }
-      const text = vo.textContent ?? vo.textPreview ?? '';
+      const text = vo.textContent ?? '';
       if (ResumeRepository.isParsed(text)) {
         profile.textContent = text;
         profile.textPreview = this.trimPreview(text);
+        profile.parseStatus = vo.parseStatus ?? 'done';
+        profile.syncStatus = 'uploaded';
+        await this.persist(context, profile);
+        this.cached = profile;
+        this.publish(profile);
+        return '';
       }
-      profile.parseStatus = vo.parseStatus ?? profile.parseStatus;
+      const hint = parsed.message !== undefined && parsed.message.length > 0 ?
+        parsed.message : '没有解析出简历正文。请上传可选中文字的 PDF 或 Word，扫描件暂不支持。';
+      profile.textContent = '';
+      profile.textPreview = vo.textPreview !== undefined && vo.textPreview.length > 0 ? vo.textPreview : hint;
+      profile.parseStatus = vo.parseStatus ?? 'failed';
       profile.syncStatus = 'uploaded';
       await this.persist(context, profile);
       this.cached = profile;
       this.publish(profile);
+      return hint;
     } catch (err) {
       hilog.warn(DOMAIN, 'ResumeRepository', 'upload parse failed %{public}s', JSON.stringify(err));
+      return '简历上传失败，请稍后再试';
     }
+  }
+
+  private static uploadFailMessage(body: string): string {
+    try {
+      const parsed = JSON.parse(body) as ResumeApiWrap;
+      if (parsed.message !== undefined && parsed.message.length > 0 && parsed.message.length < 80) {
+        return parsed.message;
+      }
+    } catch (_e) {
+    }
+    return '简历上传失败，请稍后再试';
   }
 
   private static isParsed(text: string): boolean {
     if (text.length < 20) {
       return false;
     }
-    return text.indexOf('服务端将解析') < 0;
+    if (text.indexOf('服务端将解析') >= 0 || text.indexOf('没有解析出简历正文') >= 0) {
+      return false;
+    }
+    if (text.indexOf('未能抽出正文') >= 0 || text.indexOf('未能解析出正文') >= 0 || text.indexOf('扫描件') >= 0) {
+      return false;
+    }
+    return true;
   }
 
   private async deleteRemote(): Promise<void> {
