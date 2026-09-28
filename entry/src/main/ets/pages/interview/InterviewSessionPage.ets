@@ -13,6 +13,7 @@ import { InterviewEngine } from '../../data/interview/InterviewEngine';
 import { ResumeInsightBuilder } from '../../data/interview/ResumeInsight';
 import { AuthRepository } from '../../data/repository/AuthRepository';
 import { InterviewParsedReply, InterviewRepository } from '../../data/repository/InterviewRepository';
+import { ResumeProfile } from '../../common/models/ResumeTypes';
 import { ResumeRepository } from '../../data/repository/ResumeRepository';
 import { LoginGate } from '../../common/utils/LoginGate';
 import { MemberGate } from '../../common/utils/MemberGate';
@@ -38,11 +39,12 @@ struct InterviewSessionPage {
   @State private messages: InterviewMessage[] = [];
   @State private inputText: string = '';
   @State private voiceTranscript: string = '';
-  // @State private voiceStatus: string = '点击麦克风开始说话';
+  @State private voiceStatus: string = '点麦克风回答';
   @State private isRecording: boolean = false;
-  // @State private isSpeaking: boolean = false;
+  @State private isSpeaking: boolean = false;
   @State private voiceMuted: boolean = false;
   @State private speechReady: boolean = false;
+  @State private micReady: boolean = false;
   @State private elapsedSeconds: number = 0;
   @State private showReport: boolean = false;
   @State private report: InterviewReport | null = null;
@@ -86,8 +88,7 @@ struct InterviewSessionPage {
       level: level,
       difficulty: params.difficulty ?? '中等',
       resumeId: resume !== null ? resume.resumeId : '',
-      resumePreview: resume !== null ?
-        (resume.textContent && resume.textContent.length > 0 ? resume.textContent : resume.textPreview) : '',
+      resumePreview: InterviewSessionPage.resumeBody(resume),
       resumeFileName: resume !== null ? resume.fileName : '',
       focus: ResumeInsightBuilder.modulesOf(resume, role).join('、'),
       interviewerTitle: ResumeInsightBuilder.interviewerOf(role)
@@ -128,29 +129,43 @@ struct InterviewSessionPage {
   }
 
   private async initSpeech(): Promise<void> {
-    await this.speech.initTts();
-    // todo 上架暂时关闭麦克风权限申请
-    // const ctx = getContext(this) as common.UIAbilityContext;
-    // const micOk = await this.speech.requestMicPermission(ctx);
-    // const asrOk = await this.speech.initAsr(
-    //   (text: string, isLast: boolean) => {
-    //     this.voiceTranscript = text;
-    //     if (isLast && text.trim().length > 0) {
-    //       this.isRecording = false;
-    //       this.voiceStatus = '识别完成，正在提交…';
-    //       this.submitAnswer(text);
-    //     }
-    //   },
-    //   (message: string) => {
-    //     this.isRecording = false;
-    //     this.voiceStatus = message;
-    //     promptAction.showToast({ message });
-    //   }
-    // );
-    // this.speechReady = ttsOk && micOk && asrOk;
-    // if (!this.speechReady) {
-    //   this.voiceStatus = '当前设备语音能力不可用，请使用文字模式';
-    // }
+    const ttsOk = await this.speech.initTts();
+    this.speechReady = ttsOk;
+    const ctx = getContext(this) as common.UIAbilityContext;
+    const micOk = await this.speech.requestMicPermission(ctx);
+    const asrOk = await this.speech.initAsr(
+      (text: string, isLast: boolean) => {
+        setTimeout(() => {
+          if (!this.isRecording) {
+            return;
+          }
+          this.voiceTranscript = text;
+          if (isLast && text.trim().length > 0) {
+            this.isRecording = false;
+            this.voiceStatus = '识别完成，正在交给面试官…';
+            this.submitAnswer(text);
+          }
+        }, 0);
+      },
+      (message: string) => {
+        setTimeout(() => {
+          if (!this.isRecording) {
+            return;
+          }
+          this.isRecording = false;
+          this.voiceStatus = message;
+          promptAction.showToast({ message });
+        }, 0);
+      }
+    );
+    this.micReady = micOk && asrOk;
+    if (!this.micReady) {
+      this.voiceStatus = '麦克风不可用，可以改用文字聊天';
+    } else if (!this.speechReady) {
+      this.voiceStatus = '点麦克风回答。本机暂不能朗读题目';
+    } else {
+      this.voiceStatus = '点麦克风回答';
+    }
   }
 
   private async beginInterview(): Promise<void> {
@@ -282,7 +297,8 @@ struct InterviewSessionPage {
     this.waitingAnswer = false;
     this.speech.stopSpeak();
     this.clearSpeakTimer();
-    // this.isSpeaking = false;
+    this.isSpeaking = false;
+    this.isRecording = false;
   }
 
   private maybeSpeak(text: string): void {
@@ -318,35 +334,35 @@ struct InterviewSessionPage {
       return;
     }
     this.clearSpeakTimer();
-    // this.isSpeaking = true;
-    // this.voiceStatus = '面试官正在说话，可点静音关闭';
+    this.isSpeaking = true;
+    this.voiceStatus = '面试官正在朗读，可点静音';
     await this.speech.speak(text);
-    // const waitMs = Math.min(90000, Math.max(2800, text.length * 160));
-    // this.speakTimer = setTimeout(() => {
-    //   this.isSpeaking = false;
-    //   if (!this.showReport && !this.voiceMuted) {
-    //     this.voiceStatus = '点击麦克风开始回答';
-    //   }
-    // }, waitMs);
+    const waitMs = Math.min(90000, Math.max(2800, text.length * 160));
+    this.speakTimer = setTimeout(() => {
+      this.isSpeaking = false;
+      if (!this.showReport && !this.voiceMuted && !this.isRecording) {
+        this.voiceStatus = this.waitingAnswer ? '轮到你了，点麦克风回答' : '点麦克风回答';
+      }
+    }, waitMs);
   }
 
   private async stopVoicePlayback(): Promise<void> {
     this.clearSpeakTimer();
     await this.speech.stopSpeak();
-    // this.isSpeaking = false;
+    this.isSpeaking = false;
   }
 
-  // private async toggleMute(): Promise<void> {
-  //   this.voiceMuted = !this.voiceMuted;
-  //   if (this.voiceMuted) {
-  //     await this.stopVoicePlayback();
-  //     this.voiceStatus = '已静音，面试官回复不再朗读';
-  //     promptAction.showToast({ message: I18n.t('tts_off', this.lang) });
-  //   } else {
-  //     this.voiceStatus = '已开启朗读';
-  //     promptAction.showToast({ message: I18n.t('tts_on', this.lang) });
-  //   }
-  // }
+  private async toggleMute(): Promise<void> {
+    this.voiceMuted = !this.voiceMuted;
+    if (this.voiceMuted) {
+      await this.stopVoicePlayback();
+      this.voiceStatus = '已静音，面试官不再朗读';
+      promptAction.showToast({ message: I18n.t('tts_off', this.lang) });
+    } else {
+      this.voiceStatus = this.waitingAnswer ? '轮到你了，点麦克风回答' : '已开启朗读';
+      promptAction.showToast({ message: I18n.t('tts_on', this.lang) });
+    }
+  }
 
   private submitAnswer(answer: string): void {
     const text = answer.trim();
@@ -362,10 +378,13 @@ struct InterviewSessionPage {
     this.runTurn('chat', text, true);
   }
 
-  private endInterview(): void {
+  private async endInterview(): Promise<void> {
     if (this.streaming || this.showReport) {
       return;
     }
+    this.isRecording = false;
+    await this.speech.stopListening();
+    await this.stopVoicePlayback();
     this.runTurn('finish', '', false);
   }
 
@@ -428,39 +447,56 @@ struct InterviewSessionPage {
     const display = parsed.display.length > 0 ? parsed.display : '请继续作答。';
     this.replaceBubble(this.streamBubbleId, display);
     this.applyReport(parsed);
+    if (action === 'finish' && !this.showReport && this.engine) {
+      this.stopTimer();
+      this.report = this.engine.getReport();
+      this.showReport = true;
+      this.waitingAnswer = false;
+      this.speech.stopSpeak();
+      this.isSpeaking = false;
+    }
     if (!this.showReport) {
       this.waitingAnswer = true;
-      this.maybeSpeak(parsed.spoken);
+      this.maybeSpeak(parsed.spoken.length > 0 ? parsed.spoken : display);
+    } else {
+      this.voiceStatus = '本场结束，下面是综合评分';
+      this.scroller.scrollEdge(Edge.Bottom);
     }
   }
 
-  // private async toggleRecording(): Promise<void> {
-  //   if (!this.speechReady) {
-  //     promptAction.showToast({ message: I18n.t('voice_unavail', this.lang) });
-  //     return;
-  //   }
-  //   if (this.streaming || !this.waitingAnswer) {
-  //     promptAction.showToast({ message: I18n.t('wait_reply', this.lang) });
-  //     return;
-  //   }
-  //   if (this.isSpeaking) {
-  //     await this.stopVoicePlayback();
-  //   }
-  //   if (this.isRecording) {
-  //     await this.speech.stopListening();
-  //     this.isRecording = false;
-  //     this.voiceStatus = '识别结束';
-  //     return;
-  //   }
-  //   this.voiceTranscript = '';
-  //   const ok = await this.speech.startListening();
-  //   if (ok) {
-  //     this.isRecording = true;
-  //     this.voiceStatus = '正在聆听，请作答…';
-  //   } else {
-  //     promptAction.showToast({ message: I18n.t('asr_fail', this.lang) });
-  //   }
-  // }
+  private async toggleRecording(): Promise<void> {
+    if (!this.micReady) {
+      promptAction.showToast({ message: I18n.t('voice_unavail', this.lang) });
+      return;
+    }
+    if (this.streaming || !this.waitingAnswer || this.showReport) {
+      promptAction.showToast({ message: I18n.t('wait_reply', this.lang) });
+      return;
+    }
+    if (this.isSpeaking) {
+      await this.stopVoicePlayback();
+    }
+    if (this.isRecording) {
+      const heard = this.voiceTranscript.trim();
+      this.isRecording = false;
+      await this.speech.stopListening();
+      if (heard.length > 0) {
+        this.voiceStatus = '识别完成，正在交给面试官…';
+        this.submitAnswer(heard);
+      } else {
+        this.voiceStatus = '没有听清，请再点一次麦克风';
+      }
+      return;
+    }
+    this.voiceTranscript = '';
+    const ok = await this.speech.startListening();
+    if (ok) {
+      this.isRecording = true;
+      this.voiceStatus = '正在听你的回答…';
+    } else {
+      promptAction.showToast({ message: I18n.t('asr_fail', this.lang) });
+    }
+  }
 
   build() {
     Column() {
@@ -511,12 +547,12 @@ struct InterviewSessionPage {
         .padding({ left: 16, right: 16, bottom: 6 })
 
       //  todo 语音Tab
-      // Row({ space: 8 }) {
-        // this.modeTab('mode_text', 'text')
-        // this.modeTab('mode_voice', 'voice')
-      // }
-      // .width('100%')
-      // .padding({ left: 16, right: 16, bottom: 8 })
+      Row({ space: 8 }) {
+        this.modeTab('mode_text', 'text')
+        this.modeTab('mode_voice', 'voice')
+      }
+      .width('100%')
+      .padding({ left: 16, right: 16, bottom: 8 })
 
       if (!this.showReport) {
         Row() {
@@ -591,77 +627,7 @@ struct InterviewSessionPage {
           .width('100%')
           .padding({ left: 16, right: 16, top: 8, bottom: 16 })
         } else {
-          Column({ space: 12 }) {
-            // Text(this.voiceStatus)
-            //   .fontSize(13)
-            //   .fontColor($r('app.color.text_muted'))
-            //   .width('100%')
-            //   .textAlign(TextAlign.Center)
-
-            if (this.voiceTranscript.length > 0) {
-              Text(this.voiceTranscript)
-                .fontSize(14)
-                .fontColor($r('app.color.text_primary'))
-                .width('100%')
-                .padding(12)
-                .backgroundColor($r('app.color.card_bg'))
-                .borderRadius(12)
-            }
-
-            Row({ space: 28 }) {
-              // Column({ space: 6 }) {
-              //   Text(this.voiceMuted ? '🔇' : '🔊')
-              //     .fontSize(22)
-              //     .fontColor(this.voiceMuted ? '#6B7280' : '#2563EB')
-              //   Text(this.voiceMuted ? I18n.t('muted', this.lang) : I18n.t('mute', this.lang))
-              //     .fontSize(11)
-              //     .fontColor($r('app.color.text_muted'))
-              // }
-              // .width(64)
-              // .height(72)
-              // .justifyContent(FlexAlign.Center)
-              // .onClick(() => {
-              //   this.toggleMute();
-              // })
-
-              // Column() {
-              //   Text(this.isRecording ? '■' : '🎙')
-              //     .fontSize(this.isRecording ? 22 : 28)
-              //     .fontColor($r('app.color.text_on_color'))
-              // }
-              // .width(72)
-              // .height(72)
-              // .borderRadius(36)
-              // .justifyContent(FlexAlign.Center)
-              // .backgroundColor(this.isRecording ? '#EF4444' : '#2563EB')
-              // .onClick(() => {
-              //   this.toggleRecording();
-              // })
-
-              Column({ space: 6 }) {
-                Text('⏹')
-                  .fontSize(20)
-                  .fontColor($r('app.color.text_muted'))
-                Text(I18n.t('end', this.lang))
-                  .fontSize(11)
-                  .fontColor($r('app.color.text_muted'))
-              }
-              .width(64)
-              .height(72)
-              .justifyContent(FlexAlign.Center)
-              .onClick(() => {
-                this.endInterview();
-              })
-            }
-            .justifyContent(FlexAlign.Center)
-            .width('100%')
-
-            Text(this.isRecording ? I18n.t('tap_end', this.lang) : I18n.t('tap_mic', this.lang))
-              .fontSize(12)
-              .fontColor($r('app.color.text_muted'))
-          }
-          .width('100%')
-          .padding({ left: 16, right: 16, top: 8, bottom: 20 })
+          this.voiceDock()
         }
       } else {
         Button(I18n.t('back_iv', this.lang))
@@ -675,6 +641,130 @@ struct InterviewSessionPage {
     .width('100%')
     .height('100%')
     .backgroundColor($r('app.color.page_bg'))
+  }
+
+  @Builder
+  private voiceDock() {
+    Column({ space: 12 }) {
+      Text(this.voiceStatus)
+        .fontSize(14)
+        .fontWeight(FontWeight.Medium)
+        .fontColor(this.isRecording ? '#DC2626' : '#1F2430')
+        .width('100%')
+        .textAlign(TextAlign.Center)
+
+      if (this.voiceTranscript.length > 0) {
+        Text(this.voiceTranscript)
+          .fontSize(14)
+          .fontColor('#1F2430')
+          .width('100%')
+          .maxLines(3)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+          .padding(12)
+          .backgroundColor('#F4F7FF')
+          .borderRadius(12)
+      }
+
+      Row() {
+        Column({ space: 6 }) {
+          Text(this.voiceMuted ? '静' : '读')
+            .fontSize(16)
+            .fontWeight(FontWeight.Medium)
+            .fontColor(this.voiceMuted ? '#6B7280' : '#2563EB')
+          Text(this.voiceMuted ? I18n.t('muted', this.lang) : I18n.t('mute', this.lang))
+            .fontSize(11)
+            .fontColor($r('app.color.text_muted'))
+        }
+        .width(64)
+        .height(72)
+        .justifyContent(FlexAlign.Center)
+        .backgroundColor(this.voiceMuted ? '#F3F4F6' : '#EFF6FF')
+        .borderRadius(16)
+        .onClick(() => {
+          this.toggleMute();
+        })
+
+        Blank().layoutWeight(1)
+
+        Column() {
+          if (this.isRecording) {
+            Column()
+              .width(18)
+              .height(18)
+              .borderRadius(4)
+              .backgroundColor(Color.White)
+          } else {
+            this.micMark()
+          }
+        }
+        .width(76)
+        .height(76)
+        .borderRadius(38)
+        .justifyContent(FlexAlign.Center)
+        .backgroundColor(this.isRecording ? '#EF4444' : (this.micReady && this.waitingAnswer && !this.streaming ? '#2563EB' : '#CBD5E1'))
+        .shadow({ radius: 16, color: '#2563EB33', offsetY: 6 })
+        .onClick(() => {
+          this.toggleRecording();
+        })
+
+        Blank().layoutWeight(1)
+
+        Column({ space: 6 }) {
+          Text('停')
+            .fontSize(16)
+            .fontWeight(FontWeight.Medium)
+            .fontColor(this.streaming ? '#9CA3AF' : '#DC2626')
+          Text(I18n.t('end_iv', this.lang))
+            .fontSize(11)
+            .fontColor(this.streaming ? '#9CA3AF' : '#DC2626')
+        }
+        .width(72)
+        .height(72)
+        .justifyContent(FlexAlign.Center)
+        .backgroundColor(this.streaming ? '#F3F4F6' : '#FEF2F2')
+        .borderRadius(16)
+        .onClick(() => {
+          if (!this.streaming) {
+            this.endInterview();
+          }
+        })
+      }
+      .width('100%')
+      .alignItems(VerticalAlign.Center)
+
+      Text(this.isRecording ? '再说完后点红色按钮提交。结束面试后会给出综合评分' :
+        '按当前简历出题。回答结束后点「结束面试」，查看综合评分')
+        .fontSize(12)
+        .fontColor($r('app.color.text_muted'))
+        .width('100%')
+        .textAlign(TextAlign.Center)
+        .lineHeight(18)
+    }
+    .width('100%')
+    .padding({ left: 16, right: 16, top: 14, bottom: 18 })
+    .backgroundColor(Color.White)
+    .borderRadius({ topLeft: 20, topRight: 20 })
+  }
+
+  @Builder
+  private micMark() {
+    Column() {
+      Column()
+        .width(16)
+        .height(24)
+        .borderRadius(8)
+        .border({ width: 2, color: Color.White })
+      Column()
+        .width(2)
+        .height(8)
+        .backgroundColor(Color.White)
+        .margin({ top: 2 })
+      Row()
+        .width(12)
+        .height(2)
+        .borderRadius(1)
+        .backgroundColor(Color.White)
+    }
   }
 
   @Builder
@@ -764,6 +854,20 @@ struct InterviewSessionPage {
       content: content,
       time: `${hh}:${mm}`
     };
+  }
+
+  private static resumeBody(resume: ResumeProfile | null): string {
+    if (resume === null) {
+      return '';
+    }
+    const text = resume.textContent.length > 0 ? resume.textContent : '';
+    if (text.length < 40) {
+      return '';
+    }
+    if (text.indexOf('服务端将解析') >= 0 || text.indexOf('没有解析出简历正文') >= 0 || text.indexOf('扫描件') >= 0) {
+      return '';
+    }
+    return text;
   }
 
   private formatTime(seconds: number): string {
