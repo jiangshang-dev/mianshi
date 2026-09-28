@@ -34,6 +34,8 @@ export class SpeechService {
   private asrOnline: number = 0;
   private heardText: boolean = false;
   private swapped: boolean = false;
+  /** 用户主动停麦时，结束会话触发的识别错误不再提示。 */
+  private intentionalStop: boolean = false;
   private lastAsrError: string = '';
   private onResult: AsrResultCallback | null = null;
   private onError: AsrErrorCallback | null = null;
@@ -154,7 +156,9 @@ export class SpeechService {
     this.continuous = true;
     this.heardText = false;
     this.swapped = false;
+    this.intentionalStop = true;
     const opened = await this.listenNext();
+    this.intentionalStop = !opened;
     if (!opened) {
       this.continuous = false;
       const hint = this.lastAsrError.length > 0 ? this.lastAsrError : '听写没有开始';
@@ -164,6 +168,7 @@ export class SpeechService {
   }
 
   async stopContinuous(): Promise<void> {
+    this.intentionalStop = true;
     this.continuous = false;
     this.restarting = false;
     await this.stopListening();
@@ -220,6 +225,7 @@ export class SpeechService {
   }
 
   release(): void {
+    this.intentionalStop = true;
     this.continuous = false;
     this.feeding = false;
     this.listening = false;
@@ -485,7 +491,7 @@ export class SpeechService {
       },
       onError: (sessionId: string, errorCode: number, errorMessage: string) => {
         hilog.warn(DOMAIN, 'SpeechService', 'asr error %{public}d %{public}s', errorCode, errorMessage);
-        if (this.restarting) {
+        if (this.intentionalStop || this.restarting) {
           return;
         }
         if (this.activeSessionId.length > 0 && sessionId !== this.activeSessionId) {

@@ -115,6 +115,9 @@ struct ListenAssistPage {
     const ok = await this.speech.beginContinuous(
       (text: string, isLast: boolean) => {
         setTimeout(() => {
+          if (!this.hearing) {
+            return;
+          }
           this.draft = text;
           this.scheduleCommit(isLast);
         }, 0);
@@ -134,9 +137,24 @@ struct ListenAssistPage {
 
   private async finishAssist(): Promise<void> {
     this.clearStable();
-    await this.speech.stopContinuous();
     this.hearing = false;
+    await this.speech.stopContinuous();
     router.back();
+  }
+
+  /** 停掉麦克风，候选人自己回答时不会被识别成下一题。 */
+  private async pauseHear(): Promise<void> {
+    this.hearing = false;
+    this.clearStable();
+    this.pendingRaw = '';
+    this.draft = '';
+    await this.speech.stopContinuous();
+  }
+
+  private resumeHear(): void {
+    this.draft = '';
+    this.pendingRaw = '';
+    this.startHear();
   }
 
   private scheduleCommit(isLast: boolean): void {
@@ -190,6 +208,9 @@ struct ListenAssistPage {
       this.tab = 0;
     }
     this.busy = true;
+    if (this.hearing) {
+      await this.pauseHear();
+    }
     const current = this.abort;
     await this.repo.streamTurn(this.sessionId, turnId, this.seq, questionText, forceLlm, (snap: AiStreamSnapshot) => {
       if (snap.markdown.length > 0) {
@@ -485,6 +506,7 @@ struct ListenAssistPage {
           }
           .layoutWeight(1)
           .align(Alignment.Top)
+          this.pauseBar()
           this.bottomBar()
         }
       }
@@ -535,12 +557,16 @@ struct ListenAssistPage {
       Blank()
         .layoutWeight(1)
       this.micHero()
-      Text(this.hearing ? '正在聆听面试...' : '准备聆听面试')
+      Text(this.hearing ? '正在聆听面试...' : (this.sessionId.length > 0 ? '已暂停聆听' : '准备聆听面试'))
         .fontSize(22)
         .fontWeight(FontWeight.Bold)
         .fontColor('#1F2430')
         .margin({ top: 28 })
-      Text('请将手机放在一旁，AI 会实时识别面试官的问题\n并生成回答建议')
+      Text(this.hearing ?
+        '只听面试官。识别到问题后会暂停，你回答时不会被听见' :
+        (this.sessionId.length > 0 ?
+          '你的回答不会被听见。面试官开始下一题时，点「继续听面试官」' :
+          '请将手机放在一旁，AI 会实时识别面试官的问题\n并生成回答建议'))
         .fontSize(13)
         .fontColor('#8B93A7')
         .textAlign(TextAlign.Center)
@@ -657,7 +683,7 @@ struct ListenAssistPage {
       }
       .width('100%')
       this.tipRow(1, '保持手机靠近面试环境')
-      this.tipRow(2, '在面试官提问结束后，AI 会自动生成答案')
+      this.tipRow(2, '识别到问题后麦克风会暂停，回答时不会听见你')
       this.tipRow(3, '可查看精简/详细回答和可能的追问')
       this.tipRow(4, '建议佩戴耳机或放在桌面方便查看')
     }
@@ -691,38 +717,75 @@ struct ListenAssistPage {
 
   @Builder
   private endButton() {
-    Row({ space: 8 }) {
-      Column()
-        .width(10)
-        .height(10)
-        .borderRadius(2)
-        .backgroundColor(Color.White)
-      Text(this.hearing ? '结束辅助面试' : '开始聆听')
-        .fontSize(16)
-        .fontColor(Color.White)
-        .fontWeight(FontWeight.Medium)
+    Column({ space: 10 }) {
+      if (this.hearing || this.sessionId.length > 0) {
+        this.listenToggle()
+      }
+      if (this.hearing || this.sessionId.length === 0) {
+        Row({ space: 8 }) {
+          Column()
+            .width(10)
+            .height(10)
+            .borderRadius(2)
+            .backgroundColor(Color.White)
+          Text(this.hearing ? '结束辅助面试' : '开始聆听')
+            .fontSize(16)
+            .fontColor(Color.White)
+            .fontWeight(FontWeight.Medium)
+        }
+        .width('100%')
+        .height(52)
+        .borderRadius(26)
+        .justifyContent(FlexAlign.Center)
+        .linearGradient({ angle: 90, colors: [['#FF7A8A', 0], ['#FF4D6A', 1]] })
+        .shadow({ radius: 16, color: '#FF4D6A33', offsetY: 6 })
+        .onClick(() => {
+          if (this.hearing) {
+            this.finishAssist();
+          } else {
+            this.startHear();
+          }
+        })
+      } else {
+        Text('结束辅助面试')
+          .fontSize(14)
+          .fontColor('#8B93A7')
+          .width('100%')
+          .height(36)
+          .textAlign(TextAlign.Center)
+          .onClick(() => this.finishAssist())
+      }
     }
     .width('100%')
-    .height(52)
     .margin({ left: 20, right: 20, bottom: 28 })
-    .borderRadius(26)
-    .justifyContent(FlexAlign.Center)
-    .linearGradient({ angle: 90, colors: [['#FF7A8A', 0], ['#FF4D6A', 1]] })
-    .shadow({ radius: 16, color: '#FF4D6A33', offsetY: 6 })
-    .onClick(() => {
-      if (this.hearing) {
-        this.finishAssist();
-      } else {
-        this.startHear();
-      }
-    })
+  }
+
+  @Builder
+  private listenToggle() {
+    Text(this.hearing ? '暂停聆听' : '继续听面试官')
+      .fontSize(16)
+      .fontColor(this.hearing ? '#5B4BDB' : Color.White)
+      .fontWeight(FontWeight.Medium)
+      .width('100%')
+      .height(48)
+      .textAlign(TextAlign.Center)
+      .borderRadius(24)
+      .backgroundColor(this.hearing ? Color.White : '#5B4BDB')
+      .border(this.hearing ? { width: 1, color: '#D9D3FF' } : { width: 0, color: Color.Transparent })
+      .onClick(() => {
+        if (this.hearing) {
+          this.pauseHear();
+        } else {
+          this.resumeHear();
+        }
+      })
   }
 
   @Builder
   private recognizedChip() {
     Row({ space: 8 }) {
       this.miniWave()
-      Text(this.busy ? '正在生成回答建议' : (this.hearing ? '继续聆听下一题' : '已识别面试官问题'))
+      Text(this.busy ? '正在生成回答建议' : (this.hearing ? '正在听面试官' : '已暂停，回答不会被听见'))
         .fontSize(13)
         .fontColor('#5B4BDB')
         .layoutWeight(1)
@@ -1002,6 +1065,20 @@ struct ListenAssistPage {
     .width('100%')
     .padding({ top: 10, bottom: 10 })
     .onClick(() => this.askFollow(text))
+  }
+
+  @Builder
+  private pauseBar() {
+    Column({ space: 6 }) {
+      Text(this.hearing ? '回答前点暂停，就不会听见你' : '已暂停。面试官下一题时再继续听')
+        .fontSize(12)
+        .fontColor('#8B93A7')
+        .width('100%')
+        .textAlign(TextAlign.Center)
+      this.listenToggle()
+    }
+    .width('100%')
+    .padding({ left: 16, right: 16, top: 4 })
   }
 
   @Builder
