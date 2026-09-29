@@ -635,6 +635,12 @@ export class I18n {
     I18n.put('member_pay_pending', '支付处理中，请稍后查看会员状态', '支付處理中，請稍後查看會員狀態', 'Payment is processing');
     I18n.put('member_pay_ok', '支付成功', '支付成功', 'Payment succeeded');
     I18n.put('member_pay_fail', '支付未完成', '支付未完成', 'Payment was not completed');
+    I18n.put('member_pay_pick', '选择支付方式', '選擇支付方式', 'Choose how to pay');
+    I18n.put('member_pay_alipay_only', '暂时仅支持支付宝，请使用支付宝完成支付。',
+      '暫時僅支援支付寶，請使用支付寶完成支付。',
+      'Alipay is the only option for now. Please pay with Alipay.');
+    I18n.put('member_pay_alipay', '支付宝', '支付寶', 'Alipay');
+    I18n.put('member_pay_go_alipay', '使用支付宝支付', '使用支付寶支付', 'Pay with Alipay');
     I18n.put('member_restore', '恢复购买', '恢復購買', 'Restore purchases');
     I18n.put('member_load_fail', '会员信息加载失败', '會員資訊載入失敗', 'Failed to load membership');
     I18n.put('member_iap_tip', '支付由支付宝完成。开通后按套餐生效，虚拟会员暂不支持退款。',

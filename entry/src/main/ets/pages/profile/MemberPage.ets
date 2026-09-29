@@ -17,6 +17,8 @@ struct MemberPage {
   @State private me: MemberMe | null = null;
   @State private plans: MemberPlan[] = [];
   @State private hint: string = '';
+  @State private paySheetOpen: boolean = false;
+  @State private pendingPlan: MemberPlan | null = null;
   private repo: MemberRepository = MemberRepository.getInstance();
 
   aboutToAppear(): void {
@@ -42,6 +44,23 @@ struct MemberPage {
     } finally {
       this.loading = false;
     }
+  }
+
+  private openPaySheet(plan: MemberPlan): void {
+    if (this.buying || !this.memberEnabled) {
+      return;
+    }
+    this.pendingPlan = plan;
+    this.paySheetOpen = true;
+  }
+
+  private confirmAlipay(): void {
+    const plan = this.pendingPlan;
+    this.paySheetOpen = false;
+    if (plan === null) {
+      return;
+    }
+    this.buy(plan);
   }
 
   private async buy(plan: MemberPlan): Promise<void> {
@@ -328,7 +347,7 @@ struct MemberPage {
                     .backgroundColor(this.isHot(plan) ? '#B45309' : '#1F1633')
                     .enabled(!this.buying)
                     .onClick(() => {
-                      this.buy(plan);
+                      this.openPaySheet(plan);
                     })
                 }
                 .width('100%')
@@ -368,5 +387,71 @@ struct MemberPage {
     .width('100%')
     .height('100%')
     .backgroundColor($r('app.color.page_bg'))
+    .bindSheet(this.paySheetOpen, this.payMethodSheet(), {
+      height: SheetSize.FIT_CONTENT,
+      dragBar: true,
+      showClose: true,
+      onDisappear: () => {
+        this.paySheetOpen = false;
+      }
+    })
+  }
+
+  @Builder
+  private payMethodSheet() {
+    Column({ space: 14 }) {
+      Text(I18n.t('member_pay_pick', this.lang))
+        .fontSize(17)
+        .fontWeight(FontWeight.Medium)
+        .fontColor($r('app.color.text_primary'))
+        .width('100%')
+      Text(I18n.t('member_pay_alipay_only', this.lang))
+        .fontSize(13)
+        .fontColor($r('app.color.text_muted'))
+        .width('100%')
+        .lineHeight(20)
+      Row({ space: 12 }) {
+        Text('支')
+          .fontSize(16)
+          .fontWeight(FontWeight.Medium)
+          .fontColor(Color.White)
+          .width(36)
+          .height(36)
+          .textAlign(TextAlign.Center)
+          .borderRadius(10)
+          .backgroundColor('#1677FF')
+        Text(I18n.t('member_pay_alipay', this.lang))
+          .fontSize(16)
+          .fontColor($r('app.color.text_primary'))
+          .layoutWeight(1)
+        SymbolGlyph($r('sys.symbol.checkmark_circle_fill'))
+          .fontSize(22)
+          .fontColor(['#1677FF'])
+      }
+      .width('100%')
+      .padding(12)
+      .backgroundColor('#F0F7FF')
+      .borderRadius(14)
+      .border({ width: 1, color: '#BFDBFE' })
+      Button(I18n.t('member_pay_go_alipay', this.lang))
+        .width('100%')
+        .height(44)
+        .fontSize(16)
+        .backgroundColor('#1677FF')
+        .onClick(() => {
+          this.confirmAlipay();
+        })
+      Text(I18n.t('cancel', this.lang))
+        .fontSize(14)
+        .fontColor($r('app.color.text_muted'))
+        .width('100%')
+        .textAlign(TextAlign.Center)
+        .padding({ top: 2, bottom: 4 })
+        .onClick(() => {
+          this.paySheetOpen = false;
+        })
+    }
+    .width('100%')
+    .padding({ left: 20, right: 20, top: 8, bottom: 16 })
   }
 }

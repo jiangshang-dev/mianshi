@@ -667,10 +667,9 @@ struct InterviewSessionPage {
 
       Row() {
         Column({ space: 6 }) {
-          Text(this.voiceMuted ? '静' : '读')
-            .fontSize(16)
-            .fontWeight(FontWeight.Medium)
-            .fontColor(this.voiceMuted ? '#6B7280' : '#2563EB')
+          SymbolGlyph(this.voiceMuted ? $r('sys.symbol.speaker_slash') : $r('sys.symbol.speaker_wave_2'))
+            .fontSize(22)
+            .fontColor([this.voiceMuted ? '#6B7280' : '#2563EB'])
           Text(this.voiceMuted ? I18n.t('muted', this.lang) : I18n.t('mute', this.lang))
             .fontSize(11)
             .fontColor($r('app.color.text_muted'))
@@ -710,10 +709,9 @@ struct InterviewSessionPage {
         Blank().layoutWeight(1)
 
         Column({ space: 6 }) {
-          Text('停')
-            .fontSize(16)
-            .fontWeight(FontWeight.Medium)
-            .fontColor(this.streaming ? '#9CA3AF' : '#DC2626')
+          SymbolGlyph($r('sys.symbol.phone_down_fill'))
+            .fontSize(22)
+            .fontColor([this.streaming ? '#9CA3AF' : '#DC2626'])
           Text(I18n.t('end_iv', this.lang))
             .fontSize(11)
             .fontColor(this.streaming ? '#9CA3AF' : '#DC2626')
