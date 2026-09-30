@@ -676,8 +676,9 @@ export class I18n {
       'Membership is disabled by ops. AI is not gated.');
     I18n.put('member_perk_title', '会员权益', '會員權益', 'Benefits');
     I18n.put('member_perk_ai', '· 题目详情 AI 讲解，针对当前题追问', '· 題目詳情 AI 講解，針對當前題追問', '· Question AI explanations');
-    I18n.put('member_perk_iv', '· AI 模拟面试，结合简历追问并生成报告', '· AI 模擬面試，結合簡歷追問並生成報告', '· AI mock interviews');
-    I18n.put('member_perk_quota', '· 按套餐享对应次数，年卡 / 永久更划算', '· 按套餐享對應次數，年卡 / 永久更划算', '· Quota by plan');
+    I18n.put('member_perk_iv', '· AI模拟面试，结合简历追问并生成报告', '· AI 模擬面試，結合簡歷追問並生成報告', '· AI mock interviews');
+    I18n.put('member_perk_ai_assist', '· AI辅助面试，听题实时给提示', '· AI輔助面試，聽題實時給提示', '· AI-assisted interviews with live hints');
+    I18n.put('member_perk_quota', '· 按套餐享对应次数，年卡/永久更划算', '· 按套餐享對應次數，年卡/永久更划算', '· Quota by plan');
     I18n.put('member_plan_hot', '推荐', '推薦', 'Popular');
     I18n.put('mall_title', '积分商城', '積分商城', 'Mall');
     I18n.put('mall_sub', '积分或现金兑换虚拟 / 实物商品', '積分或現金兌換虛擬 / 實物商品', 'Redeem virtual or physical goods');

@@ -85,7 +85,7 @@ export default class EntryAbility extends UIAbility {
       hilog.info(DOMAIN, 'alipay', 'bundleName=%{public}s', info.name);
       hilog.info(DOMAIN, 'alipay', 'fingerprint=%{public}s', raw);
       hilog.info(DOMAIN, 'alipay', 'alipay_sign=%{public}s', normalized);
-      promptAction.showToast({ message: '应用签名 ' + normalized, duration: 5000 });
+      // promptAction.showToast({ message: '应用签名 ' + normalized, duration: 5000 });
     }).catch((err: BusinessError) => {
       hilog.error(DOMAIN, 'alipay', 'fingerprint failed code=%{public}d msg=%{public}s',
         err.code, err.message);

@@ -12,7 +12,11 @@ import { MemberBadge } from '../../components/MemberBadge';
 struct MemberPage {
   @StorageLink('appLang') lang: string = I18n.HANS;
   @StorageLink('memberEnabled') memberEnabled: boolean = true;
-  @State private loading: boolean = true;
+  @StorageLink('isMember') isMember: boolean = false;
+  @StorageLink('isLifetimeMember') isLifetime: boolean = false;
+  @StorageLink('memberPlanName') cachedPlanName: string = '';
+  @StorageLink('memberExpireTime') cachedExpire: number = 0;
+  @State private plansLoading: boolean = true;
   @State private buying: boolean = false;
   @State private me: MemberMe | null = null;
   @State private plans: MemberPlan[] = [];
@@ -27,13 +31,16 @@ struct MemberPage {
 
   private async bootstrap(): Promise<void> {
     if (!LoginGate.isLoggedIn()) {
-      this.loading = false;
+      this.plansLoading = false;
       LoginGate.ensure(I18n.t('member_title', this.lang), () => {
         this.bootstrap();
       });
       return;
     }
-    this.loading = true;
+    const firstOpen = this.plans.length === 0;
+    if (firstOpen) {
+      this.plansLoading = true;
+    }
     try {
       const snapshot = await this.repo.me();
       this.me = snapshot;
@@ -42,7 +49,7 @@ struct MemberPage {
     } catch (err) {
       this.hint = err instanceof Error ? err.message : I18n.t('member_load_fail', this.lang);
     } finally {
-      this.loading = false;
+      this.plansLoading = false;
     }
   }
 
@@ -147,25 +154,31 @@ struct MemberPage {
 
   private memberTitle(): string {
     const snap = this.me;
-    if (snap === null || !snap.member) {
+    const active = snap !== null ? snap.member : this.isMember;
+    const lifetime = snap !== null ? snap.lifetime : this.isLifetime;
+    const planName = snap !== null ? snap.planName : this.cachedPlanName;
+    if (!active) {
       return I18n.t('member_not_yet', this.lang);
     }
-    if (snap.lifetime) {
+    if (lifetime) {
       return I18n.t('member_lifetime_on', this.lang);
     }
-    return snap.planName.length > 0 ? snap.planName : I18n.t('member_title', this.lang);
+    return planName.length > 0 ? planName : I18n.t('member_title', this.lang);
   }
 
   private memberSub(): string {
     const snap = this.me;
-    if (snap === null || !snap.member) {
+    const active = snap !== null ? snap.member : this.isMember;
+    const lifetime = snap !== null ? snap.lifetime : this.isLifetime;
+    if (!active) {
       return I18n.t('member_hero_sub', this.lang);
     }
-    if (snap.lifetime) {
+    if (lifetime) {
       return I18n.t('member_hero_life', this.lang);
     }
-    if (snap.expireTime !== undefined && snap.expireTime > 0) {
-      const ms = MemberGate.parseExpireMs(snap.expireTime as number | string);
+    const expireRaw = snap !== null ? snap.expireTime : this.cachedExpire;
+    if (expireRaw !== undefined && expireRaw !== 0) {
+      const ms = MemberGate.parseExpireMs(expireRaw as number | string);
       if (ms > 0) {
         const d = new Date(ms);
         if (!isNaN(d.getTime())) {
@@ -199,31 +212,27 @@ struct MemberPage {
     Column() {
       Row() {
         Text('‹')
-          .fontSize(28)
+          .fontSize(26)
           .fontColor($r('app.color.text_primary'))
-          .padding({ right: 8 })
+          .padding({ right: 6 })
           .onClick(() => {
             router.back();
           })
-        // Text(I18n.t('member_title', this.lang))
-        //   .fontSize(18)
-        //   .fontWeight(FontWeight.Bold)
-        //   .fontColor($r('app.color.text_primary'))
-        //   .layoutWeight(1)
+        Text(I18n.t('member_title', this.lang))
+          .fontSize(18)
+          .fontWeight(FontWeight.Bold)
+          .fontColor($r('app.color.text_primary'))
+          .layoutWeight(1)
       }
       .width('100%')
-      .padding({ left: 12, right: 16, top: 8, bottom: 8 })
+      .height(40)
+      .padding({ left: 12, right: 16 })
+      .alignItems(VerticalAlign.Center)
 
-      if (this.loading) {
-        Text(I18n.t('loading', this.lang))
-          .fontSize(14)
-          .fontColor($r('app.color.text_muted'))
-          .margin({ top: 40 })
-      } else {
-        Scroll() {
-          Column({ space: 14 }) {
-            Column({ space: 10 }) {
-              Row({ space: 8 }) {
+      Scroll() {
+        Column({ space: 10 }) {
+          Column({ space: 8 }) {
+              Row({ space: 1 }) {
                 Text(this.memberTitle())
                   .fontSize(20)
                   .fontWeight(FontWeight.Bold)
@@ -252,11 +261,11 @@ struct MemberPage {
                 .fontSize(12)
                 .fontColor('#F6E2A4')
                 .width('100%')
-            }
-            .width('100%')
-            .padding(18)
-            .borderRadius(18)
-            .linearGradient({ angle: 145, colors: [['#1F1633', 0], ['#3A2A12', 0.55], ['#8A5A00', 1]] })
+          }
+          .width('100%')
+          .padding({ left: 18, right: 18, top: 16, bottom: 16 })
+          .borderRadius(18)
+          .linearGradient({ angle: 145, colors: [['#1F1633', 0], ['#3A2A12', 0.55], ['#8A5A00', 1]] })
 
             if (!this.memberEnabled) {
               Column({ space: 6 }) {
@@ -289,6 +298,10 @@ struct MemberPage {
                   .fontSize(13)
                   .fontColor($r('app.color.text_secondary'))
                   .width('100%')
+                Text(I18n.t('member_perk_ai_assist', this.lang))
+                  .fontSize(13)
+                  .fontColor($r('app.color.text_secondary'))
+                  .width('100%')
                 Text(I18n.t('member_perk_quota', this.lang))
                   .fontSize(13)
                   .fontColor($r('app.color.text_secondary'))
@@ -305,6 +318,22 @@ struct MemberPage {
                   .fontSize(12)
                   .fontColor(this.isErrorHint() ? '#DC2626' : '#6B7280')
                   .width('100%')
+              }
+
+              if (this.plansLoading) {
+                Column({ space: 8 }) {
+                  LoadingProgress()
+                    .width(28)
+                    .height(28)
+                    .color('#B45309')
+                  Text(I18n.t('loading', this.lang))
+                    .fontSize(13)
+                    .fontColor($r('app.color.text_muted'))
+                }
+                .width('100%')
+                .padding({ top: 20, bottom: 20 })
+                .justifyContent(FlexAlign.Center)
+                .alignItems(HorizontalAlign.Center)
               }
 
               ForEach(this.plans, (plan: MemberPlan) => {
@@ -383,12 +412,12 @@ struct MemberPage {
               .fontColor($r('app.color.text_muted'))
               .width('100%')
           }
-          .padding({ left: 16, right: 16, bottom: 24 })
+          .padding({ left: 16, right: 16, top: 8, bottom: 24 })
           .width('100%')
         }
         .layoutWeight(1)
+        .align(Alignment.Top)
         .scrollBar(BarState.Off)
-      }
     }
     .width('100%')
     .height('100%')
