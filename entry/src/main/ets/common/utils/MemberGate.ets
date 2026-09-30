@@ -76,13 +76,15 @@ export class MemberGate {
       return;
     }
     const shown = MemberGate.displayMessage(message);
+    const upgrade = shown.indexOf('升级') >= 0;
+    const action = upgrade ? I18n.t('member_upgrade') : I18n.t('member_buy');
     promptAction.showDialog({
-      title: I18n.t('member_need_title'),
+      title: action,
       message: shown.length > 0 ? shown : I18n.t('member_need_msg'),
-      // buttons: [
-      //   { text: I18n.t('cancel'), color: '#6B7280' },
-      //   { text: I18n.t('member_go'), color: '#2563EB' }
-      // ]
+      buttons: [
+        { text: I18n.t('cancel'), color: '#6B7280' },
+        { text: action, color: '#2563EB' }
+      ]
     }).then((res: DialogResult) => {
       if (res.index === 1) {
         MemberGate.goMember();

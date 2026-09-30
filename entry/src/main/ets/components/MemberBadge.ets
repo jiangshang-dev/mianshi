@@ -55,6 +55,7 @@ export struct MemberNeedHint {
   @StorageLink('appLang') lang: string = I18n.HANS;
   @StorageLink('memberEnabled') memberEnabled: boolean = true;
   @StorageLink('isMember') isMember: boolean = false;
+  @Prop hintKey: string = 'member_ai_need';
 
   build() {
     if (!this.memberEnabled || this.isMember) {
@@ -68,7 +69,7 @@ export struct MemberNeedHint {
           .padding({ left: 8, right: 8, top: 3, bottom: 3 })
           .backgroundColor('#FDE68A')
           .borderRadius(6)
-        Text(I18n.t('member_ai_need', this.lang))
+        Text(I18n.t(this.hintKey, this.lang))
           .fontSize(12)
           .fontColor('#92400E')
           .layoutWeight(1)

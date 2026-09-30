@@ -1,6 +1,7 @@
-import { AbilityConstant, Configuration, ConfigurationConstant, UIAbility, Want } from '@kit.AbilityKit';
+import { AbilityConstant, bundleManager, Configuration, ConfigurationConstant, UIAbility, Want } from '@kit.AbilityKit';
+import { BusinessError } from '@kit.BasicServicesKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
-import { window } from '@kit.ArkUI';
+import { promptAction, window } from '@kit.ArkUI';
 import { I18n } from '../common/i18n/I18n';
 import { LangManager } from '../common/i18n/LangManager';
 import { ThemeManager } from '../common/theme/ThemeManager';
@@ -74,6 +75,23 @@ export default class EntryAbility extends UIAbility {
     hilog.info(DOMAIN, 'testTag', '%{public}s', 'Ability onWindowStageDestroy');
   }
 
+  private logAlipayFingerprint(): void {
+    const flags = bundleManager.BundleFlag.GET_BUNDLE_INFO_WITH_APPLICATION
+      | bundleManager.BundleFlag.GET_BUNDLE_INFO_WITH_SIGNATURE_INFO;
+    bundleManager.getBundleInfoForSelf(flags).then((info: bundleManager.BundleInfo) => {
+      const raw = info.signatureInfo.fingerprint;
+      const normalized = raw.replace(/:/g, '').toLowerCase();
+      console.info('alipay_sign=' + normalized);
+      hilog.info(DOMAIN, 'alipay', 'bundleName=%{public}s', info.name);
+      hilog.info(DOMAIN, 'alipay', 'fingerprint=%{public}s', raw);
+      hilog.info(DOMAIN, 'alipay', 'alipay_sign=%{public}s', normalized);
+      promptAction.showToast({ message: '应用签名 ' + normalized, duration: 5000 });
+    }).catch((err: BusinessError) => {
+      hilog.error(DOMAIN, 'alipay', 'fingerprint failed code=%{public}d msg=%{public}s',
+        err.code, err.message);
+    });
+  }
+
   private loadIndex(windowStage: window.WindowStage): void {
     windowStage.loadContent('pages/Index', (err) => {
       if (err.code) {
@@ -81,6 +99,7 @@ export default class EntryAbility extends UIAbility {
         return;
       }
       hilog.info(DOMAIN, 'testTag', 'Succeeded in loading the content.');
+      this.logAlipayFingerprint();
     });
   }
 

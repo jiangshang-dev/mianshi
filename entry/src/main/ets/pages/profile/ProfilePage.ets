@@ -469,6 +469,9 @@ export struct ProfilePage {
                 I18n.t('iv_logs', this.lang));
             })
           }
+          this.menuRow('listen_logs', 'listen_logs_sub', () => {
+            this.openNeedLogin(I18n.t('listen_logs', this.lang), 'pages/listen/ListenHistoryPage');
+          })
           // this.menuRow('study_log', 'study_log_sub', () => {
           //   this.soon(I18n.t('study_log', this.lang));
           // })

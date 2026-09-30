@@ -4,13 +4,18 @@ import { promptAction, router, window } from '@kit.ArkUI';
 import { AiStreamSnapshot } from '../../common/models/Types';
 import { SseAbort } from '../../common/network/HttpClient';
 import { SpeechService } from '../../common/speech/SpeechService';
+import { ListenPcmBuffer } from '../../data/listen/ListenPcmBuffer';
 import { QuestionSegmenter } from '../../data/listen/QuestionSegmenter';
 import { ListenRepository } from '../../data/repository/ListenRepository';
 import { ResumeRepository } from '../../data/repository/ResumeRepository';
+import { I18n } from '../../common/i18n/I18n';
+import { MemberQuota } from '../../common/models/MemberTypes';
 import { LoginGate } from '../../common/utils/LoginGate';
 import { MemberGate } from '../../common/utils/MemberGate';
 import { AiNotice } from '../../common/utils/AiNotice';
 import { AiDisclaimerBar } from '../../components/AiGenMark';
+import { MemberBadge, MemberNeedHint } from '../../components/MemberBadge';
+import { MemberRepository } from '../../data/repository/MemberRepository';
 
 /**
  * AI 辅助面试：聆听页、回答建议、追问预测。
@@ -19,7 +24,9 @@ import { AiDisclaimerBar } from '../../components/AiGenMark';
 @Entry
 @Component
 struct ListenAssistPage {
+  @StorageLink('appLang') lang: string = I18n.HANS;
   @State private notice: string = '';
+  @State private quotaText: string = '';
   @State private draft: string = '';
   @State private question: string = '';
   @State private answer: string = '';
@@ -38,6 +45,7 @@ struct ListenAssistPage {
   private speech: SpeechService = SpeechService.getInstance();
   private repo: ListenRepository = ListenRepository.getInstance();
   private segmenter: QuestionSegmenter = new QuestionSegmenter();
+  private pcmBuf: ListenPcmBuffer = new ListenPcmBuffer();
   private sessionId: string = '';
   private seq: number = 0;
   private abort: SseAbort | null = null;
@@ -69,6 +77,8 @@ struct ListenAssistPage {
     }
     this.abort?.abort();
     this.abortFollow?.abort();
+    this.speech.setPcmTap(null);
+    this.pcmBuf.clear();
     this.speech.release();
     this.keepScreen(false);
   }
@@ -78,9 +88,11 @@ struct ListenAssistPage {
     const resume = await ResumeRepository.getInstance().load(ctx);
     this.resumeHint = resume !== null && resume.fileName.length > 0 ? `已带上简历 ${resume.fileName}` : '未关联简历，按面试官原话作答';
     this.keepScreen(true);
-    this.sessionId = await this.repo.openSession();
-    if (this.sessionId.length === 0) {
-      this.notice = '会话没打开，确认已执行 aifuzhu.sql 且服务已重启';
+    await this.refreshQuota();
+    try {
+      this.sessionId = await this.repo.openSession();
+    } catch (err) {
+      this.notice = err instanceof Error ? err.message : '会话没打开';
       return;
     }
     this.startHear();
@@ -112,6 +124,7 @@ struct ListenAssistPage {
       this.notice = '没有麦克风权限，可点右上角粘贴面试官的话';
       return;
     }
+    this.armTap();
     const ok = await this.speech.beginContinuous(
       (text: string, isLast: boolean) => {
         setTimeout(() => {
@@ -132,22 +145,43 @@ struct ListenAssistPage {
     this.hearing = ok;
     if (ok) {
       this.notice = '';
+    } else {
+      this.speech.setPcmTap(null);
+      this.pcmBuf.clear();
     }
+  }
+
+  /** 从这一次开始听起抄录面试官原声。继续听之前先丢掉上一段没成题的声音。 */
+  private armTap(): void {
+    this.pcmBuf.clear();
+    this.speech.setPcmTap((chunk: Uint8Array) => {
+      this.pcmBuf.append(chunk);
+    });
   }
 
   private async finishAssist(): Promise<void> {
     this.clearStable();
     this.hearing = false;
+    this.speech.setPcmTap(null);
+    this.pcmBuf.clear();
     await this.speech.stopContinuous();
     router.back();
   }
 
-  /** 停掉麦克风，候选人自己回答时不会被识别成下一题。 */
+  private openHistory(): void {
+    if (this.hearing) {
+      this.pauseHear();
+    }
+    router.pushUrl({ url: 'pages/listen/ListenHistoryPage' });
+  }
+
+  /** 停掉麦克风，候选人自己回答时不会被识别成下一题，也不会被录进原声。 */
   private async pauseHear(): Promise<void> {
     this.hearing = false;
     this.clearStable();
     this.pendingRaw = '';
     this.draft = '';
+    this.speech.setPcmTap(null);
     await this.speech.stopContinuous();
   }
 
@@ -208,9 +242,12 @@ struct ListenAssistPage {
       this.tab = 0;
     }
     this.busy = true;
-    if (this.hearing) {
+    const ctx = getContext(this) as common.UIAbilityContext;
+    const wasHearing = this.hearing;
+    if (wasHearing) {
       await this.pauseHear();
     }
+    const pcm = wasHearing ? this.pcmBuf.take() : new Uint8Array(0);
     const current = this.abort;
     await this.repo.streamTurn(this.sessionId, turnId, this.seq, questionText, forceLlm, (snap: AiStreamSnapshot) => {
       if (snap.markdown.length > 0) {
@@ -219,12 +256,16 @@ struct ListenAssistPage {
       if (snap.phase === 'error' && MemberGate.isQuotaError(snap.markdown)) {
         this.answer = MemberGate.displayMessage(snap.markdown);
         MemberGate.promptUpgrade(snap.markdown);
+        this.refreshQuota();
       }
     }, current);
     if (this.answer.length === 0) {
       this.answer = '没有生成答法，可点「详细回答」重试，或检查网络';
     }
     this.busy = false;
+    if (pcm.byteLength >= 16000) {
+      this.repo.uploadUtterance(ctx.cacheDir, turnId, pcm);
+    }
     this.segmenter.hold(2500);
     const pending = this.pendingRaw;
     this.pendingRaw = '';
@@ -234,6 +275,25 @@ struct ListenAssistPage {
     if (this.tab === 2) {
       this.fetchFollows();
     }
+  }
+
+  private async refreshQuota(): Promise<void> {
+    try {
+      const me = await MemberRepository.getInstance().me();
+      const quota = me !== null && me.listenAi !== undefined && me.listenAi !== null ? me.listenAi : null;
+      this.quotaText = this.formatQuota(quota);
+    } catch (_e) {
+    }
+  }
+
+  private formatQuota(quota: MemberQuota | null): string {
+    if (quota === null) {
+      return '';
+    }
+    if (quota.unlimited) {
+      return I18n.t('member_listen_unlimited', this.lang);
+    }
+    return I18n.tf('member_listen_remain', `${quota.remain}/${quota.limit}`, this.lang);
   }
 
   private async fetchFollows(): Promise<void> {
@@ -531,12 +591,22 @@ struct ListenAssistPage {
         .width(40)
         .textAlign(TextAlign.Center)
         .onClick(() => this.finishAssist())
-      Text('AI 辅助面试')
-        .fontSize(17)
-        .fontWeight(FontWeight.Medium)
-        .fontColor('#1F2430')
-        .layoutWeight(1)
-        .textAlign(TextAlign.Center)
+      Column({ space: 2 }) {
+        Text('AI 辅助面试')
+          .fontSize(17)
+          .fontWeight(FontWeight.Medium)
+          .fontColor('#1F2430')
+        MemberBadge({ tapToOpen: true })
+      }
+      .layoutWeight(1)
+      .alignItems(HorizontalAlign.Center)
+      Text('记录')
+        .fontSize(14)
+        .fontColor('#5B4BDB')
+        .padding({ left: 8, right: 4 })
+        .onClick(() => {
+          this.openHistory();
+        })
       Text('⚙')
         .fontSize(20)
         .fontColor('#1F2430')
@@ -572,6 +642,14 @@ struct ListenAssistPage {
         .textAlign(TextAlign.Center)
         .lineHeight(20)
         .margin({ top: 10 })
+      if (this.quotaText.length > 0) {
+        Text(this.quotaText)
+          .fontSize(12)
+          .fontColor('#8B93A7')
+          .margin({ top: 6 })
+      }
+      MemberNeedHint({ hintKey: 'member_listen_need' })
+        .margin({ top: 12 })
       if (this.draft.length > 0) {
         Text(this.draft)
           .fontSize(14)

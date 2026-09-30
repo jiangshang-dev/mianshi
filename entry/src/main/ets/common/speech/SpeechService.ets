@@ -13,6 +13,8 @@ const PCM_HOLD = 16000 * 2 * 2;
 
 export type AsrResultCallback = (text: string, isLast: boolean) => void;
 export type AsrErrorCallback = (message: string) => void;
+/** 只在正在往识别引擎送音时回调。停麦后不再回调，避免录到候选人自己的回答。 */
+export type PcmTap = (chunk: Uint8Array) => void;
 
 /** 语音服务：TTS 播报 + ASR 听写（CoreSpeechKit）。听写必须自己采集麦克风再 writeAudio。 */
 export class SpeechService {
@@ -39,6 +41,7 @@ export class SpeechService {
   private lastAsrError: string = '';
   private onResult: AsrResultCallback | null = null;
   private onError: AsrErrorCallback | null = null;
+  private pcmTap: PcmTap | null = null;
 
   static getInstance(): SpeechService {
     if (!SpeechService.instance) {
@@ -57,6 +60,11 @@ export class SpeechService {
 
   isListening(): boolean {
     return this.listening;
+  }
+
+  /** 聆听面试官时抄一份 PCM。传 null 表示停止抄录。 */
+  setPcmTap(tap: PcmTap | null): void {
+    this.pcmTap = tap;
   }
 
   async requestMicPermission(context: common.UIAbilityContext): Promise<boolean> {
@@ -225,6 +233,7 @@ export class SpeechService {
   }
 
   release(): void {
+    this.pcmTap = null;
     this.intentionalStop = true;
     this.continuous = false;
     this.feeding = false;
@@ -437,6 +446,10 @@ export class SpeechService {
   private writeChunk(chunk: Uint8Array): void {
     if (!this.asrEngine || !this.feeding || this.activeSessionId.length === 0) {
       return;
+    }
+    const tap = this.pcmTap;
+    if (tap !== null) {
+      tap(chunk);
     }
     try {
       this.asrEngine.writeAudio(this.activeSessionId, chunk);

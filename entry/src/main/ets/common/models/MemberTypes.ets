@@ -33,6 +33,7 @@ export interface MemberMe {
   expireTime?: number | string;
   questionAi: MemberQuota | null;
   interviewAi: MemberQuota | null;
+  listenAi?: MemberQuota | null;
   plans: MemberPlan[];
 }
 

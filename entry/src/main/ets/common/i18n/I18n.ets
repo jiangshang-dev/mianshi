@@ -479,6 +479,15 @@ export class I18n {
     I18n.put('ai_qa_title', 'AI 问答记录', 'AI 問答記錄', 'AI Q&A history');
     I18n.put('iv_logs', '面试记录', '面試記錄', 'Interviews');
     I18n.put('iv_logs_sub', '模拟面试历史', '模擬面試歷史', 'Mock interview history');
+    I18n.put('listen_logs', '辅助面试记录', '輔助面試記錄', 'Assist history');
+    I18n.put('listen_logs_sub', '回看提问、答法和面试官原声', '回看提問、答法和面試官原聲', 'Review questions, answers, and audio');
+    I18n.put('listen_hist_empty', '还没有辅助面试记录', '還沒有輔助面試記錄', 'No assist sessions yet');
+    I18n.put('listen_hist_note', '只保存面试官原声。你回答时麦克风是关的，不会被录进去。',
+      '只保存面試官原聲。你回答時麥克風是關的，不會被錄進去。',
+      'Only the interviewer is recorded. Your answers are not.');
+    I18n.put('listen_play', '播放原声', '播放原聲', 'Play audio');
+    I18n.put('listen_stop', '停止播放', '停止播放', 'Stop');
+    I18n.put('listen_no_audio', '这场还没有原声', '這場還沒有原聲', 'No audio for this turn');
     I18n.put('study_log', '学习记录', '學習記錄', 'Study log');
     I18n.put('study_log_sub', '刷题天数与进度', '刷題天數與進度', 'Days and progress');
     I18n.put('wrong_book', '错题本', '錯題本', 'Wrong answers');
@@ -653,6 +662,11 @@ export class I18n {
     I18n.put('member_badge_life', '永久会员', '永久會員', 'Lifetime');
     I18n.put('member_badge_need', '会员专享', '會員專享', 'Members');
     I18n.put('member_ai_need', 'AI 讲解与模拟面试需开通会员', 'AI 講解與模擬面試需開通會員', 'AI features require membership');
+    I18n.put('member_listen_need', 'AI 辅助面试有次数限制，开通会员后可继续使用',
+      'AI 輔助面試有次數限制，開通會員後可繼續使用',
+      'AI interview assist has a daily limit. Subscribe to continue.');
+    I18n.put('member_listen_remain', '今日剩余 {0} 次', '今日剩餘 {0} 次', '{0} left today');
+    I18n.put('member_listen_unlimited', '今日不限次数', '今日不限次數', 'Unlimited today');
     I18n.put('member_hero_sub', '开通后解锁题目 AI 讲解与模拟面试', '開通後解鎖題目 AI 講解與模擬面試', 'Unlock AI Q&A and mock interviews');
     I18n.put('member_hero_life', '全部 AI 功能长期可用', '全部 AI 功能長期可用', 'All AI features stay available');
     I18n.put('member_hero_on', '会员权益生效中', '會員權益生效中', 'Membership is active');

@@ -71,6 +71,7 @@ struct MemberPage {
     try {
       const prepared = await this.repo.createAppOrder(plan.id, PayCheckout.ALIPAY);
       const orderStr = prepared.orderStr !== undefined ? prepared.orderStr : '';
+      console.info('alipay_orderNo=' + prepared.orderNo);
       if (orderStr.length === 0) {
         promptAction.showToast({ message: I18n.t('member_pay_fail', this.lang) });
         return;
@@ -246,6 +247,11 @@ struct MemberPage {
                   .layoutWeight(1)
               }
               .width('100%')
+              Text(this.quotaLine(this.me !== null && this.me.listenAi !== undefined ? this.me.listenAi : null,
+                I18n.t('home_grid_listen', this.lang)))
+                .fontSize(12)
+                .fontColor('#F6E2A4')
+                .width('100%')
             }
             .width('100%')
             .padding(18)

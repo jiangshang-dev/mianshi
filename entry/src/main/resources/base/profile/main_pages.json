@@ -9,6 +9,8 @@
     "pages/search/SearchPage",
     "pages/interview/InterviewSessionPage",
     "pages/listen/ListenAssistPage",
+    "pages/listen/ListenHistoryPage",
+    "pages/listen/ListenHistoryDetailPage",
     "pages/profile/LoginPage",
     "pages/profile/SettingsPage",
     "pages/profile/CustomerServicePage",
